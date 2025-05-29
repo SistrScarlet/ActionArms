@@ -24,6 +24,10 @@ subprojects {
         // mappings loom.officialMojangMappings()
         // The following line declares the yarn mappings you may select this one as well.
         mappings "net.fabricmc:yarn:1.20.1+build.10:v2"
+        
+        // jglTF for glTF model loading
+        implementation "de.javagl:jgltf-model:${rootProject.jgltf_version}"
+        implementation "de.javagl:jgltf-impl-v2:${rootProject.jgltf_version}"
     }
 }
 
