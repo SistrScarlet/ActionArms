@@ -1,0 +1,50 @@
+{
+  "GunItem.java": {
+    "desc": "全ての銃アイテムの基底クラス",
+    "importance": "high",
+    "last_accessed": "2025-05-29",
+    "key_features": ["Minecraftアイテム継承", "銃の基本構造"],
+    "note": "現在はシンプルな継承のみ、今後銃固有の処理を追加予定"
+  },
+  "LeverActionGunItem.java": {
+    "desc": "レバーアクション機構を持つ銃アイテム",
+    "importance": "high",
+    "last_accessed": "2025-05-29",
+    "key_features": ["GunItem継承", "レバーアクション機構"],
+    "parent": "GunItem",
+    "note": "MODの主要機能となるレバーアクション銃の実装"
+  },
+  "component/IItemComponent.java": {
+    "desc": "アイテムコンポーネントシステムのインターフェース",
+    "importance": "high",
+    "last_accessed": "2025-05-29",
+    "key_features": [
+      "NBT読み書きメソッド",
+      "静的executeメソッド",
+      "ExecuteFunction関数型インターフェース",
+      "コンポーネント操作の共通パターン"
+    ],
+    "note": "銃の状態管理の核となるコンポーネントシステム"
+  },
+  "component/BasicGunComponent.java": {
+    "desc": "基本的な銃コンポーネントの実装（現在空実装）",
+    "importance": "medium",
+    "last_accessed": "2025-05-29",
+    "key_features": ["IItemComponent実装"],
+    "parent": "IItemComponent",
+    "note": "今後銃の基本ステータス管理を実装予定"
+  },
+  "component/ExampleComponent.java": {
+    "desc": "コンポーネントシステムの使用例、カウンター機能を実装",
+    "importance": "low",
+    "last_accessed": "2025-05-29",
+    "key_features": [
+      "count変数管理",
+      "NBT永続化",
+      "incrementExample静的メソッド",
+      "executeパターンの実例"
+    ],
+    "parent": "IItemComponent",
+    "note": "コンポーネントシステムの使い方を示すサンプル実装"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "AAConfig.java": {
+    "desc": "MODの設定クラス、現在は照準関連の設定のみ",
+    "importance": "medium",
+    "last_accessed": "2025-05-29",
+    "key_features": [
+      "AutoConfig使用",
+      "TOML形式での保存",
+      "照準トグル設定 (aimToggle)"
+    ],
+    "structure": {
+      "Key": "キー操作関連の設定クラス"
+    },
+    "note": "今後銃の動作設定などが追加される予定"
+  }
+}

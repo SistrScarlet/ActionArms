@@ -1,0 +1,14 @@
+{
+  "Networking.java": {
+    "desc": "ネットワーク通信の管理クラス、現在は初期化のみ",
+    "importance": "medium",
+    "last_accessed": "2025-05-29",
+    "key_features": [
+      "Architecturyネットワーク使用",
+      "クライアント・サーバー分離",
+      "EnvType判定",
+      "C2S/S2C通信登録メソッド"
+    ],
+    "note": "今後銃の発射・リロードなどの同期処理を追加予定"
+  }
+}

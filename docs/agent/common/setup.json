@@ -1,0 +1,21 @@
+{
+  "Registration.java": {
+    "desc": "MODのアイテム登録処理を管理",
+    "importance": "high",
+    "last_accessed": "2025-05-29",
+    "key_features": [
+      "DeferredRegister使用",
+      "アイテム登録システム",
+      "テスト用レバーアクション銃登録"
+    ],
+    "registered_items": {
+      "TEST_LEVER_ACTION_GUN": {
+        "id": "test_lever_action_gun",
+        "type": "LeverActionGunItem",
+        "maxCount": 1
+      }
+    },
+    "dependencies": ["LeverActionGunItem"],
+    "note": "今後追加される銃アイテムもここに登録される"
+  }
+}
