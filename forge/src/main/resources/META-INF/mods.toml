@@ -1,0 +1,33 @@
+modLoader = "javafml"
+loaderVersion = "[47,)"
+#issueTrackerURL = ""
+license = "MIT"
+
+[[mods]]
+modId = "actionarms"
+version = "${version}"
+displayName = "Action Arms"
+authors = "Sistr"
+description = ""
+#logoFile = ""
+
+[[dependencies.actionarms]]
+modId = "forge"
+mandatory = true
+versionRange = "[47,)"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.actionarms]]
+modId = "minecraft"
+mandatory = true
+versionRange = "[1.20.1]"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.actionarms]]
+modId = "architectury"
+mandatory = true
+versionRange = "[9.2.0,)"
+ordering = "AFTER"
+side = "BOTH"
