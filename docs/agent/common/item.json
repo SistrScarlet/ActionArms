@@ -20,11 +20,14 @@
     "last_accessed": "2025-05-29",
     "key_features": [
       "NBT読み書きメソッド",
-      "静的executeメソッド",
+      "静的executeメソッド（ComponentResult返り値）",
+      "静的queryメソッド（読み取り専用）",
+      "静的updateメソッド（常に保存）",
+      "ComponentResult enum（NO_CHANGE/MODIFIED）",
       "ExecuteFunction関数型インターフェース",
       "コンポーネント操作の共通パターン"
     ],
-    "note": "銃の状態管理の核となるコンポーネントシステム"
+    "note": "銃の状態管理の核。ComponentResultでシンプルかつ明確な制御が可能"
   },
   "component/BasicGunComponent.java": {
     "desc": "基本的な銃コンポーネントの実装（現在空実装）",
@@ -41,10 +44,14 @@
     "key_features": [
       "count変数管理",
       "NBT永続化",
-      "incrementExample静的メソッド",
-      "executeパターンの実例"
+      "incrementExample（基本的なexecute使用例）",
+      "incrementWithLimit（NO_CHANGE/MODIFIEDの使い分け）",
+      "resetIfCorrupted（データ整合性チェック例）",
+      "getCount（query使用例）",
+      "setCount/addCount（update使用例）",
+      "3つの操作パターンの実例"
     ],
     "parent": "IItemComponent",
-    "note": "コンポーネントシステムの使い方を示すサンプル実装"
+    "note": "execute/query/updateの全パターンとシンプルなComponentResultの使い分けを示す"
   }
 }
