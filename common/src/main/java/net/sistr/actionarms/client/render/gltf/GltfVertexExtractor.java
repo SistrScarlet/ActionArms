@@ -249,7 +249,7 @@ public class GltfVertexExtractor {
                     normalDeltas = accessorCache.getOrCreate(normalDelta, AccessorDataType.MORPH_NORMAL, deltaId);
                 }
 
-                // MorphTargetの作成（AccessorDataを使用）
+                // MorphTargetの作成（新しいAccessorDataコンストラクタを使用）
                 MorphTarget morphTarget = new MorphTarget(targetName, positionDeltas, normalDeltas);
                 morphTargets.add(morphTarget);
                 

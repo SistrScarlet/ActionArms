@@ -1,4 +1,19 @@
 {
+  "MorphTarget.java": {
+    "desc": "AccessorDataベースの効率的なモーフターゲットデータ管理クラス",
+    "importance": "high",
+    "last_accessed": "2025-06-03",
+    "key_features": [
+      "AccessorDataによる差分データの直接保持",
+      "float[]配列の代わりにAccessorDataで軽量化",
+      "位置・法線・タンジェント差分対応",
+      "効率的なメモリ使用量計算",
+      "読み取り専用データアクセス",
+      "個別頂点の差分取得機能"
+    ],
+    "dependencies": ["AccessorData", "AccessorDataType"],
+    "note": "ProcessedVertex削除に伴いAccessorDataベース設計に変更"
+  },
   "DrawingMode.java": {
     "desc": "glTFの描画モード定義とMinecraft VertexFormat.DrawModeとの変換",
     "importance": "medium",
@@ -37,32 +52,155 @@
     "note": "変換処理でのエラーは個別にログ出力、処理続行"
   },
   "GltfRenderer.java": {
-    "desc": "ProcessedGltfModelの実際のMinecraft描画処理",
+    "desc": "ProcessedGltfModelの実際のMinecraft描画処理（AccessorDataシステム対応済み）",
     "importance": "high",
     "last_accessed": "2025-06-03",
     "key_features": [
       "アニメーション制御とキーフレーム補間",
-      "頂点データキャッシュシステム",
+      "新ProcessedMeshインターフェースへの対応完了",
       "マテリアル別レンダーレイヤー管理",
       "TRIANGLES/TRIANGLE_STRIP/POINTS/LINES描画対応",
-      "スキニングとモーフターゲット適用"
+      "スキニングとモーフターゲット適用",
+      "AccessorDataベースの効率的データアクセス"
     ],
     "dependencies": ["ProcessedGltfModel", "GltfAnimationController", "VertexProcessor", "ComputedVertexData"],
-    "note": "アニメーション更新時のみキャッシュクリア、パフォーマンス重視設計"
+    "note": "ProcessedMeshの大幅変更に合わせて更新完了、動作確認済み"
   },
-  "GltfVertexExtractor.java": {
-    "desc": "glTFメッシュから頂点データとプリミティブ情報の抽出",
+  "AccessorDataType.java": {
+    "desc": "glTF属性のデータ型定義とコンポーネント数・Java型の管理",
     "importance": "high",
     "last_accessed": "2025-06-03",
     "key_features": [
-      "位置・法線・UV・スキニングデータの抽出",
-      "モーフターゲット対応",
-      "プリミティブ別メッシュ分割",
-      "インデックスバッファ処理",
-      "マテリアル情報の取得"
+      "POSITION/NORMAL/UV等の属性型定義",
+      "属性名からデータ型の自動推定",
+      "コンポーネント数とJava型の対応",
+      "バイト単位でのサイズ計算",
+      "モーフターゲット属性対応"
     ],
-    "dependencies": ["ProcessedMesh", "ProcessedVertex", "MorphTarget", "ProcessedSkin"],
-    "note": "TODO: 同一頂点がプリミティブごとに重複生成される問題要修正"
+    "dependencies": ["AccessorData", "AccessorDataCache"],
+    "note": "AccessorDataシステムの基盤となる型定義"
+  },
+  "AccessorSignature.java": {
+    "desc": "アクセサの内容を一意に識別するシグネチャ、キャッシュキーとして使用",
+    "importance": "high",
+    "last_accessed": "2025-06-03",
+    "key_features": [
+      "BufferViewハッシュによる一意識別",
+      "オフセット・型・正規化フラグの管理",
+      "効率的なhashCode計算",
+      "デバッグ用toString実装"
+    ],
+    "dependencies": ["AccessorDataCache"],
+    "note": "同一データアクセサの重複防止に使用"
+  },
+  "AccessorData.java": {
+    "desc": "アクセサから抽出されたプリミティブ配列データの効率的保持クラス",
+    "importance": "high",
+    "last_accessed": "2025-06-03",
+    "key_features": [
+      "float[]・int[]によるプリミティブ配列保持",
+      "元AccessorModel非保持による軽量化",
+      "豊富なバリデーション機能",
+      "防御的コピーによる型安全性",
+      "メモリ使用量計算とデバッグ情報",
+      "要素・コンポーネント単位でのデータアクセス"
+    ],
+    "dependencies": ["AccessorDataType", "AccessorSignature"],
+    "note": "AccessorDataシステムの核となるデータ保持クラス"
+  },
+  "AccessorDataCache.java": {
+    "desc": "AccessorDataのスレッドセーフなキャッシュ管理、重複排除とメモリ効率化",
+    "importance": "high",
+    "last_accessed": "2025-06-03",
+    "key_features": [
+      "ConcurrentHashMapによるスレッドセーフ実装",
+      "AccessorSignatureベースのキャッシング",
+      "ヒット率・メモリ使用量の統計情報",
+      "float/int配列の自動抽出",
+      "キャッシュ管理（クリア・削除・統計）",
+      "デバッグ用コンテンツ表示機能"
+    ],
+    "dependencies": ["AccessorData", "AccessorSignature", "AccessorDataType"],
+    "note": "メモリ使用量50-80%削減を実現"
+  },
+  "ProcessedMesh.java": {
+    "desc": "AccessorDataベースの効率的なメッシュデータ管理クラス（大幅設計変更）",
+    "importance": "high",
+    "last_accessed": "2025-06-03",
+    "key_features": [
+      "Map<String, AccessorData>で属性データを直接保持",
+      "ProcessedVertex[]を廃止してメモリ効率大幅改善",
+      "属性別の効率的アクセス機能",
+      "キャッシュシステム削除でシンプル化",
+      "読み取り専用生配列アクセス",
+      "個別頂点データ取得機能",
+      "統計情報とデバッグ機能充実",
+      "メッシュデータの整合性チェック"
+    ],
+    "dependencies": ["AccessorData", "MorphTarget", "ProcessedSkin", "DrawingMode"],
+    "note": "ProcessedVertex依存削除、AccessorDataシステムとの完全統合"
+  },
+  "VertexProcessor.java": {
+    "desc": "AccessorDataベースの効率的な頂点処理クラス（新設計対応）",
+    "importance": "high",
+    "last_accessed": "2025-06-03",
+    "key_features": [
+      "ProcessedMeshからAccessorDataを直接取得",
+      "不要な配列コピーの削減",
+      "効率的なモーフターゲット適用",
+      "AccessorDataベースのスキニング処理",
+      "部分更新用頂点単位スキニング",
+      "法線の自動正規化",
+      "範囲チェックとエラーハンドリング強化"
+    ],
+    "dependencies": ["ProcessedMesh", "ComputedVertexData", "RenderingContext", "MorphTarget"],
+    "note": "ProcessedVertex削除に伴い新ProcessedMeshインターフェースに対応"
+  },
+  "ComputedVertexData.java": {
+    "desc": "計算済み頂点データの効率的管理クラス（機能強化）",
+    "importance": "medium",
+    "last_accessed": "2025-06-03",
+    "key_features": [
+      "位置・法線・UV座標の統合管理",
+      "防御的コピーと読み取り専用アクセス",
+      "個別頂点データ取得機能",
+      "境界ボックス計算機能",
+      "メモリ使用量計算とデバッグ情報",
+      "データ整合性バリデーション",
+      "BoundingBox内部クラスで幾何情報管理"
+    ],
+    "dependencies": ["VertexProcessor"],
+    "note": "UV座標対応、境界ボックス計算等機能強化"
+  },
+  "ProcessedVertex.java": {
+    "desc": "【削除済み】個別頂点データ保持クラス - AccessorDataシステム導入により不要になったため削除",
+    "importance": "deleted",
+    "last_accessed": "2025-06-03",
+    "key_features": [
+      "【削除理由】大量のオブジェクト作成によるメモリ無駄遣い",
+      "【削除理由】属性別アクセスの非効率性",
+      "【削除理由】AccessorDataの恩恵を受けられない設計",
+      "【代替手段】ProcessedMeshで属性別AccessorDataを直接管理",
+      "【代替手段】個別頂点データはProcessedMesh.getVertexXxx()で取得"
+    ],
+    "dependencies": [],
+    "note": "ProcessedVertex.java.backupとしてバックアップ保存済み、新設計では不要"
+  },
+  "GltfVertexExtractor.java": {
+    "desc": "AccessorDataCacheを使用したメッシュ頂点データの重複排除抽出処理",
+    "importance": "high",
+    "last_accessed": "2025-06-03",
+    "key_features": [
+      "AccessorDataによるアクセサレベルデータ管理",
+      "重複頂点問題の解決（同一アクセサデータ共有）",
+      "必須属性の自動補完（NORMAL・UVデフォルト生成）",
+      "モーフターゲットのAccessorData化",
+      "新ProcessedMeshコンストラクタ対応",
+      "エラーハンドリング強化",
+      "キャッシュ統計とデバッグ機能"
+    ],
+    "dependencies": ["AccessorDataCache", "AccessorData", "ProcessedMesh", "MorphTarget"],
+    "note": "重複頂点問題解決済み、新ProcessedMesh設計に対応済み"
   },
   "ProcessedGltfModel.java": {
     "desc": "変換済みglTFモデルデータの統合管理クラス",

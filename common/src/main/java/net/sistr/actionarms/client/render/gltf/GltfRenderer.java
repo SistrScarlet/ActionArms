@@ -178,7 +178,7 @@ public class GltfRenderer {
 
         float[] finalPositions = vertexData.getFinalPositions();
         float[] finalNormals = vertexData.getFinalNormals();
-        float[] uvs = mesh.getUvs();
+        float[] uvs = mesh.getUvsRaw();
 
         // 配列の境界チェック
         if (vertexIndex * 3 + 2 >= finalPositions.length ||
