@@ -19,8 +19,12 @@ public class GltfModelConverter {
         this.animationExtractor = new GltfAnimationExtractor();
     }
 
-    public ProcessedGltfModel convertModel(String name, GltfModel gltfModel) {
-        return convertModel(name, gltfModel, 0);
+    public List<ProcessedGltfModel> convertModel(String name, GltfModel gltfModel) {
+        List<ProcessedGltfModel> models = new ArrayList<>();
+        for (int i = 0; i < gltfModel.getSceneModels().size(); i++) {
+            models.add(convertModel(name + "#" + i, gltfModel, i));
+        }
+        return models;
     }
 
     public ProcessedGltfModel convertModel(String name, GltfModel gltfModel, int sceneIndex) {
@@ -39,6 +43,7 @@ public class GltfModelConverter {
         var sceneModel = gltfModel.getSceneModels().get(sceneIndex);
         for (NodeModel rootNode : sceneModel.getNodeModels()) {
             var skinModel = rootNode.getSkinModel();
+            if (skinModel == null) continue;
             try {
                 ProcessedSkin processedSkin = skinExtractor.extractSkin(skinModel);
                 processedSkins.add(processedSkin);

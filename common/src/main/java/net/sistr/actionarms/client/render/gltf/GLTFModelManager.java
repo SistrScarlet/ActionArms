@@ -1,6 +1,8 @@
 package net.sistr.actionarms.client.render.gltf;
 
 import com.google.common.collect.ImmutableMap;
+import de.javagl.jgltf.model.GltfModel;
+import de.javagl.jgltf.model.SceneModel;
 import de.javagl.jgltf.model.io.GltfModelReader;
 import net.minecraft.resource.ResourceManager;
 import net.minecraft.resource.ResourceReloader;
@@ -32,16 +34,23 @@ public class GLTFModelManager implements ResourceReloader, AutoCloseable {
                     var modelReader = new GltfModelReader();
                     var gltfConverter = new GltfModelConverter();
                     map.forEach((key, value) -> {
-                        ProcessedGltfModel model;
-                        try {
-                            var original = modelReader.readWithoutReferences(value.getInputStream());
-                            var name = key.toString();
-                            model = gltfConverter.convertModel(name, original);
+                        GltfModel original;
+                        try (var inputStream = value.getInputStream()) {
+                            original = modelReader.readWithoutReferences(inputStream);
                         } catch (IOException e) {
                             ActionArms.LOGGER.error("Model load error : {}", key, e);
                             return;
                         }
-                        modelMapBuilder.put(key, model);
+                        var paths = key.getPath().split("/");
+                        var fileName = paths[paths.length - 1].replace(".glb", "");
+                        var models = gltfConverter.convertModel(fileName, original);
+                        int index = 0;
+                        for (ProcessedGltfModel model : models) {
+                            // Identifierはパス準拠
+                            var modelKey = new Identifier(key.getNamespace(), key.getPath() + "_scene" + index);
+                            modelMapBuilder.put(modelKey, model);
+                            index++;
+                        }
                     });
                     this.models = modelMapBuilder.build();
                 });
@@ -53,6 +62,9 @@ public class GLTFModelManager implements ResourceReloader, AutoCloseable {
     }
 
     public Map<Identifier, ProcessedGltfModel> getModels() {
+        if (models == null) {
+            throw new IllegalStateException("models is not initialized.");
+        }
         return models;
     }
 }

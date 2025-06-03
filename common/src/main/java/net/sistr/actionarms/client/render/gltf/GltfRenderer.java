@@ -4,30 +4,20 @@ package net.sistr.actionarms.client.render.gltf;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.render.VertexConsumerProvider;
-import net.minecraft.client.texture.SpriteAtlasTexture;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.Identifier;
 import net.sistr.actionarms.ActionArms;
-
-import java.util.HashMap;
-import java.util.Map;
 
 public class GltfRenderer {
     private final ProcessedGltfModel model;
     private final GltfAnimationController animationController;
     private final VertexProcessor vertexProcessor;
-
-    // キャッシュとプール
-    private final Map<ProcessedMesh, ComputedVertexData> vertexDataCache;
-    private final Map<Integer, RenderLayer> materialRenderLayers;
     private RenderingContext lastContext;
 
     public GltfRenderer(ProcessedGltfModel model) {
         this.model = model;
         this.animationController = new GltfAnimationController(model);
         this.vertexProcessor = new VertexProcessor();
-        this.vertexDataCache = new HashMap<>();
-        this.materialRenderLayers = new HashMap<>();
 
         // マテリアル別レンダーレイヤーの事前作成
         // initializeMaterialRenderLayers();
@@ -43,7 +33,6 @@ public class GltfRenderer {
         // アニメーション状態の更新（フレーム間で状態が変わった場合のみ）
         if (shouldUpdateAnimation(context)) {
             animationController.update(context);
-            clearVertexCache(); // アニメーションが更新されたらキャッシュクリア
             lastContext = context;
         }
 
@@ -52,60 +41,6 @@ public class GltfRenderer {
             renderMesh(matrixStack, vertexConsumerProvider, mesh, context,
                     packedLight, packedOverlay);
         }
-    }
-
-    private void initializeMaterialRenderLayers() {
-        // 各メッシュのマテリアルに基づいてレンダーレイヤーを事前作成
-        for (ProcessedMesh mesh : model.getMeshes()) {
-            int materialIndex = mesh.getMaterialIndex();
-            if (!materialRenderLayers.containsKey(materialIndex)) {
-                RenderLayer renderLayer = createRenderLayerForMaterial(materialIndex);
-                materialRenderLayers.put(materialIndex, renderLayer);
-            }
-        }
-    }
-
-    private RenderLayer createRenderLayerForMaterial(int materialIndex) {
-        // マテリアルインデックスに基づいてテクスチャを決定
-        Identifier textureId = getTextureForMaterial(materialIndex);
-
-        if (textureId != null) {
-            // 透明度や両面描画などのマテリアル属性に応じてレンダーレイヤーを選択
-            boolean hasTransparency = materialHasTransparency(materialIndex);
-            boolean isDoubleSided = materialIsDoubleSided(materialIndex);
-
-            if (hasTransparency) {
-                return RenderLayer.getEntityTranslucent(textureId);
-            } else if (isDoubleSided) {
-                return RenderLayer.getEntityCutoutNoCull(textureId);
-            } else {
-                return RenderLayer.getEntityCutout(textureId);
-            }
-        }
-
-        // デフォルトテクスチャ
-        return RenderLayer.getEntityCutout(SpriteAtlasTexture.BLOCK_ATLAS_TEXTURE);
-    }
-
-    private Identifier getTextureForMaterial(int materialIndex) {
-        if (materialIndex < 0) {
-            return null;
-        }
-
-        // glTFモデルからマテリアル情報を取得してテクスチャIDを決定
-        // 実装例：マテリアルインデックスをベースにテクスチャを選択
-        return new Identifier("actionarms", "textures/gltf/material_" + materialIndex + ".png");
-    }
-
-    private boolean materialHasTransparency(int materialIndex) {
-        // glTFのマテリアル情報から透明度を判定
-        // 実装例：特定のマテリアルインデックスで透明度を判定
-        return false; // 実際はマテリアルデータから取得
-    }
-
-    private boolean materialIsDoubleSided(int materialIndex) {
-        // glTFのマテリアル情報から両面描画を判定
-        return false; // 実際はマテリアルデータから取得
     }
 
     private RenderingContext createRenderingContext(float delta) {
@@ -125,10 +60,6 @@ public class GltfRenderer {
         return currentTime != lastTime;
     }
 
-    private void clearVertexCache() {
-        vertexDataCache.clear();
-    }
-
     private void renderMesh(MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider,
                             ProcessedMesh mesh, RenderingContext context, int packedLight, int packedOverlay) {
         // レンダーレイヤーの取得
@@ -136,7 +67,7 @@ public class GltfRenderer {
         VertexConsumer vertexConsumer = vertexConsumerProvider.getBuffer(renderLayer);
 
         // 頂点データの取得（キャッシュ利用）
-        ComputedVertexData vertexData = getOrComputeVertexData(mesh, context);
+        ComputedVertexData vertexData = vertexProcessor.computeVertices(mesh, context);
 
         // 描画モードに応じた描画
         switch (mesh.getDrawingMode()) {
@@ -156,22 +87,6 @@ public class GltfRenderer {
                 // 未対応の描画モードはTRIANGLESとして扱う
                 renderTriangles(mesh, vertexData, matrixStack, vertexConsumer, packedLight, packedOverlay);
         }
-    }
-
-    private ComputedVertexData getOrComputeVertexData(ProcessedMesh mesh, RenderingContext context) {
-        // アニメーションやモーフィングがない場合はキャッシュを利用
-        if (!hasAnimationOrMorphing(context)) {
-            return vertexDataCache.computeIfAbsent(mesh,
-                    m -> vertexProcessor.computeVertices(m, context));
-        }
-
-        // アニメーションがある場合は毎回計算
-        return vertexProcessor.computeVertices(mesh, context);
-    }
-
-    private boolean hasAnimationOrMorphing(RenderingContext context) {
-        return (context.getBoneMatrices() != null && context.getBoneMatrices().length > 0) ||
-                (context.getMorphWeights() != null && context.getMorphWeights().length > 0);
     }
 
     private void renderTriangles(ProcessedMesh mesh, ComputedVertexData vertexData,
@@ -294,21 +209,5 @@ public class GltfRenderer {
                 .light(packedLight)
                 .normal(matrixStack.peek().getNormalMatrix(), nx, ny, nz)
                 .next();
-    }
-
-    // アニメーション制御
-    public void playAnimation(String animationName) {
-        animationController.playAnimation(animationName);
-        clearVertexCache();
-    }
-
-    public void setAnimationSpeed(float speed) {
-        animationController.setAnimationSpeed(speed);
-    }
-
-    // リソース管理
-    public void dispose() {
-        vertexDataCache.clear();
-        materialRenderLayers.clear();
     }
 }
