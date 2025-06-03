@@ -1,14 +1,16 @@
 {
   "ActionArms.java": {
-    "desc": "MODのメインクラス。設定管理とMOD初期化を担当",
+    "desc": "MODのメインクラス。設定管理、登録処理、ネットワーク初期化を担当",
     "importance": "high",
-    "last_accessed": "2025-05-29",
+    "last_accessed": "2025-06-03",
     "key_features": [
       "MOD_ID定数定義",
+      "LOGGERインスタンス管理",
       "AutoConfig使用した設定管理",
-      "Toml4j設定シリアライザー"
+      "preInit/initの初期化フロー分離",
+      "RegistrationとNetworkingの初期化連携"
     ],
-    "dependencies": ["AAConfig"],
-    "note": "全てのMOD機能の起点となる重要クラス"
+    "dependencies": ["AAConfig", "Registration", "Networking"],
+    "note": "初期化順序を適切に制御し、全MOD機能の基盤を提供"
   }
 }

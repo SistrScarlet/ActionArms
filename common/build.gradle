@@ -1,3 +1,7 @@
+plugins {
+    id "com.github.johnrengelman.shadow" version "7.1.2"
+}
+
 architectury {
     common(rootProject.enabled_platforms.split(","))
 }
@@ -18,6 +22,11 @@ dependencies {
     }
 
     modApi fileTree(dir: './mods', include: '*.jar')
+
+    // jglTF for glTF model loading
+    //noinspection VulnerableLibrariesLocal
+    implementation "de.javagl:jgltf-model:${rootProject.jgltf_version}"
+    implementation "de.javagl:jgltf-impl-v2:${rootProject.jgltf_version}"
 }
 
 publishing {

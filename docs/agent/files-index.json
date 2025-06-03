@@ -1,6 +1,6 @@
 {
   "description": "ActionArms MOD - 銃の機構と操作の心地よさを重視したMinecraft用銃MOD",
-  "last_updated": "2025-05-29",
+  "last_updated": "2025-06-03",
   "structure": {
     "common/": {
       "description": "プラットフォーム共通コード",
@@ -10,7 +10,8 @@
         "config.json": "MOD設定",
         "item.json": "銃アイテム・コンポーネント",
         "network.json": "ネットワーク通信",
-        "setup.json": "登録処理"
+        "setup.json": "登録処理",
+        "gltf.json": "glTFモデル描画システム"
       }
     },
     "fabric/": {
@@ -22,8 +23,10 @@
   },
   "key_features": [
     "コンポーネントベースの銃システム",
-    "jglTFによる描画システム（予定）",
+    "jglTFによる描画システム（実装中）",
     "レバーアクション機構",
-    "カスタマイズ可能なキーバインド"
+    "カスタマイズ可能なキーバインド",
+    "リアルタイムアニメーション対応",
+    "Mixinベースのカスタムアイテム描画"
   ]
 }

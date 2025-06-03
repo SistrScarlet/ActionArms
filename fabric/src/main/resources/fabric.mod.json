@@ -17,6 +17,9 @@
   "entrypoints": {
     "main": [
       "net.sistr.actionarms.fabric.ActionArmsFabric"
+    ],
+    "client": [
+      "net.sistr.actionarms.fabric.ActionArmsFabric"
     ]
   },
   "mixins": [

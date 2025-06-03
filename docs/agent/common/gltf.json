@@ -1,0 +1,104 @@
+{
+  "DrawingMode.java": {
+    "desc": "glTFの描画モード定義とMinecraft VertexFormat.DrawModeとの変換",
+    "importance": "medium",
+    "last_accessed": "2025-06-03",
+    "key_features": [
+      "OpenGLプリミティブタイプからMinecraft描画モードへの変換",
+      "POINTS/LINES/TRIANGLES等の描画モード対応",
+      "描画可能性チェック機能"
+    ],
+    "dependencies": ["GltfRenderer"],
+    "note": "POINTSとLINE_LOOPはMinecraftで直接描画できないためnull設定"
+  },
+  "GLTFModelManager.java": {
+    "desc": "glTFモデルのリソース管理とロード処理を行うシングルトンマネージャー",
+    "importance": "high",
+    "last_accessed": "2025-06-03",
+    "key_features": [
+      "ResourceReloaderによるリソースパックからの.glbファイル読み込み",
+      "非同期でのモデル変換とキャッシング",
+      "models/gltf/配下の.glbファイル自動検出",
+      "GltfModelConverterとの連携"
+    ],
+    "dependencies": ["GltfModelConverter", "ProcessedGltfModel", "ActionArmsClient"],
+    "note": "INSTANCE経由でアクセス、CLIENT_RESOURCESでリロード登録が必要"
+  },
+  "GltfModelConverter.java": {
+    "desc": "jglTF形式からMinecraft描画用形式への変換処理",
+    "importance": "high",
+    "last_accessed": "2025-06-03",
+    "key_features": [
+      "GltfModelからProcessedGltfModelへの変換",
+      "アニメーション・スキン・メッシュの個別抽出",
+      "複数シーン対応とエラーハンドリング"
+    ],
+    "dependencies": ["GltfVertexExtractor", "GltfSkinExtractor", "GltfAnimationExtractor", "ProcessedGltfModel"],
+    "note": "変換処理でのエラーは個別にログ出力、処理続行"
+  },
+  "GltfRenderer.java": {
+    "desc": "ProcessedGltfModelの実際のMinecraft描画処理",
+    "importance": "high",
+    "last_accessed": "2025-06-03",
+    "key_features": [
+      "アニメーション制御とキーフレーム補間",
+      "頂点データキャッシュシステム",
+      "マテリアル別レンダーレイヤー管理",
+      "TRIANGLES/TRIANGLE_STRIP/POINTS/LINES描画対応",
+      "スキニングとモーフターゲット適用"
+    ],
+    "dependencies": ["ProcessedGltfModel", "GltfAnimationController", "VertexProcessor", "ComputedVertexData"],
+    "note": "アニメーション更新時のみキャッシュクリア、パフォーマンス重視設計"
+  },
+  "GltfVertexExtractor.java": {
+    "desc": "glTFメッシュから頂点データとプリミティブ情報の抽出",
+    "importance": "high",
+    "last_accessed": "2025-06-03",
+    "key_features": [
+      "位置・法線・UV・スキニングデータの抽出",
+      "モーフターゲット対応",
+      "プリミティブ別メッシュ分割",
+      "インデックスバッファ処理",
+      "マテリアル情報の取得"
+    ],
+    "dependencies": ["ProcessedMesh", "ProcessedVertex", "MorphTarget", "ProcessedSkin"],
+    "note": "TODO: 同一頂点がプリミティブごとに重複生成される問題要修正"
+  },
+  "ProcessedGltfModel.java": {
+    "desc": "変換済みglTFモデルデータの統合管理クラス",
+    "importance": "high",
+    "last_accessed": "2025-06-03",
+    "key_features": [
+      "メッシュ・スキン・アニメーションリストの管理",
+      "名前によるアニメーション検索",
+      "モーフターゲット最大数の計算",
+      "統計情報の提供（頂点数・三角形数・ボーン数）"
+    ],
+    "dependencies": ["ProcessedMesh", "ProcessedSkin", "ProcessedAnimation"],
+    "note": "元のGltfModelも保持、必要に応じて生データアクセス可能"
+  },
+  "GLTFModelItem.java": {
+    "desc": "glTFモデルを使用するアイテム用のマーカーインターフェース",
+    "importance": "medium",
+    "last_accessed": "2025-06-03",
+    "key_features": [
+      "MixinItemRendererでの描画判定に使用",
+      "将来的にモデルファイル指定機能拡張予定"
+    ],
+    "dependencies": ["MixinItemRenderer", "GunItem"],
+    "note": "現在は空インターフェース、将来的に機能拡張予定"
+  },
+  "MixinItemRenderer.java": {
+    "desc": "Minecraftのアイテム描画をフックしてglTF描画に切り替えるMixin",
+    "importance": "high",
+    "last_accessed": "2025-06-03",
+    "key_features": [
+      "エンティティ保持アイテムとスタンドアロンアイテムの描画対応",
+      "GLTFModelItemインターフェース判定",
+      "元描画処理のキャンセル",
+      "GltfRendererとの連携"
+    ],
+    "dependencies": ["GLTFModelItem", "GLTFModelManager", "GltfRenderer"],
+    "note": "現在全モデルを描画、将来的にアイテム別モデル選択機能必要"
+  }
+}

@@ -1,10 +1,11 @@
 {
   "ActionArmsClient.java": {
-    "desc": "クライアント側の初期化処理（現在空実装）",
-    "importance": "medium",
-    "last_accessed": "2025-05-29",
-    "key_features": ["クライアント初期化のエントリーポイント"],
-    "note": "将来的にクライアント固有の処理を追加予定"
+    "desc": "クライアント側の初期化処理、glTFモデルマネージャー登録",
+    "importance": "high",
+    "last_accessed": "2025-06-03",
+    "key_features": ["クライアント初期化のエントリーポイント", "AAKeys初期化", "GLTFModelManagerリソースリローダー登録"],
+    "dependencies": ["AAKeys", "GLTFModelManager"],
+    "note": "preInit/initの分離により初期化順序を適切に制御"
   },
   "key/AAKeys.java": {
     "desc": "銃操作用のキーバインド定義・登録処理",
@@ -30,5 +31,18 @@
       "マウスキー競合設定"
     ],
     "note": "FabricとForgeで異なる実装が必要"
+  },
+  "render/gltf/MixinItemRenderer.java": {
+    "desc": "Minecraftのアイテム描画をフックしてglTF描画に切り替えるMixin",
+    "importance": "high",
+    "last_accessed": "2025-06-03",
+    "key_features": [
+      "エンティティ保持アイテムとスタンドアロンアイテムの描画対応",
+      "GLTFModelItemインターフェース判定",
+      "元描画処理のキャンセル",
+      "GltfRendererとの連携"
+    ],
+    "dependencies": ["GLTFModelItem", "GLTFModelManager", "GltfRenderer"],
+    "note": "現在全モデルを描画、将来的にアイテム別モデル選択機能必要"
   }
 }

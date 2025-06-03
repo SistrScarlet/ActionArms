@@ -11,10 +11,7 @@ import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.sistr.actionarms.ActionArms;
 import net.sistr.actionarms.client.ActionArmsClient;
-import net.sistr.actionarms.client.key.AAKeys;
 import net.sistr.actionarms.config.AAConfig;
-import net.sistr.actionarms.network.Networking;
-import net.sistr.actionarms.setup.Registration;
 
 @Mod(ActionArms.MOD_ID)
 public class ActionArmsForge {
@@ -31,16 +28,16 @@ public class ActionArmsForge {
                 () -> new ConfigScreenHandler.ConfigScreenFactory(
                         (client, parent) -> AutoConfig.getConfigScreen(AAConfig.class, parent).get()));
 
+        ActionArms.preInit();
+
         // clientInitだと実行が遅い場合のクライアント処理
         if (Platform.getEnv() == Dist.CLIENT) {
-            AAKeys.init();
+            ActionArmsClient.preInit();
         }
     }
 
     public void modInit(FMLCommonSetupEvent event) {
         ActionArms.init();
-        Registration.init();
-        Networking.init();
     }
 
     public void clientInit(FMLClientSetupEvent event) {

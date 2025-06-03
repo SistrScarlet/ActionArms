@@ -38,6 +38,11 @@ dependencies {
 
     common(project(path: ":common", configuration: "namedElements")) { transitive false }
     shadowCommon(project(path: ":common", configuration: "transformProductionForge")) { transitive = false }
+
+    // jglTF for glTF model loading
+    //noinspection VulnerableLibrariesLocal
+    implementation "de.javagl:jgltf-model:${rootProject.jgltf_version}"
+    implementation "de.javagl:jgltf-impl-v2:${rootProject.jgltf_version}"
 }
 
 processResources {
