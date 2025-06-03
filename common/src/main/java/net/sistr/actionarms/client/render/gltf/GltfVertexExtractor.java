@@ -4,10 +4,24 @@ import de.javagl.jgltf.model.*;
 import net.sistr.actionarms.ActionArms;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * glTFメッシュからProcessedMeshへの変換を行うクラス
+ * AccessorDataCacheを使用してアクセサデータの重複を排除し、メモリ効率を向上
+ */
 public class GltfVertexExtractor {
+    private final AccessorDataCache accessorCache;
+
+    public GltfVertexExtractor() {
+        this.accessorCache = new AccessorDataCache();
+    }
+
+    public GltfVertexExtractor(AccessorDataCache sharedCache) {
+        this.accessorCache = sharedCache != null ? sharedCache : new AccessorDataCache();
+    }
 
     public List<ProcessedMesh> extractMeshes(MeshModel meshModel, ProcessedSkin associatedSkin) {
         List<MeshPrimitiveModel> primitives = meshModel.getMeshPrimitiveModels();
@@ -33,6 +47,7 @@ public class GltfVertexExtractor {
             }
         }
 
+        ActionArms.LOGGER.debug("Cache stats after processing mesh {}: {}", baseMeshName, accessorCache.getStats());
         return processedMeshes;
     }
 
@@ -48,11 +63,11 @@ public class GltfVertexExtractor {
                                                  ProcessedSkin associatedSkin,
                                                  int primitiveIndex) {
 
-        // 基本頂点データの抽出
-        List<ProcessedVertex> vertices = extractVertices(primitive);
+        // AccessorDataを使用してアクセサレベルでの頂点データ管理
+        Map<String, AccessorData> attributeData = extractAttributeData(primitive, meshName, primitiveIndex);
 
         // インデックスデータの抽出
-        int[] indices = extractIndices(primitive);
+        AccessorData indexData = extractIndexData(primitive, meshName, primitiveIndex);
 
         // モーフターゲットの抽出
         List<MorphTarget> morphTargets = extractMorphTargets(primitive, primitiveIndex);
@@ -63,75 +78,152 @@ public class GltfVertexExtractor {
         // 描画モードの取得
         DrawingMode drawingMode = getDrawingMode(primitive);
 
-        // ProcessedMeshの作成
+        // ProcessedMeshの作成（新しい設計では頂点データは直接持たない）
         return new ProcessedMesh(
-                meshName, vertices, indices, morphTargets,
+                meshName, attributeData, indexData, morphTargets,
                 associatedSkin, materialIndex, drawingMode, primitiveIndex);
     }
 
-    //todo ここで取得されるverticesは全primitive共通のため、同一頂点がprimitiveごとに生成されてしまう
-    private List<ProcessedVertex> extractVertices(MeshPrimitiveModel primitive) {
-        // 頂点数の取得
-        int vertexCount = getVertexCount(primitive);
-        if (vertexCount == 0) {
-            return new ArrayList<>();
+    /**
+     * プリミティブの全属性データをAccessorDataとして抽出
+     */
+    private Map<String, AccessorData> extractAttributeData(MeshPrimitiveModel primitive, String meshName, int primitiveIndex) {
+        Map<String, AccessorData> attributeData = new HashMap<>();
+        Map<String, AccessorModel> attributes = primitive.getAttributes();
+
+        for (Map.Entry<String, AccessorModel> entry : attributes.entrySet()) {
+            String attributeName = entry.getKey();
+            AccessorModel accessor = entry.getValue();
+
+            if (accessor == null) continue;
+
+            try {
+                // 属性名からAccessorDataTypeを推定
+                AccessorDataType dataType = AccessorDataType.fromAttributeName(attributeName);
+                
+                // キャッシュからAccessorDataを取得または作成
+                String accessorId = String.format("%s_P%d_%s", meshName, primitiveIndex, attributeName);
+                AccessorData data = accessorCache.getOrCreate(accessor, dataType, accessorId);
+                
+                attributeData.put(attributeName, data);
+                
+                ActionArms.LOGGER.debug("Extracted attribute {} for mesh {}: {}", 
+                                      attributeName, meshName, data.getDebugInfo());
+            } catch (Exception e) {
+                ActionArms.LOGGER.error("Failed to extract attribute {} for mesh {}: {}", 
+                                      attributeName, meshName, e.getMessage());
+            }
         }
 
-        // 各属性の抽出
-        float[] positions = extractPositions(primitive);
-        float[] normals = extractNormals(primitive);
-        float[] uvs = extractUVs(primitive);
-        int[] boneIndices = extractBoneIndices(primitive);
-        float[] boneWeights = extractBoneWeights(primitive);
+        // 必須属性のチェックと補完
+        ensureRequiredAttributes(attributeData, primitive, meshName, primitiveIndex);
 
-        // ProcessedVertexリストの作成
-        List<ProcessedVertex> vertices = new ArrayList<>();
+        return attributeData;
+    }
 
+    /**
+     * 必須属性のチェックと不足している属性の補完
+     */
+    private void ensureRequiredAttributes(Map<String, AccessorData> attributeData, 
+                                        MeshPrimitiveModel primitive, String meshName, int primitiveIndex) {
+        // POSITION属性は必須
+        if (!attributeData.containsKey("POSITION")) {
+            throw new RuntimeException("POSITION attribute is required for mesh: " + meshName);
+        }
+
+        AccessorData positionData = attributeData.get("POSITION");
+        int vertexCount = positionData.getElementCount();
+
+        // NORMAL属性がない場合はデフォルト法線を生成
+        if (!attributeData.containsKey("NORMAL")) {
+            ActionArms.LOGGER.debug("Generating default normals for mesh: {}", meshName);
+            AccessorData defaultNormals = createDefaultNormals(vertexCount, meshName, primitiveIndex);
+            attributeData.put("NORMAL", defaultNormals);
+        }
+
+        // TEXCOORD_0属性がない場合はデフォルトUVを生成
+        if (!attributeData.containsKey("TEXCOORD_0")) {
+            ActionArms.LOGGER.debug("Generating default UVs for mesh: {}", meshName);
+            AccessorData defaultUVs = createDefaultUVs(vertexCount, meshName, primitiveIndex);
+            attributeData.put("TEXCOORD_0", defaultUVs);
+        }
+    }
+
+    /**
+     * デフォルト法線データを作成
+     */
+    private AccessorData createDefaultNormals(int vertexCount, String meshName, int primitiveIndex) {
+        float[] normals = new float[vertexCount * 3];
+        for (int i = 0; i < normals.length; i += 3) {
+            normals[i] = 0.0f;     // x
+            normals[i + 1] = 1.0f; // y (上向き)
+            normals[i + 2] = 0.0f; // z
+        }
+
+        // ダミーのシグネチャを作成（デフォルトデータ用）
+        AccessorSignature signature = new AccessorSignature(
+                0, 0, 5126, vertexCount, "VEC3", false); // FLOAT, VEC3, not normalized
+
+        String id = String.format("%s_P%d_DEFAULT_NORMAL", meshName, primitiveIndex);
+        return new AccessorData(id, AccessorDataType.NORMAL, vertexCount, normals, false, signature);
+    }
+
+    /**
+     * デフォルトUVデータを作成
+     */
+    private AccessorData createDefaultUVs(int vertexCount, String meshName, int primitiveIndex) {
+        float[] uvs = new float[vertexCount * 2]; // すべて(0,0)で初期化
+
+        // ダミーのシグネチャを作成（デフォルトデータ用）
+        AccessorSignature signature = new AccessorSignature(
+                0, 0, 5126, vertexCount, "VEC2", false); // FLOAT, VEC2, not normalized
+
+        String id = String.format("%s_P%d_DEFAULT_UV", meshName, primitiveIndex);
+        return new AccessorData(id, AccessorDataType.UV_0, vertexCount, uvs, false, signature);
+    }
+
+    /**
+     * インデックスデータの抽出
+     */
+    private AccessorData extractIndexData(MeshPrimitiveModel primitive, String meshName, int primitiveIndex) {
+        AccessorModel indexAccessor = primitive.getIndices();
+        
+        if (indexAccessor == null) {
+            // インデックスがない場合は連番インデックスを生成
+            int vertexCount = getVertexCount(primitive);
+            return createSequentialIndices(vertexCount, meshName, primitiveIndex);
+        }
+
+        try {
+            String accessorId = String.format("%s_P%d_INDICES", meshName, primitiveIndex);
+            return accessorCache.getOrCreate(indexAccessor, AccessorDataType.SCALAR_INT, accessorId);
+        } catch (Exception e) {
+            ActionArms.LOGGER.error("Failed to extract indices for mesh {}: {}", meshName, e.getMessage());
+            // フォールバック：連番インデックスを生成
+            int vertexCount = getVertexCount(primitive);
+            return createSequentialIndices(vertexCount, meshName, primitiveIndex);
+        }
+    }
+
+    /**
+     * 連番インデックスを作成
+     */
+    private AccessorData createSequentialIndices(int vertexCount, String meshName, int primitiveIndex) {
+        int[] indices = new int[vertexCount];
         for (int i = 0; i < vertexCount; i++) {
-            ProcessedVertex vertex = new ProcessedVertex();
-
-            // 位置
-            if (positions != null && i * 3 + 2 < positions.length) {
-                vertex.setPosition(positions[i * 3], positions[i * 3 + 1], positions[i * 3 + 2]);
-            }
-
-            // 法線
-            if (normals != null && i * 3 + 2 < normals.length) {
-                vertex.setNormal(normals[i * 3], normals[i * 3 + 1], normals[i * 3 + 2]);
-            }
-
-            // UV
-            if (uvs != null && i * 2 + 1 < uvs.length) {
-                vertex.setUV(uvs[i * 2], uvs[i * 2 + 1]);
-            }
-
-            // スキニングデータ
-            if (boneIndices != null && boneWeights != null) {
-                for (int j = 0; j < 4; j++) {
-                    int indexPos = i * 4 + j;
-                    if (indexPos < boneIndices.length && indexPos < boneWeights.length) {
-                        vertex.setBoneData(j, boneIndices[indexPos], boneWeights[indexPos]);
-                    }
-                }
-                vertex.normalizeWeights();
-            }
-
-            vertices.add(vertex);
+            indices[i] = i;
         }
 
-        return vertices;
+        AccessorSignature signature = new AccessorSignature(
+                0, 0, 5125, vertexCount, "SCALAR", false); // UNSIGNED_INT, SCALAR
+
+        String id = String.format("%s_P%d_SEQ_INDICES", meshName, primitiveIndex);
+        return new AccessorData(id, AccessorDataType.SCALAR_INT, vertexCount, indices, false, signature);
     }
 
-    private int[] extractBoneIndices(MeshPrimitiveModel primitive) {
-        AccessorModel jointsAccessor = primitive.getAttributes().get("JOINTS_0");
-        return jointsAccessor != null ? extractIntArray(jointsAccessor, 4) : null;
-    }
-
-    private float[] extractBoneWeights(MeshPrimitiveModel primitive) {
-        AccessorModel weightsAccessor = primitive.getAttributes().get("WEIGHTS_0");
-        return weightsAccessor != null ? extractFloatArray(weightsAccessor, 4) : null;
-    }
-
+    /**
+     * モーフターゲットの抽出（AccessorDataCache使用版）
+     */
     private List<MorphTarget> extractMorphTargets(MeshPrimitiveModel primitive, int primitiveIndex) {
         List<Map<String, AccessorModel>> targets = primitive.getTargets();
         List<MorphTarget> morphTargets = new ArrayList<>();
@@ -140,135 +232,45 @@ public class GltfVertexExtractor {
             Map<String, AccessorModel> target = targets.get(i);
             String targetName = "MorphTarget_P" + primitiveIndex + "_T" + i;
 
-            float[] positionDeltas = null;
-            float[] normalDeltas = null;
+            try {
+                // 位置の差分
+                AccessorData positionDeltas = null;
+                AccessorModel positionDelta = target.get("POSITION");
+                if (positionDelta != null) {
+                    String deltaId = targetName + "_POSITION";
+                    positionDeltas = accessorCache.getOrCreate(positionDelta, AccessorDataType.MORPH_POSITION, deltaId);
+                }
 
-            // 位置の差分
-            AccessorModel positionDelta = target.get("POSITION");
-            if (positionDelta != null) {
-                positionDeltas = extractFloatArray(positionDelta, 3);
+                // 法線の差分
+                AccessorData normalDeltas = null;
+                AccessorModel normalDelta = target.get("NORMAL");
+                if (normalDelta != null) {
+                    String deltaId = targetName + "_NORMAL";
+                    normalDeltas = accessorCache.getOrCreate(normalDelta, AccessorDataType.MORPH_NORMAL, deltaId);
+                }
+
+                // MorphTargetの作成（AccessorDataを使用）
+                MorphTarget morphTarget = new MorphTarget(targetName, positionDeltas, normalDeltas);
+                morphTargets.add(morphTarget);
+                
+                ActionArms.LOGGER.debug("Created morph target: {}", targetName);
+            } catch (Exception e) {
+                ActionArms.LOGGER.error("Failed to create morph target {}: {}", targetName, e.getMessage());
             }
-
-            // 法線の差分
-            AccessorModel normalDelta = target.get("NORMAL");
-            if (normalDelta != null) {
-                normalDeltas = extractFloatArray(normalDelta, 3);
-            }
-
-            MorphTarget morphTarget = new MorphTarget(targetName, positionDeltas, normalDeltas, null);
-            morphTargets.add(morphTarget);
         }
 
         return morphTargets;
     }
 
     private int getMaterialIndex(MeshPrimitiveModel primitive) {
-        // マテリアルインデックスの取得
         MaterialModel material = primitive.getMaterialModel();
-        return material != null ? getMaterialIndex(material) : -1;
-    }
-
-    private int getMaterialIndex(MaterialModel material) {
-        // MaterialModelから実際のインデックスを取得
-        // 実装はglTFライブラリの詳細に依存
-        return System.identityHashCode(material); // 暫定実装
+        return material != null ? System.identityHashCode(material) : -1;
     }
 
     private DrawingMode getDrawingMode(MeshPrimitiveModel primitive) {
-        // プリミティブの描画モードを取得
         int mode = primitive.getMode();
-
-        return DrawingMode.from(mode);
-    }
-
-    // 既存のメソッドは変更なし
-    private float[] extractPositions(MeshPrimitiveModel primitive) {
-        AccessorModel positionAccessor = primitive.getAttributes().get("POSITION");
-        if (positionAccessor == null) {
-            throw new RuntimeException("Position attribute not found");
-        }
-        return extractFloatArray(positionAccessor, 3);
-    }
-
-    private float[] extractNormals(MeshPrimitiveModel primitive) {
-        AccessorModel normalAccessor = primitive.getAttributes().get("NORMAL");
-        if (normalAccessor == null) {
-            return generateDefaultNormals(extractPositions(primitive));
-        }
-        return extractFloatArray(normalAccessor, 3);
-    }
-
-    private float[] extractUVs(MeshPrimitiveModel primitive) {
-        AccessorModel uvAccessor = primitive.getAttributes().get("TEXCOORD_0");
-        if (uvAccessor == null) {
-            int vertexCount = getVertexCount(primitive);
-            return new float[vertexCount * 2]; // すべて(0,0)
-        }
-        return extractFloatArray(uvAccessor, 2);
-    }
-
-    private int[] extractIndices(MeshPrimitiveModel primitive) {
-        AccessorModel indexAccessor = primitive.getIndices();
-        if (indexAccessor == null) {
-            int vertexCount = getVertexCount(primitive);
-            int[] indices = new int[vertexCount];
-            for (int i = 0; i < vertexCount; i++) {
-                indices[i] = i;
-            }
-            return indices;
-        }
-
-        AccessorData accessorData = indexAccessor.getAccessorData();
-        int[] indices = new int[indexAccessor.getCount()];
-
-        if (accessorData instanceof AccessorIntData accessorIntData) {
-            for (int i = 0; i < indices.length; i++) {
-                indices[i] = accessorIntData.get(i, 0);
-            }
-        } else if (accessorData instanceof AccessorShortData accessorShortData) {
-            for (int i = 0; i < indices.length; i++) {
-                indices[i] = accessorShortData.getInt(i, 0);
-            }
-        }
-
-        return indices;
-    }
-
-    // ユーティリティメソッドは変更なし
-    private float[] extractFloatArray(AccessorModel accessor, int componentCount) {
-        AccessorFloatData data = (AccessorFloatData) accessor.getAccessorData();
-        int elementCount = accessor.getCount();
-        float[] result = new float[elementCount * componentCount];
-
-        for (int i = 0; i < elementCount; i++) {
-            for (int j = 0; j < componentCount; j++) {
-                result[i * componentCount + j] = data.get(i, j);
-            }
-        }
-
-        return result;
-    }
-
-    private int[] extractIntArray(AccessorModel accessor, int componentCount) {
-        AccessorData accessorData = accessor.getAccessorData();
-        int elementCount = accessor.getCount();
-        int[] result = new int[elementCount * componentCount];
-
-        if (accessorData instanceof AccessorIntData accessorIntData) {
-            for (int i = 0; i < elementCount; i++) {
-                for (int j = 0; j < componentCount; j++) {
-                    result[i * componentCount + j] = accessorIntData.get(i, j);
-                }
-            }
-        } else if (accessorData instanceof AccessorShortData accessorShortData) {
-            for (int i = 0; i < elementCount; i++) {
-                for (int j = 0; j < componentCount; j++) {
-                    result[i * componentCount + j] = accessorShortData.getInt(i, j);
-                }
-            }
-        }
-
-        return result;
+        DrawingMode drawingMode = DrawingMode.from(mode);
+        return drawingMode != null ? drawingMode : DrawingMode.TRIANGLES; // デフォルト
     }
 
     private int getVertexCount(MeshPrimitiveModel primitive) {
@@ -276,14 +278,24 @@ public class GltfVertexExtractor {
         return positionAccessor != null ? positionAccessor.getCount() : 0;
     }
 
-    private float[] generateDefaultNormals(float[] positions) {
-        // 簡単な法線生成（上向き法線）
-        float[] normals = new float[positions.length];
-        for (int i = 0; i < normals.length; i += 3) {
-            normals[i] = 0.0f;     // x
-            normals[i + 1] = 1.0f; // y (上向き)
-            normals[i + 2] = 0.0f; // z
-        }
-        return normals;
+    /**
+     * キャッシュ統計情報を取得
+     */
+    public AccessorDataCache.CacheStats getCacheStats() {
+        return accessorCache.getStats();
+    }
+
+    /**
+     * キャッシュをクリア
+     */
+    public void clearCache() {
+        accessorCache.clear();
+    }
+
+    /**
+     * キャッシュの内容をデバッグ出力
+     */
+    public void printCacheContents() {
+        accessorCache.printCacheContents();
     }
 }
