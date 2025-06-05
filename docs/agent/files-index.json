@@ -1,6 +1,6 @@
 {
-  "description": "ActionArms MOD - 銃の機構と操作の心地よさを重視したMinecraft用銃MOD（副作用ゼロレンダリングシステム実装済み）",
-  "last_updated": "2025-06-03",
+  "description": "ActionArms MOD - 銃の機構と操作の心地よさを重視したMinecraft用銃MOD（副作用ゼロレンダリングシステム完全実装済み）",
+  "last_updated": "2025-06-05",
   "structure": {
     "common/": {
       "description": "プラットフォーム共通コード",
@@ -11,7 +11,7 @@
         "item.json": "銃アイテム・コンポーネント",
         "network.json": "ネットワーク通信",
         "setup.json": "登録処理",
-        "gltf.json": "glTFモデル描画システム"
+        "gltf.json": "glTFモデル描画システム（副作用ゼロ設計完全対応）"
       }
     },
     "fabric/": {
@@ -24,15 +24,31 @@
   "key_features": [
     "コンポーネントベースの銃システム",
     "AccessorDataシステムの完全統合とメモリ効率大幅改善",
-    "副作用ゼロのglTFレンダリングシステム（NEW！）",
+    "副作用ゼロのglTFレンダリングシステム（完全実装済み！）",
     "イミュータブルなRenderingContext設計",
-    "純粋関数型アニメーション計算",
+    "純粋関数型アニメーション計算（AnimationProcessor）",
     "統合された状態管理システム",
+    "パッケージ構造の完全整理（converter/data/processor/renderer/util）",
     "レバーアクション機構",
     "カスタマイズ可能なキーバインド",
     "リアルタイムアニメーション対応",
     "スレッドセーフなレンダリング",
     "高いテスタビリティ（純粋関数設計）",
-    "Mixinベースのカスタムアイテム描画"
-  ]
+    "Mixinベースのカスタムアイテム描画",
+    "メモリ効率と保守性の両立"
+  ],
+  "recent_major_changes": {
+    "2025-06-05": {
+      "title": "副作用ゼロ設計への大幅リファクタリング完了",
+      "changes": [
+        "パッケージ構造完全整理（converter/data/processor/renderer/util分割）",
+        "GltfRendererを純粋関数型に完全変更",
+        "イミュータブルRenderingContext導入",
+        "AnimationProcessorによる純粋関数型アニメーション処理",
+        "新データクラス群追加（ComputedBoneMatricesData等）",
+        "スレッドセーフ化とテスタビリティ大幅向上",
+        "GLTFModelManager → GltfModelManagerにリネーム統一"
+      ]
+    }
+  }
 }
