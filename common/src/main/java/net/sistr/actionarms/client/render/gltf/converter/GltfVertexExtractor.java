@@ -24,10 +24,6 @@ public class GltfVertexExtractor {
         this.accessorCache = new AccessorDataCache();
     }
 
-    public GltfVertexExtractor(AccessorDataCache sharedCache) {
-        this.accessorCache = sharedCache != null ? sharedCache : new AccessorDataCache();
-    }
-
     public List<ProcessedMesh> extractMeshes(MeshModel meshModel, ProcessedSkin associatedSkin) {
         List<MeshPrimitiveModel> primitives = meshModel.getMeshPrimitiveModels();
         List<ProcessedMesh> processedMeshes = new ArrayList<>();

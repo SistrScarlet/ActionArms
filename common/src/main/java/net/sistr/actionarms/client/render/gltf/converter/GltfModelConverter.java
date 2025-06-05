@@ -56,6 +56,7 @@ public class GltfModelConverter {
                     var meshes = vertexExtractor.extractMeshes(meshModel, processedSkin);
                     processedMeshes.addAll(meshes);
                 }
+                vertexExtractor.clearCache();
             } catch (Exception e) {
                 ActionArms.LOGGER.error("Failed to process model: {}", e.getMessage(), e);
             }
