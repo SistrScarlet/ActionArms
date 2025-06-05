@@ -238,40 +238,17 @@ public class DirectProcessor {
         }
     }
 
-    /**
-     * 頂点を直接描画（ComputedVertexDataを作らない）
-     */
     private void renderVerticesDirect(ProcessedMesh mesh, Matrix4f[] boneMatrices,
                                       float[] morphWeights, MatrixStack matrixStack,
                                       VertexConsumer vertexConsumer, RenderingContext context) {
 
         int[] indices = mesh.getIndices();
-        if (indices != null) {
-            // インデックスバッファを使用
-            for (int i = 0; i < indices.length; i += 3) {
-                for (int j = 0; j < 3; j++) {
-                    int vertexIndex = indices[i + j];
-                    renderVertexDirect(mesh, vertexIndex, boneMatrices, morphWeights,
-                            matrixStack, vertexConsumer, context);
-                }
-            }
-        } else {
-            // 直接頂点を描画
-            int vertexCount = mesh.getVertexCount();
-            for (int i = 0; i < vertexCount; i += 3) {
-                for (int j = 0; j < 3; j++) {
-                    if (i + j < vertexCount) {
-                        renderVertexDirect(mesh, i + j, boneMatrices, morphWeights,
-                                matrixStack, vertexConsumer, context);
-                    }
-                }
-            }
+        for (int vertexIndex : indices) {
+            renderVertexDirect(mesh, vertexIndex, boneMatrices, morphWeights,
+                    matrixStack, vertexConsumer, context);
         }
     }
 
-    /**
-     * 単一頂点を直接描画（頂点データをメモリに保存しない）
-     */
     private void renderVertexDirect(ProcessedMesh mesh, int vertexIndex, Matrix4f[] boneMatrices,
                                     float[] morphWeights, MatrixStack matrixStack,
                                     VertexConsumer vertexConsumer, RenderingContext context) {
@@ -368,6 +345,7 @@ public class DirectProcessor {
 
     /**
      * 単一頂点へのスキニング適用（汎用版）
+     *
      * @param isPosition trueの場合は位置（w=1.0）、falseの場合は法線（w=0.0）として処理
      */
     private Vector3f applySkinning(ProcessedMesh mesh, int vertexIndex, Matrix4f[] boneMatrices,
@@ -410,17 +388,11 @@ public class DirectProcessor {
         return new Vector3f(resultVec.x, resultVec.y, resultVec.z);
     }
 
-    /**
-     * 単一頂点へのスキニング適用（位置）
-     */
     private Vector3f applySkinningToVertex(ProcessedMesh mesh, int vertexIndex, Matrix4f[] boneMatrices,
                                            float x, float y, float z) {
         return applySkinning(mesh, vertexIndex, boneMatrices, x, y, z, true);
     }
 
-    /**
-     * 単一頂点へのスキニング適用（法線）
-     */
     private Vector3f applySkinningToNormal(ProcessedMesh mesh, int vertexIndex, Matrix4f[] boneMatrices,
                                            float nx, float ny, float nz) {
         return applySkinning(mesh, vertexIndex, boneMatrices, nx, ny, nz, false);

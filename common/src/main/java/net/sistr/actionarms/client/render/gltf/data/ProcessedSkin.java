@@ -2,11 +2,7 @@ package net.sistr.actionarms.client.render.gltf.data;
 
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 
 public class ProcessedSkin {
     private final String name;
@@ -97,8 +93,8 @@ public class ProcessedSkin {
         if (obj == null || getClass() != obj.getClass()) return false;
         ProcessedSkin that = (ProcessedSkin) obj;
         return Objects.equals(name, that.name) &&
-               Objects.equals(bones, that.bones) &&
-               Objects.equals(rootBones, that.rootBones);
+                Objects.equals(bones, that.bones) &&
+                Objects.equals(rootBones, that.rootBones);
     }
 
     @Override

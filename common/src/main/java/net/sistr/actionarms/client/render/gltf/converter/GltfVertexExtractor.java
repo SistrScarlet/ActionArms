@@ -6,7 +6,7 @@ import de.javagl.jgltf.model.MeshModel;
 import de.javagl.jgltf.model.MeshPrimitiveModel;
 import net.sistr.actionarms.ActionArms;
 import net.sistr.actionarms.client.render.gltf.data.*;
-import net.sistr.actionarms.client.render.gltf.util.*;
+import net.sistr.actionarms.client.render.gltf.util.DrawingMode;
 
 import java.util.ArrayList;
 import java.util.HashMap;

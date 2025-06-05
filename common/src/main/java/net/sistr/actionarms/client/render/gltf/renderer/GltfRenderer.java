@@ -9,10 +9,10 @@ import net.sistr.actionarms.ActionArms;
 import net.sistr.actionarms.client.render.gltf.data.ProcessedGltfModel;
 import net.sistr.actionarms.client.render.gltf.data.ProcessedMesh;
 import net.sistr.actionarms.client.render.gltf.processor.DirectProcessor;
+import net.sistr.actionarms.client.render.gltf.util.DrawingMode;
 
 /**
  * glTFレンダリングクラス
- * 効率的な描画のため複数の処理方式をサポート
  */
 public class GltfRenderer {
     private final ProcessedGltfModel model;
@@ -56,8 +56,12 @@ public class GltfRenderer {
     private RenderLayer getRenderLayer(ProcessedMesh mesh, RenderingContext context) {
         // TODO: メッシュのマテリアル情報からレンダーレイヤーを決定
         // 現在はデフォルトテクスチャを使用
-        return RenderLayer.getEntityCutout(new Identifier(ActionArms.MOD_ID,
-                "textures/test/texture.png"));
+        if (mesh.getDrawingMode() == DrawingMode.TRIANGLES) {
+            return GltfRenderLayer.getEntityCutoutTriangle(new Identifier(ActionArms.MOD_ID,
+                    "textures/test/texture.png"));
+        } else {
+            throw new RuntimeException();
+        }
     }
 
     /**

@@ -11,30 +11,32 @@ import java.util.Stack;
  * アロケーション削減とGC負荷軽減のための配列・オブジェクトプール
  */
 public class GltfMemoryPool {
-    
+
     // float配列プール
-    private static final ThreadLocal<FloatArrayPool> FLOAT_POOL = 
-        ThreadLocal.withInitial(FloatArrayPool::new);
-    
+    private static final ThreadLocal<FloatArrayPool> FLOAT_POOL =
+            ThreadLocal.withInitial(FloatArrayPool::new);
+
     // Matrix4f配列プール
-    private static final ThreadLocal<MatrixArrayPool> MATRIX_POOL = 
-        ThreadLocal.withInitial(MatrixArrayPool::new);
-    
+    private static final ThreadLocal<MatrixArrayPool> MATRIX_POOL =
+            ThreadLocal.withInitial(MatrixArrayPool::new);
+
     // int配列プール
-    private static final ThreadLocal<IntArrayPool> INT_POOL = 
-        ThreadLocal.withInitial(IntArrayPool::new);
-    
+    private static final ThreadLocal<IntArrayPool> INT_POOL =
+            ThreadLocal.withInitial(IntArrayPool::new);
+
     /**
      * float配列を借用
+     *
      * @param size 必要なサイズ
      * @return 再利用可能なfloat配列
      */
     public static float[] borrowFloatArray(int size) {
         return FLOAT_POOL.get().borrow(size);
     }
-    
+
     /**
      * float配列を返却
+     *
      * @param array 使用済み配列
      */
     public static void returnFloatArray(float[] array) {
@@ -42,18 +44,20 @@ public class GltfMemoryPool {
             FLOAT_POOL.get().returnArray(array);
         }
     }
-    
+
     /**
      * Matrix4f配列を借用
+     *
      * @param size 必要なサイズ
      * @return 再利用可能なMatrix4f配列
      */
     public static Matrix4f[] borrowMatrixArray(int size) {
         return MATRIX_POOL.get().borrow(size);
     }
-    
+
     /**
      * Matrix4f配列を返却
+     *
      * @param array 使用済み配列
      */
     public static void returnMatrixArray(Matrix4f[] array) {
@@ -61,18 +65,20 @@ public class GltfMemoryPool {
             MATRIX_POOL.get().returnArray(array);
         }
     }
-    
+
     /**
      * int配列を借用
+     *
      * @param size 必要なサイズ
      * @return 再利用可能なint配列
      */
     public static int[] borrowIntArray(int size) {
         return INT_POOL.get().borrow(size);
     }
-    
+
     /**
      * int配列を返却
+     *
      * @param array 使用済み配列
      */
     public static void returnIntArray(int[] array) {
@@ -80,18 +86,18 @@ public class GltfMemoryPool {
             INT_POOL.get().returnArray(array);
         }
     }
-    
+
     /**
      * プールの統計情報を取得（デバッグ用）
      */
     public static PoolStats getStats() {
         return new PoolStats(
-            FLOAT_POOL.get().getStats(),
-            MATRIX_POOL.get().getStats(),
-            INT_POOL.get().getStats()
+                FLOAT_POOL.get().getStats(),
+                MATRIX_POOL.get().getStats(),
+                INT_POOL.get().getStats()
         );
     }
-    
+
     /**
      * プールをクリア（メモリリーク防止用）
      */
@@ -100,13 +106,13 @@ public class GltfMemoryPool {
         MATRIX_POOL.get().clear();
         INT_POOL.get().clear();
     }
-    
+
     // float配列プール実装
     private static class FloatArrayPool {
         private final Map<Integer, Stack<float[]>> pools = new HashMap<>();
         private int borrowCount = 0;
         private int returnCount = 0;
-        
+
         float[] borrow(int size) {
             borrowCount++;
             Stack<float[]> pool = pools.computeIfAbsent(size, k -> new Stack<>());
@@ -119,7 +125,7 @@ public class GltfMemoryPool {
                 return array;
             }
         }
-        
+
         void returnArray(float[] array) {
             returnCount++;
             Stack<float[]> pool = pools.computeIfAbsent(array.length, k -> new Stack<>());
@@ -128,25 +134,25 @@ public class GltfMemoryPool {
                 pool.push(array);
             }
         }
-        
+
         void clear() {
             pools.clear();
             borrowCount = 0;
             returnCount = 0;
         }
-        
+
         ArrayPoolStats getStats() {
             int totalPooled = pools.values().stream().mapToInt(Stack::size).sum();
             return new ArrayPoolStats("float[]", borrowCount, returnCount, totalPooled);
         }
     }
-    
+
     // Matrix4f配列プール実装
     private static class MatrixArrayPool {
         private final Map<Integer, Stack<Matrix4f[]>> pools = new HashMap<>();
         private int borrowCount = 0;
         private int returnCount = 0;
-        
+
         Matrix4f[] borrow(int size) {
             borrowCount++;
             Stack<Matrix4f[]> pool = pools.computeIfAbsent(size, k -> new Stack<>());
@@ -168,7 +174,7 @@ public class GltfMemoryPool {
                 return array;
             }
         }
-        
+
         void returnArray(Matrix4f[] array) {
             returnCount++;
             Stack<Matrix4f[]> pool = pools.computeIfAbsent(array.length, k -> new Stack<>());
@@ -177,25 +183,25 @@ public class GltfMemoryPool {
                 pool.push(array);
             }
         }
-        
+
         void clear() {
             pools.clear();
             borrowCount = 0;
             returnCount = 0;
         }
-        
+
         ArrayPoolStats getStats() {
             int totalPooled = pools.values().stream().mapToInt(Stack::size).sum();
             return new ArrayPoolStats("Matrix4f[]", borrowCount, returnCount, totalPooled);
         }
     }
-    
+
     // int配列プール実装
     private static class IntArrayPool {
         private final Map<Integer, Stack<int[]>> pools = new HashMap<>();
         private int borrowCount = 0;
         private int returnCount = 0;
-        
+
         int[] borrow(int size) {
             borrowCount++;
             Stack<int[]> pool = pools.computeIfAbsent(size, k -> new Stack<>());
@@ -208,7 +214,7 @@ public class GltfMemoryPool {
                 return array;
             }
         }
-        
+
         void returnArray(int[] array) {
             returnCount++;
             Stack<int[]> pool = pools.computeIfAbsent(array.length, k -> new Stack<>());
@@ -217,45 +223,45 @@ public class GltfMemoryPool {
                 pool.push(array);
             }
         }
-        
+
         void clear() {
             pools.clear();
             borrowCount = 0;
             returnCount = 0;
         }
-        
+
         ArrayPoolStats getStats() {
             int totalPooled = pools.values().stream().mapToInt(Stack::size).sum();
             return new ArrayPoolStats("int[]", borrowCount, returnCount, totalPooled);
         }
     }
-    
+
     // 統計情報用クラス
     public static class PoolStats {
         public final ArrayPoolStats floatArrayStats;
         public final ArrayPoolStats matrixArrayStats;
         public final ArrayPoolStats intArrayStats;
-        
+
         PoolStats(ArrayPoolStats floatArrayStats, ArrayPoolStats matrixArrayStats, ArrayPoolStats intArrayStats) {
             this.floatArrayStats = floatArrayStats;
             this.matrixArrayStats = matrixArrayStats;
             this.intArrayStats = intArrayStats;
         }
-        
+
         @Override
         public String toString() {
-            return String.format("GltfMemoryPool Stats:\n%s\n%s\n%s", 
-                floatArrayStats, matrixArrayStats, intArrayStats);
+            return String.format("GltfMemoryPool Stats:\n%s\n%s\n%s",
+                    floatArrayStats, matrixArrayStats, intArrayStats);
         }
     }
-    
+
     public static class ArrayPoolStats {
         public final String arrayType;
         public final int borrowCount;
         public final int returnCount;
         public final int currentPooled;
         public final double hitRate;
-        
+
         ArrayPoolStats(String arrayType, int borrowCount, int returnCount, int currentPooled) {
             this.arrayType = arrayType;
             this.borrowCount = borrowCount;
@@ -263,11 +269,11 @@ public class GltfMemoryPool {
             this.currentPooled = currentPooled;
             this.hitRate = borrowCount > 0 ? (double) returnCount / borrowCount : 0.0;
         }
-        
+
         @Override
         public String toString() {
-            return String.format("%s: borrow=%d, return=%d, pooled=%d, hit_rate=%.2f%%", 
-                arrayType, borrowCount, returnCount, currentPooled, hitRate * 100);
+            return String.format("%s: borrow=%d, return=%d, pooled=%d, hit_rate=%.2f%%",
+                    arrayType, borrowCount, returnCount, currentPooled, hitRate * 100);
         }
     }
 }
