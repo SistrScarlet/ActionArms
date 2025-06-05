@@ -1,4 +1,4 @@
-package net.sistr.actionarms.client.render.gltf;
+package net.sistr.actionarms.client.render.gltf.data;
 
 import java.util.Objects;
 
@@ -15,8 +15,8 @@ public class AccessorSignature {
     private final boolean normalized;
     private final int hashCode;
 
-    public AccessorSignature(int bufferViewHash, int byteOffset, int componentType, 
-                           int count, String type, boolean normalized) {
+    public AccessorSignature(int bufferViewHash, int byteOffset, int componentType,
+                             int count, String type, boolean normalized) {
         this.bufferViewHash = bufferViewHash;
         this.byteOffset = byteOffset;
         this.componentType = componentType;
@@ -36,11 +36,11 @@ public class AccessorSignature {
         if (obj == null || getClass() != obj.getClass()) return false;
         AccessorSignature that = (AccessorSignature) obj;
         return bufferViewHash == that.bufferViewHash &&
-               byteOffset == that.byteOffset &&
-               componentType == that.componentType &&
-               count == that.count &&
-               normalized == that.normalized &&
-               Objects.equals(type, that.type);
+                byteOffset == that.byteOffset &&
+                componentType == that.componentType &&
+                count == that.count &&
+                normalized == that.normalized &&
+                Objects.equals(type, that.type);
     }
 
     @Override
@@ -51,14 +51,31 @@ public class AccessorSignature {
     @Override
     public String toString() {
         return String.format("AccessorSignature[bufferView=%d, offset=%d, type=%s(%d), count=%d, normalized=%s]",
-                           bufferViewHash, byteOffset, type, componentType, count, normalized);
+                bufferViewHash, byteOffset, type, componentType, count, normalized);
     }
 
     // Getter methods
-    public int getBufferViewHash() { return bufferViewHash; }
-    public int getByteOffset() { return byteOffset; }
-    public int getComponentType() { return componentType; }
-    public int getCount() { return count; }
-    public String getType() { return type; }
-    public boolean isNormalized() { return normalized; }
+    public int getBufferViewHash() {
+        return bufferViewHash;
+    }
+
+    public int getByteOffset() {
+        return byteOffset;
+    }
+
+    public int getComponentType() {
+        return componentType;
+    }
+
+    public int getCount() {
+        return count;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public boolean isNormalized() {
+        return normalized;
+    }
 }

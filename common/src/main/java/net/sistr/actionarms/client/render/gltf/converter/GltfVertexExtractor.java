@@ -1,7 +1,12 @@
-package net.sistr.actionarms.client.render.gltf;
+package net.sistr.actionarms.client.render.gltf.converter;
 
-import de.javagl.jgltf.model.*;
+import de.javagl.jgltf.model.AccessorModel;
+import de.javagl.jgltf.model.MaterialModel;
+import de.javagl.jgltf.model.MeshModel;
+import de.javagl.jgltf.model.MeshPrimitiveModel;
 import net.sistr.actionarms.ActionArms;
+import net.sistr.actionarms.client.render.gltf.data.*;
+import net.sistr.actionarms.client.render.gltf.util.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -100,18 +105,18 @@ public class GltfVertexExtractor {
             try {
                 // 属性名からAccessorDataTypeを推定
                 AccessorDataType dataType = AccessorDataType.fromAttributeName(attributeName);
-                
+
                 // キャッシュからAccessorDataを取得または作成
                 String accessorId = String.format("%s_P%d_%s", meshName, primitiveIndex, attributeName);
                 AccessorData data = accessorCache.getOrCreate(accessor, dataType, accessorId);
-                
+
                 attributeData.put(attributeName, data);
-                
-                ActionArms.LOGGER.debug("Extracted attribute {} for mesh {}: {}", 
-                                      attributeName, meshName, data.getDebugInfo());
+
+                ActionArms.LOGGER.debug("Extracted attribute {} for mesh {}: {}",
+                        attributeName, meshName, data.getDebugInfo());
             } catch (Exception e) {
-                ActionArms.LOGGER.error("Failed to extract attribute {} for mesh {}: {}", 
-                                      attributeName, meshName, e.getMessage());
+                ActionArms.LOGGER.error("Failed to extract attribute {} for mesh {}: {}",
+                        attributeName, meshName, e.getMessage());
             }
         }
 
@@ -124,8 +129,8 @@ public class GltfVertexExtractor {
     /**
      * 必須属性のチェックと不足している属性の補完
      */
-    private void ensureRequiredAttributes(Map<String, AccessorData> attributeData, 
-                                        MeshPrimitiveModel primitive, String meshName, int primitiveIndex) {
+    private void ensureRequiredAttributes(Map<String, AccessorData> attributeData,
+                                          MeshPrimitiveModel primitive, String meshName, int primitiveIndex) {
         // POSITION属性は必須
         if (!attributeData.containsKey("POSITION")) {
             throw new RuntimeException("POSITION attribute is required for mesh: " + meshName);
@@ -187,7 +192,7 @@ public class GltfVertexExtractor {
      */
     private AccessorData extractIndexData(MeshPrimitiveModel primitive, String meshName, int primitiveIndex) {
         AccessorModel indexAccessor = primitive.getIndices();
-        
+
         if (indexAccessor == null) {
             // インデックスがない場合は連番インデックスを生成
             int vertexCount = getVertexCount(primitive);
@@ -252,7 +257,7 @@ public class GltfVertexExtractor {
                 // MorphTargetの作成（新しいAccessorDataコンストラクタを使用）
                 MorphTarget morphTarget = new MorphTarget(targetName, positionDeltas, normalDeltas);
                 morphTargets.add(morphTarget);
-                
+
                 ActionArms.LOGGER.debug("Created morph target: {}", targetName);
             } catch (Exception e) {
                 ActionArms.LOGGER.error("Failed to create morph target {}: {}", targetName, e.getMessage());

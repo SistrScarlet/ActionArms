@@ -1,4 +1,4 @@
-package net.sistr.actionarms.client.render.gltf;
+package net.sistr.actionarms.client.render.gltf.data;
 
 import org.joml.Vector3f;
 
@@ -37,17 +37,35 @@ public class MorphTarget {
     }
 
     // 基本情報
-    public String getName() { return name; }
+    public String getName() {
+        return name;
+    }
 
     // AccessorDataの直接取得
-    public AccessorData getPositionDeltas() { return positionDeltas; }
-    public AccessorData getNormalDeltas() { return normalDeltas; }
-    public AccessorData getTangentDeltas() { return tangentDeltas; }
+    public AccessorData getPositionDeltas() {
+        return positionDeltas;
+    }
+
+    public AccessorData getNormalDeltas() {
+        return normalDeltas;
+    }
+
+    public AccessorData getTangentDeltas() {
+        return tangentDeltas;
+    }
 
     // データ存在チェック
-    public boolean hasPositionDeltas() { return positionDeltas != null && positionDeltas.isValid(); }
-    public boolean hasNormalDeltas() { return normalDeltas != null && normalDeltas.isValid(); }
-    public boolean hasTangentDeltas() { return tangentDeltas != null && tangentDeltas.isValid(); }
+    public boolean hasPositionDeltas() {
+        return positionDeltas != null && positionDeltas.isValid();
+    }
+
+    public boolean hasNormalDeltas() {
+        return normalDeltas != null && normalDeltas.isValid();
+    }
+
+    public boolean hasTangentDeltas() {
+        return tangentDeltas != null && tangentDeltas.isValid();
+    }
 
     /**
      * 要素数を取得（すべてのAccessorDataは同じ要素数を持つ必要がある）
@@ -66,11 +84,11 @@ public class MorphTarget {
         if (!hasPositionDeltas() || vertexIndex < 0 || vertexIndex >= positionDeltas.getElementCount()) {
             return new Vector3f(0, 0, 0);
         }
-        
+
         return new Vector3f(
-            positionDeltas.getFloat(vertexIndex, 0),
-            positionDeltas.getFloat(vertexIndex, 1),
-            positionDeltas.getFloat(vertexIndex, 2)
+                positionDeltas.getFloat(vertexIndex, 0),
+                positionDeltas.getFloat(vertexIndex, 1),
+                positionDeltas.getFloat(vertexIndex, 2)
         );
     }
 
@@ -81,11 +99,11 @@ public class MorphTarget {
         if (!hasNormalDeltas() || vertexIndex < 0 || vertexIndex >= normalDeltas.getElementCount()) {
             return new Vector3f(0, 0, 0);
         }
-        
+
         return new Vector3f(
-            normalDeltas.getFloat(vertexIndex, 0),
-            normalDeltas.getFloat(vertexIndex, 1),
-            normalDeltas.getFloat(vertexIndex, 2)
+                normalDeltas.getFloat(vertexIndex, 0),
+                normalDeltas.getFloat(vertexIndex, 1),
+                normalDeltas.getFloat(vertexIndex, 2)
         );
     }
 
@@ -127,11 +145,11 @@ public class MorphTarget {
      */
     public String getDebugInfo() {
         return String.format("MorphTarget[%s: elements=%d, pos=%s, normal=%s, tangent=%s, memory=%d bytes]",
-                           name, getElementCount(),
-                           hasPositionDeltas() ? "yes" : "no",
-                           hasNormalDeltas() ? "yes" : "no",
-                           hasTangentDeltas() ? "yes" : "no",
-                           getMemoryUsage());
+                name, getElementCount(),
+                hasPositionDeltas() ? "yes" : "no",
+                hasNormalDeltas() ? "yes" : "no",
+                hasTangentDeltas() ? "yes" : "no",
+                getMemoryUsage());
     }
 
     @Override

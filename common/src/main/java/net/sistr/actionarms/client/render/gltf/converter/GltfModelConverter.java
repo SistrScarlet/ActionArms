@@ -1,9 +1,13 @@
-package net.sistr.actionarms.client.render.gltf;
+package net.sistr.actionarms.client.render.gltf.converter;
 
 import de.javagl.jgltf.model.GltfModel;
 import de.javagl.jgltf.model.MeshModel;
 import de.javagl.jgltf.model.NodeModel;
 import net.sistr.actionarms.ActionArms;
+import net.sistr.actionarms.client.render.gltf.data.ProcessedAnimation;
+import net.sistr.actionarms.client.render.gltf.data.ProcessedGltfModel;
+import net.sistr.actionarms.client.render.gltf.data.ProcessedMesh;
+import net.sistr.actionarms.client.render.gltf.data.ProcessedSkin;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -1,11 +1,15 @@
-package net.sistr.actionarms.client.render.gltf;
+package net.sistr.actionarms.client.render.gltf.converter;
 
-import de.javagl.jgltf.model.*;
+import de.javagl.jgltf.model.AccessorFloatData;
+import de.javagl.jgltf.model.AccessorModel;
+import de.javagl.jgltf.model.NodeModel;
+import de.javagl.jgltf.model.SkinModel;
+import net.sistr.actionarms.client.render.gltf.data.ProcessedBone;
+import net.sistr.actionarms.client.render.gltf.data.ProcessedSkin;
 import org.joml.Matrix4f;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -21,20 +25,20 @@ public class GltfSkinExtractor {
         String skinName = getSkinName(skin);
 
         // ボーンの作成
-        List<ProcessedBone> bones = createProcessedBones(jointNodes);
+        var boneBuilders = createProcessedBones(jointNodes);
 
         // 逆バインド行列の設定
-        setInverseBindMatrices(bones, skin);
+        setInverseBindMatrices(boneBuilders, skin);
 
         // 階層構造の構築
-        buildBoneHierarchy(bones, jointNodes);
+        var bones = buildBoneHierarchy(boneBuilders, jointNodes);
 
         // ProcessedSkinの作成
-        ProcessedSkin processedSkin = new ProcessedSkin(skinName, bones);
+        var processedSkin = new ProcessedSkin(skinName, List.of(bones));
 
         // 階層の検証
         if (!processedSkin.validateHierarchy()) {
-            System.err.println("Warning: Invalid bone hierarchy detected in skin: " + skinName);
+            throw new RuntimeException("Invalid bone hierarchy detected in skin: " + skinName);
         }
 
         return processedSkin;
@@ -49,22 +53,22 @@ public class GltfSkinExtractor {
         return "Skin_" + System.identityHashCode(skin);
     }
 
-    private List<ProcessedBone> createProcessedBones(List<NodeModel> jointNodes) {
-        List<ProcessedBone> bones = new ArrayList<>();
+    private ProcessedBone.Builder[] createProcessedBones(List<NodeModel> jointNodes) {
+        var builders = new ProcessedBone.Builder[jointNodes.size()];
 
         for (int i = 0; i < jointNodes.size(); i++) {
             NodeModel jointNode = jointNodes.get(i);
             String boneName = getNodeName(jointNode, i);
 
-            ProcessedBone bone = new ProcessedBone(i, boneName);
+            ProcessedBone.Builder builder = new ProcessedBone.Builder(i, boneName);
 
             // 基本変換情報の設定
-            setTransformData(bone, jointNode);
+            setTransformData(builder, jointNode);
 
-            bones.add(bone);
+            builders[i] = builder;
         }
 
-        return bones;
+        return builders;
     }
 
     private String getNodeName(NodeModel node, int fallbackIndex) {
@@ -74,35 +78,32 @@ public class GltfSkinExtractor {
                 name.trim() : "Joint_" + fallbackIndex;
     }
 
-    private void setTransformData(ProcessedBone bone, NodeModel jointNode) {
+    private void setTransformData(ProcessedBone.Builder builder, NodeModel jointNode) {
         // 基本変換の設定
         float[] translation = jointNode.getTranslation();
         if (translation != null) {
-            bone.setTranslation(translation[0], translation[1], translation[2]);
-            bone.setAnimatedTranslation(translation[0], translation[1], translation[2]);
+            builder.translation(translation[0], translation[1], translation[2]);
         }
 
         float[] rotation = jointNode.getRotation();
         if (rotation != null) {
-            bone.setRotation(rotation[0], rotation[1], rotation[2], rotation[3]);
-            bone.setAnimatedRotation(rotation[0], rotation[1], rotation[2], rotation[3]);
+            builder.rotation(rotation[0], rotation[1], rotation[2], rotation[3]);
         }
 
         float[] scale = jointNode.getScale();
         if (scale != null) {
-            bone.setScale(scale[0], scale[1], scale[2]);
-            bone.setAnimatedScale(scale[0], scale[1], scale[2]);
+            builder.scale(scale[0], scale[1], scale[2]);
         }
 
         // 直接行列が指定されている場合の処理
         float[] matrix = jointNode.getMatrix();
         if (matrix != null) {
             // 行列からTRSを分解して設定
-            decomposeTRSFromMatrix(bone, matrix);
+            decomposeTRSFromMatrix(builder, matrix);
         }
     }
 
-    private void decomposeTRSFromMatrix(ProcessedBone bone, float[] matrixArray) {
+    private void decomposeTRSFromMatrix(ProcessedBone.Builder builder, float[] matrixArray) {
         Matrix4f matrix = new Matrix4f().set(matrixArray);
 
         // 行列からTRSを分解
@@ -114,23 +115,18 @@ public class GltfSkinExtractor {
         matrix.getUnnormalizedRotation(rotation);
         matrix.getScale(scale);
 
-        bone.setTranslation(translation.x, translation.y, translation.z);
-        bone.setRotation(rotation.x, rotation.y, rotation.z, rotation.w);
-        bone.setScale(scale.x, scale.y, scale.z);
-
-        // アニメーション用にも同じ値を設定
-        bone.setAnimatedTranslation(translation.x, translation.y, translation.z);
-        bone.setAnimatedRotation(rotation.x, rotation.y, rotation.z, rotation.w);
-        bone.setAnimatedScale(scale.x, scale.y, scale.z);
+        builder.translation(translation.x, translation.y, translation.z)
+                .rotation(rotation.x, rotation.y, rotation.z, rotation.w)
+                .scale(scale.x, scale.y, scale.z);
     }
 
-    private void setInverseBindMatrices(List<ProcessedBone> bones, SkinModel skin) {
+    private void setInverseBindMatrices(ProcessedBone.Builder[] builders, SkinModel skin) {
         AccessorModel accessor = skin.getInverseBindMatrices();
 
         if (accessor == null) {
             // 逆バインド行列が指定されていない場合は単位行列を使用
-            for (ProcessedBone bone : bones) {
-                bone.setInverseBindMatrix(new Matrix4f().identity());
+            for (ProcessedBone.Builder builder : builders) {
+                builder.inverseBindMatrix(new Matrix4f().identity());
             }
             return;
         }
@@ -139,10 +135,10 @@ public class GltfSkinExtractor {
         AccessorFloatData accessorData = (AccessorFloatData) accessor.getAccessorData();
         int numMatrices = accessor.getCount();
 
-        if (numMatrices != bones.size()) {
+        if (numMatrices != builders.length) {
             throw new RuntimeException(
                     String.format("Inverse bind matrix count (%d) doesn't match joint count (%d)",
-                            numMatrices, bones.size())
+                            numMatrices, builders.length)
             );
         }
 
@@ -153,11 +149,11 @@ public class GltfSkinExtractor {
             }
 
             Matrix4f inverseBindMatrix = new Matrix4f().set(matrixData);
-            bones.get(i).setInverseBindMatrix(inverseBindMatrix);
+            builders[i].inverseBindMatrix(inverseBindMatrix);
         }
     }
 
-    private void buildBoneHierarchy(List<ProcessedBone> bones, List<NodeModel> jointNodes) {
+    private ProcessedBone[] buildBoneHierarchy(ProcessedBone.Builder[] builders, List<NodeModel> jointNodes) {
         // NodeModelのインデックスマッピングを作成
         Map<NodeModel, Integer> nodeToIndex = new HashMap<>();
         for (int i = 0; i < jointNodes.size(); i++) {
@@ -167,18 +163,34 @@ public class GltfSkinExtractor {
         // 各ボーンの親子関係を設定
         for (int i = 0; i < jointNodes.size(); i++) {
             NodeModel jointNode = jointNodes.get(i);
-            ProcessedBone bone = bones.get(i);
 
-            // 親ノードを探す
-            NodeModel parentNode = findParentNode(jointNode, jointNodes);
-            if (parentNode != null) {
-                Integer parentIndex = nodeToIndex.get(parentNode);
-                if (parentIndex != null) {
-                    ProcessedBone parentBone = bones.get(parentIndex);
-                    bone.setParent(parentBone);
+            // 子ノードを探して追加
+            List<NodeModel> children = jointNode.getChildren();
+            if (children != null) {
+                for (NodeModel childNode : children) {
+                    Integer childIndex = nodeToIndex.get(childNode);
+                    if (childIndex != null) {
+                        builders[i].addChild(builders[childIndex]);
+                    }
                 }
             }
         }
+
+        ProcessedBone[] bones = new ProcessedBone[builders.length];
+
+        // ルートボーンを見つけてビルド
+        for (int i = 0; i < jointNodes.size(); i++) {
+            NodeModel jointNode = jointNodes.get(i);
+
+            // 親ノードを探す
+            NodeModel parentNode = findParentNode(jointNode, jointNodes);
+            if (parentNode == null) {
+                // ルートボーンの場合
+                builders[i].build(null, bones);
+            }
+        }
+
+        return bones;
     }
 
     private NodeModel findParentNode(NodeModel childNode, List<NodeModel> allJointNodes) {
@@ -190,9 +202,5 @@ public class GltfSkinExtractor {
             }
         }
         return null;
-    }
-
-    public Matrix4f[] computeBoneMatricesFromProcessedSkin(ProcessedSkin processedSkin, boolean useAnimation) {
-        return processedSkin.computeAllBoneMatrices(useAnimation);
     }
 }

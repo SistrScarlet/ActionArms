@@ -1,13 +1,9 @@
-package net.sistr.actionarms.client.render.gltf;
+package net.sistr.actionarms.client.render.gltf.data;
 
+import de.javagl.jgltf.model.*;
 import de.javagl.jgltf.model.AccessorData;
-import de.javagl.jgltf.model.AccessorFloatData;
-import de.javagl.jgltf.model.AccessorIntData;
-import de.javagl.jgltf.model.AccessorModel;
-import de.javagl.jgltf.model.AccessorShortData;
 import net.sistr.actionarms.ActionArms;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -16,7 +12,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * 同じアクセサデータの重複作成を防ぎ、メモリ効率を向上させる
  */
 public class AccessorDataCache {
-    private final Map<AccessorSignature, net.sistr.actionarms.client.render.gltf.AccessorData> cache;
+    private final Map<AccessorSignature, net.sistr.actionarms.client.render.gltf.data.AccessorData> cache;
     private long totalMemoryUsage = 0;
     private int hitCount = 0;
     private int missCount = 0;
@@ -29,7 +25,7 @@ public class AccessorDataCache {
      * アクセサデータを取得または作成
      * キャッシュにある場合は既存のものを返し、ない場合は新規作成してキャッシュに保存
      */
-    public net.sistr.actionarms.client.render.gltf.AccessorData getOrCreate(
+    public net.sistr.actionarms.client.render.gltf.data.AccessorData getOrCreate(
             AccessorModel accessor, AccessorDataType expectedType) {
         return getOrCreate(accessor, expectedType, null);
     }
@@ -37,12 +33,12 @@ public class AccessorDataCache {
     /**
      * アクセサデータを取得または作成（ID指定版）
      */
-    public net.sistr.actionarms.client.render.gltf.AccessorData getOrCreate(
+    public net.sistr.actionarms.client.render.gltf.data.AccessorData getOrCreate(
             AccessorModel accessor, AccessorDataType expectedType, String customId) {
-        
+
         AccessorSignature signature = createSignature(accessor);
-        
-        net.sistr.actionarms.client.render.gltf.AccessorData cached = cache.get(signature);
+
+        net.sistr.actionarms.client.render.gltf.data.AccessorData cached = cache.get(signature);
         if (cached != null) {
             hitCount++;
             ActionArms.LOGGER.debug("Cache hit for accessor: {}", customId != null ? customId : "unnamed");
@@ -51,11 +47,11 @@ public class AccessorDataCache {
 
         missCount++;
         ActionArms.LOGGER.debug("Cache miss for accessor: {}, extracting data...", customId != null ? customId : "unnamed");
-        
-        net.sistr.actionarms.client.render.gltf.AccessorData newData = extractAccessorData(accessor, expectedType, customId, signature);
+
+        net.sistr.actionarms.client.render.gltf.data.AccessorData newData = extractAccessorData(accessor, expectedType, customId, signature);
         cache.put(signature, newData);
         totalMemoryUsage += newData.getMemoryUsage();
-        
+
         ActionArms.LOGGER.debug("Created new AccessorData: {}", newData.getDebugInfo());
         return newData;
     }
@@ -65,39 +61,39 @@ public class AccessorDataCache {
      */
     private AccessorSignature createSignature(AccessorModel accessor) {
         // BufferViewのハッシュ値を計算（BufferView自体のidentityHashCode）
-        int bufferViewHash = accessor.getBufferViewModel() != null ? 
-                           System.identityHashCode(accessor.getBufferViewModel()) : 0;
-        
+        int bufferViewHash = accessor.getBufferViewModel() != null ?
+                System.identityHashCode(accessor.getBufferViewModel()) : 0;
+
         return new AccessorSignature(
-            bufferViewHash,
-            accessor.getByteOffset(),
-            accessor.getComponentType(),
-            accessor.getCount(),
-            accessor.getElementType().name(),
-            accessor.isNormalized()
+                bufferViewHash,
+                accessor.getByteOffset(),
+                accessor.getComponentType(),
+                accessor.getCount(),
+                accessor.getElementType().name(),
+                accessor.isNormalized()
         );
     }
 
     /**
      * AccessorModelからAccessorDataを抽出
      */
-    private net.sistr.actionarms.client.render.gltf.AccessorData extractAccessorData(
+    private net.sistr.actionarms.client.render.gltf.data.AccessorData extractAccessorData(
             AccessorModel accessor, AccessorDataType expectedType, String customId, AccessorSignature signature) {
-        
-        String id = customId != null ? customId : 
-                   "Accessor_" + accessor.getElementType().name() + "_" + accessor.getCount();
-        
+
+        String id = customId != null ? customId :
+                "Accessor_" + accessor.getElementType().name() + "_" + accessor.getCount();
+
         int elementCount = accessor.getCount();
         boolean normalized = accessor.isNormalized();
-        
+
         // データ型に応じて抽出
         if (expectedType.isFloatType()) {
             float[] data = extractFloatArray(accessor, expectedType.getComponentCount());
-            return new net.sistr.actionarms.client.render.gltf.AccessorData(
+            return new net.sistr.actionarms.client.render.gltf.data.AccessorData(
                     id, expectedType, elementCount, data, normalized, signature);
         } else {
             int[] data = extractIntArray(accessor, expectedType.getComponentCount());
-            return new net.sistr.actionarms.client.render.gltf.AccessorData(
+            return new net.sistr.actionarms.client.render.gltf.data.AccessorData(
                     id, expectedType, elementCount, data, normalized, signature);
         }
     }
@@ -110,17 +106,17 @@ public class AccessorDataCache {
         if (!(accessorData instanceof AccessorFloatData)) {
             throw new IllegalArgumentException("Expected float data but got: " + accessorData.getClass().getSimpleName());
         }
-        
+
         AccessorFloatData floatData = (AccessorFloatData) accessorData;
         int elementCount = accessor.getCount();
         float[] result = new float[elementCount * componentCount];
-        
+
         for (int i = 0; i < elementCount; i++) {
             for (int j = 0; j < componentCount; j++) {
                 result[i * componentCount + j] = floatData.get(i, j);
             }
         }
-        
+
         return result;
     }
 
@@ -131,7 +127,7 @@ public class AccessorDataCache {
         AccessorData accessorData = accessor.getAccessorData();
         int elementCount = accessor.getCount();
         int[] result = new int[elementCount * componentCount];
-        
+
         if (accessorData instanceof AccessorIntData) {
             AccessorIntData intData = (AccessorIntData) accessorData;
             for (int i = 0; i < elementCount; i++) {
@@ -149,7 +145,7 @@ public class AccessorDataCache {
         } else {
             throw new IllegalArgumentException("Expected int or short data but got: " + accessorData.getClass().getSimpleName());
         }
-        
+
         return result;
     }
 
@@ -168,7 +164,7 @@ public class AccessorDataCache {
      * 特定のシグネチャをキャッシュから削除
      */
     public boolean remove(AccessorSignature signature) {
-        net.sistr.actionarms.client.render.gltf.AccessorData removed = cache.remove(signature);
+        net.sistr.actionarms.client.render.gltf.data.AccessorData removed = cache.remove(signature);
         if (removed != null) {
             totalMemoryUsage -= removed.getMemoryUsage();
             return true;
@@ -199,12 +195,26 @@ public class AccessorDataCache {
             this.missCount = missCount;
         }
 
-        public int getEntryCount() { return entryCount; }
-        public long getTotalMemoryUsage() { return totalMemoryUsage; }
-        public int getHitCount() { return hitCount; }
-        public int getMissCount() { return missCount; }
-        public int getTotalRequests() { return hitCount + missCount; }
-        
+        public int getEntryCount() {
+            return entryCount;
+        }
+
+        public long getTotalMemoryUsage() {
+            return totalMemoryUsage;
+        }
+
+        public int getHitCount() {
+            return hitCount;
+        }
+
+        public int getMissCount() {
+            return missCount;
+        }
+
+        public int getTotalRequests() {
+            return hitCount + missCount;
+        }
+
         public double getHitRate() {
             int total = getTotalRequests();
             return total > 0 ? (double) hitCount / total : 0.0;
@@ -219,7 +229,7 @@ public class AccessorDataCache {
         @Override
         public String toString() {
             return String.format("CacheStats[entries=%d, memory=%s, requests=%d, hitRate=%.1f%%]",
-                               entryCount, getMemoryUsageFormatted(), getTotalRequests(), getHitRate() * 100);
+                    entryCount, getMemoryUsageFormatted(), getTotalRequests(), getHitRate() * 100);
         }
     }
 
@@ -229,11 +239,11 @@ public class AccessorDataCache {
     public void printCacheContents() {
         ActionArms.LOGGER.info("=== AccessorDataCache Contents ===");
         ActionArms.LOGGER.info("Stats: {}", getStats());
-        
+
         cache.forEach((signature, data) -> {
             ActionArms.LOGGER.info("  {} -> {}", signature, data.getDebugInfo());
         });
-        
+
         ActionArms.LOGGER.info("=== End Cache Contents ===");
     }
 }

@@ -52,19 +52,20 @@
     "note": "変換処理でのエラーは個別にログ出力、処理続行"
   },
   "GltfRenderer.java": {
-    "desc": "ProcessedGltfModelの実際のMinecraft描画処理（AccessorDataシステム対応済み）",
+    "desc": "副作用ゼロのProcessedGltfModel描画処理（RenderingContext完全対応）",
     "importance": "high",
     "last_accessed": "2025-06-03",
     "key_features": [
-      "アニメーション制御とキーフレーム補間",
-      "新ProcessedMeshインターフェースへの対応完了",
+      "副作用ゼロのrender()メソッド（純粋関数）",
+      "RenderingContextから全状態を取得",
+      "イミュータブルな描画処理",
       "マテリアル別レンダーレイヤー管理",
       "TRIANGLES/TRIANGLE_STRIP/POINTS/LINES描画対応",
-      "スキニングとモーフターゲット適用",
-      "AccessorDataベースの効率的データアクセス"
+      "スレッドセーフなレンダリング",
+      "テスタビリティ向上（純粋関数）"
     ],
-    "dependencies": ["ProcessedGltfModel", "GltfAnimationController", "VertexProcessor", "ComputedVertexData"],
-    "note": "ProcessedMeshの大幅変更に合わせて更新完了、動作確認済み"
+    "dependencies": ["ProcessedGltfModel", "RenderingContext", "VertexProcessor", "ComputedVertexData"],
+    "note": "副作用ゼロ設計への大幅変更予定。状態管理をRenderingContextに完全移行"
   },
   "AccessorDataType.java": {
     "desc": "glTF属性のデータ型定義とコンポーネント数・Java型の管理",
@@ -121,7 +122,7 @@
       "デバッグ用コンテンツ表示機能"
     ],
     "dependencies": ["AccessorData", "AccessorSignature", "AccessorDataType"],
-    "note": "メモリ使用量50-80%削減を実現"
+    "note": "メモリ使用量50-80%削減を実現。副作用ゼロ設計にも対応済み"
   },
   "ProcessedMesh.java": {
     "desc": "AccessorDataベースの効率的なメッシュデータ管理クラス（大幅設計変更）",
@@ -215,6 +216,113 @@
     "dependencies": ["ProcessedMesh", "ProcessedSkin", "ProcessedAnimation"],
     "note": "元のGltfModelも保持、必要に応じて生データアクセス可能"
   },
+  "GltfAnimationController.java": {
+    "desc": "副作用ゼロのglTFアニメーション計算処理（純粋関数設計）",
+    "importance": "high",
+    "last_accessed": "2025-06-03",
+    "key_features": [
+      "computeAnimation()による純粋関数計算",
+      "AnimationInputからAnimationResultへの変換",
+      "ボーン行列計算（副作用なし）",
+      "モーフウェイト計算（副作用なし）",
+      "時間正規化とループ処理",
+      "イミュータブルな結果オブジェクト",
+      "状態保持なしの設計"
+    ],
+    "dependencies": ["ProcessedGltfModel", "ProcessedAnimation", "ProcessedSkin", "ProcessedBone"],
+    "note": "副作用ゼロ設計への完全変更完了。状態管理を完全外部化"
+  },
+  "RenderingContext.java": {
+    "desc": "イミュータブルなレンダリング状態管理クラス（Builder パターン）",
+    "importance": "high",
+    "last_accessed": "2025-06-03",
+    "key_features": [
+      "完全イミュータブル設計（副作用ゼロ）",
+      "Builder パターンによる柔軟な構築",
+      "アニメーション・ボーン・モーフィング状態統合管理",
+      "レンダリング設定（ライティング・テクスチャ・アルファ）",
+      "カメラ・ビューポート情報",
+      "状態比較メソッド（更新判定用）",
+      "カスタムプロパティ対応"
+    ],
+    "dependencies": ["GltfRenderer", "GltfAnimationController", "VertexProcessor"],
+    "note": "副作用ゼロ設計の中核。全レンダリング状態をここに集約完了"
+  },
+  "AnimationStateManager.java": {
+    "desc": "アニメーション状態を管理するクラス（副作用を集約）",
+    "importance": "high",
+    "last_accessed": "2025-06-03",
+    "key_features": [
+      "アニメーションの開始・停止・切り替え",
+      "再生速度とループ設定の管理",
+      "状態更新処理の集約（副作用あり）",
+      "RenderingContext構築の支援",
+      "アニメーション完了コールバック",
+      "進行度と残り時間の取得"
+    ],
+    "dependencies": ["GltfAnimationController", "RenderingContext"],
+    "note": "副作用を集約して管理する設計。GltfAnimationControllerと連携"
+  },
+  "GunItemRenderer.java": {
+    "desc": "銃アイテムの統合レンダリングクラス（副作用ゼロコンポーネント統合）",
+    "importance": "high",
+    "last_accessed": "2025-06-03",
+    "key_features": [
+      "副作用ゼロコンポーネントの統合",
+      "アニメーショントリガー処理",
+      "状態更新から純粋描画までのフロー",
+      "銃特有のアニメーション判定",
+      "使いやすい操作インターフェース",
+      "デバッグ・情報取得機能"
+    ],
+    "dependencies": ["GltfRenderer", "GltfAnimationController", "AnimationStateManager", "GunRenderState", "GunItemState"],
+    "note": "実際のMixinItemRendererから呼び出されるメインクラス"
+  },
+  "GunRenderState.java": {
+    "desc": "銃のレンダリング状態管理（マズルフラッシュ・透明度等）",
+    "importance": "medium",
+    "last_accessed": "2025-06-03",
+    "key_features": [
+      "マズルフラッシュの自動管理",
+      "透明度エフェクト（フェード処理）",
+      "カスタムモーフウェイト管理",
+      "リロード進行度に応じたエフェクト",
+      "弾薬残量インジケーター",
+      "RenderingContextへの状態適用"
+    ],
+    "dependencies": ["GunItemState", "RenderingContext"],
+    "note": "銃特有の視覚効果を管理。GunItemStateから状態を取得して更新"
+  },
+  "GunItemState.java": {
+    "desc": "銃アイテムの状態を表すインターフェース",
+    "importance": "high",
+    "last_accessed": "2025-06-03",
+    "key_features": [
+      "リロード・発射・エイム状態の取得",
+      "弾薬数とリロード進行度",
+      "銃の種類と設定情報",
+      "アニメーション関連の設定",
+      "エフェクト関連の設定",
+      "デフォルト実装付き"
+    ],
+    "dependencies": [],
+    "note": "実際の銃アイテムクラスがこのインターフェースを実装する"
+  },
+  "TestGunItemState.java": {
+    "desc": "テスト用のGunItemState実装（開発・デバッグ用）",
+    "importance": "low",
+    "last_accessed": "2025-06-03",
+    "key_features": [
+      "全ての状態を手動設定可能",
+      "発射とリロードのシミュレーション",
+      "ランダム状態変化機能",
+      "リロード進行シミュレーション",
+      "状態リセット機能",
+      "デバッグ情報出力"
+    ],
+    "dependencies": ["GunItemState"],
+    "note": "開発時のテストやデモ用。実際のアイテムでは使用しない"
+  },
   "GLTFModelItem.java": {
     "desc": "glTFモデルを使用するアイテム用のマーカーインターフェース",
     "importance": "medium",
@@ -226,17 +334,50 @@
     "dependencies": ["MixinItemRenderer", "GunItem"],
     "note": "現在は空インターフェース、将来的に機能拡張予定"
   },
+  "GltfAnimationController.java": {
+    "desc": "副作用ゼロのglTFアニメーション計算処理（純粋関数設計）",
+    "importance": "high",
+    "last_accessed": "2025-06-03",
+    "key_features": [
+      "computeAnimation()による純粋関数計算",
+      "AnimationInputからAnimationResultへの変換",
+      "ボーン行列計算（副作用なし）",
+      "モーフウェイト計算（副作用なし）",
+      "時間正規化とループ処理",
+      "イミュータブルな結果オブジェクト",
+      "状態保持なしの設計"
+    ],
+    "dependencies": ["ProcessedGltfModel", "ProcessedAnimation", "ProcessedSkin", "ProcessedBone"],
+    "note": "副作用ゼロ設計への大幅変更予定。状態管理を完全外部化"
+  },
+  "RenderingContext.java": {
+    "desc": "イミュータブルなレンダリング状態管理クラス（Builder パターン）",
+    "importance": "high",
+    "last_accessed": "2025-06-03",
+    "key_features": [
+      "完全イミュータブル設計（副作用ゼロ）",
+      "Builder パターンによる柔軟な構築",
+      "アニメーション・ボーン・モーフィング状態統合管理",
+      "レンダリング設定（ライティング・テクスチャ・アルファ）",
+      "カメラ・ビューポート情報",
+      "状態比較メソッド（更新判定用）",
+      "カスタムプロパティ対応"
+    ],
+    "dependencies": ["GltfRenderer", "GltfAnimationController", "VertexProcessor"],
+    "note": "副作用ゼロ設計の中核。全レンダリング状態をここに集約予定"
+  },
   "MixinItemRenderer.java": {
-    "desc": "Minecraftのアイテム描画をフックしてglTF描画に切り替えるMixin",
+    "desc": "Minecraftのアイテム描画をフックしてglTF描画に切り替えるMixin（副作用ゼロ対応）",
     "importance": "high",
     "last_accessed": "2025-06-03",
     "key_features": [
       "エンティティ保持アイテムとスタンドアロンアイテムの描画対応",
       "GLTFModelItemインターフェース判定",
       "元描画処理のキャンセル",
-      "GltfRendererとの連携"
+      "GunItemRendererとの連携（副作用ゼロ）",
+      "TestGunItemStateでのテスト対応"
     ],
-    "dependencies": ["GLTFModelItem", "GLTFModelManager", "GltfRenderer"],
-    "note": "現在全モデルを描画、将来的にアイテム別モデル選択機能必要"
+    "dependencies": ["GLTFModelItem", "GLTFModelManager", "GunItemRenderer", "TestGunItemState"],
+    "note": "副作用ゼロシステム実装完了。新GunItemRendererを使用した統合レンダリング、場所はmixinディレクトリ"
   }
 }

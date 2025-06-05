@@ -1,4 +1,4 @@
-package net.sistr.actionarms.client.render.gltf;
+package net.sistr.actionarms.client.render.gltf.data;
 
 /**
  * glTFアクセサのデータ型定義
@@ -75,7 +75,7 @@ public enum AccessorDataType {
                 if (attributeName.startsWith("POSITION")) return MORPH_POSITION;
                 if (attributeName.startsWith("NORMAL")) return MORPH_NORMAL;
                 if (attributeName.startsWith("TANGENT")) return MORPH_TANGENT;
-                
+
                 // デフォルトはスカラー（型は文脈によって決まる）
                 return SCALAR_FLOAT;
         }

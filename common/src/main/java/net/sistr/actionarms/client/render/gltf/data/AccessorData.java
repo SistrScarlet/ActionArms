@@ -1,4 +1,4 @@
-package net.sistr.actionarms.client.render.gltf;
+package net.sistr.actionarms.client.render.gltf.data;
 
 /**
  * glTFアクセサから抽出されたプリミティブ配列データを保持するクラス
@@ -9,11 +9,11 @@ public class AccessorData {
     private final String id;
     private final AccessorDataType dataType;
     private final int elementCount;
-    
+
     // データ本体（どちらか一方のみnull以外）
     private final float[] floatData;
     private final int[] intData;
-    
+
     // メタデータ
     private final boolean normalized;
     private final AccessorSignature signature;
@@ -22,8 +22,8 @@ public class AccessorData {
     /**
      * float型データ用コンストラクタ
      */
-    public AccessorData(String id, AccessorDataType dataType, int elementCount, 
-                       float[] floatData, boolean normalized, AccessorSignature signature) {
+    public AccessorData(String id, AccessorDataType dataType, int elementCount,
+                        float[] floatData, boolean normalized, AccessorSignature signature) {
         this.id = id != null ? id : "AccessorData_" + System.identityHashCode(this);
         this.dataType = dataType;
         this.elementCount = elementCount;
@@ -32,15 +32,15 @@ public class AccessorData {
         this.normalized = normalized;
         this.signature = signature;
         this.stride = dataType.getComponentCount();
-        
+
         validateData();
     }
 
     /**
      * int型データ用コンストラクタ
      */
-    public AccessorData(String id, AccessorDataType dataType, int elementCount, 
-                       int[] intData, boolean normalized, AccessorSignature signature) {
+    public AccessorData(String id, AccessorDataType dataType, int elementCount,
+                        int[] intData, boolean normalized, AccessorSignature signature) {
         this.id = id != null ? id : "AccessorData_" + System.identityHashCode(this);
         this.dataType = dataType;
         this.elementCount = elementCount;
@@ -49,7 +49,7 @@ public class AccessorData {
         this.normalized = normalized;
         this.signature = signature;
         this.stride = dataType.getComponentCount();
-        
+
         validateData();
     }
 
@@ -60,11 +60,11 @@ public class AccessorData {
         if (elementCount <= 0) {
             throw new IllegalArgumentException("Element count must be positive: " + elementCount);
         }
-        
+
         if (!isValid()) {
             throw new IllegalArgumentException("Invalid accessor data: " + getDebugInfo());
         }
-        
+
         // データ型とJava配列型の整合性チェック
         if (dataType.isFloatType() && floatData == null) {
             throw new IllegalArgumentException("Float data expected but not provided for " + dataType);
@@ -81,10 +81,10 @@ public class AccessorData {
         if (elementCount <= 0) return false;
         if (floatData == null && intData == null) return false;
         if (floatData != null && intData != null) return false; // 両方あるのは無効
-        
+
         int expectedLength = getExpectedDataLength();
         int actualLength = getActualDataLength();
-        
+
         return actualLength == expectedLength;
     }
 
@@ -118,12 +118,13 @@ public class AccessorData {
      */
     public String getDebugInfo() {
         return String.format("AccessorData[id=%s, type=%s, elements=%d, stride=%d, normalized=%s, memory=%d bytes, valid=%s]",
-                           id, dataType, elementCount, stride, normalized, getMemoryUsage(), isValid());
+                id, dataType, elementCount, stride, normalized, getMemoryUsage(), isValid());
     }
 
     /**
      * 指定されたインデックスの要素を取得（float配列用）
-     * @param elementIndex 要素のインデックス（0 ≤ index < elementCount）
+     *
+     * @param elementIndex   要素のインデックス（0 ≤ index < elementCount）
      * @param componentIndex コンポーネントのインデックス（0 ≤ index < componentCount）
      */
     public float getFloat(int elementIndex, int componentIndex) {
@@ -155,7 +156,7 @@ public class AccessorData {
         if (elementIndex < 0 || elementIndex >= elementCount) {
             throw new IndexOutOfBoundsException("Element index out of bounds: " + elementIndex);
         }
-        
+
         float[] result = new float[dataType.getComponentCount()];
         System.arraycopy(floatData, elementIndex * stride, result, 0, dataType.getComponentCount());
         return result;
@@ -171,7 +172,7 @@ public class AccessorData {
         if (elementIndex < 0 || elementIndex >= elementCount) {
             throw new IndexOutOfBoundsException("Element index out of bounds: " + elementIndex);
         }
-        
+
         int[] result = new int[dataType.getComponentCount()];
         System.arraycopy(intData, elementIndex * stride, result, 0, dataType.getComponentCount());
         return result;
@@ -190,13 +191,30 @@ public class AccessorData {
     }
 
     // Getter methods
-    public String getId() { return id; }
-    public AccessorDataType getDataType() { return dataType; }
-    public int getElementCount() { return elementCount; }
-    public boolean isNormalized() { return normalized; }
-    public AccessorSignature getSignature() { return signature; }
-    public int getStride() { return stride; }
-    
+    public String getId() {
+        return id;
+    }
+
+    public AccessorDataType getDataType() {
+        return dataType;
+    }
+
+    public int getElementCount() {
+        return elementCount;
+    }
+
+    public boolean isNormalized() {
+        return normalized;
+    }
+
+    public AccessorSignature getSignature() {
+        return signature;
+    }
+
+    public int getStride() {
+        return stride;
+    }
+
     /**
      * 生のfloat配列を取得（読み取り専用）
      * 注意: 返される配列は防御的コピーではないため、変更してはいけない
@@ -204,7 +222,7 @@ public class AccessorData {
     public float[] getFloatDataReadOnly() {
         return floatData;
     }
-    
+
     /**
      * 生のint配列を取得（読み取り専用）
      * 注意: 返される配列は防御的コピーではないため、変更してはいけない

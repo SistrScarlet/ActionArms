@@ -2,21 +2,22 @@ package net.sistr.actionarms.client.render.gltf;
 
 import com.google.common.collect.ImmutableMap;
 import de.javagl.jgltf.model.GltfModel;
-import de.javagl.jgltf.model.SceneModel;
 import de.javagl.jgltf.model.io.GltfModelReader;
 import net.minecraft.resource.ResourceManager;
 import net.minecraft.resource.ResourceReloader;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.profiler.Profiler;
 import net.sistr.actionarms.ActionArms;
+import net.sistr.actionarms.client.render.gltf.converter.GltfModelConverter;
+import net.sistr.actionarms.client.render.gltf.data.ProcessedGltfModel;
 
 import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 
-public class GLTFModelManager implements ResourceReloader, AutoCloseable {
-    public static final GLTFModelManager INSTANCE = new GLTFModelManager();
+public class GltfModelManager implements ResourceReloader, AutoCloseable {
+    public static final GltfModelManager INSTANCE = new GltfModelManager();
     private Map<Identifier, ProcessedGltfModel> models;
 
     @Override
