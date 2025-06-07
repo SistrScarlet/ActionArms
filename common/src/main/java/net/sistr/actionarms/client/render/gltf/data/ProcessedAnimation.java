@@ -1,27 +1,34 @@
 package net.sistr.actionarms.client.render.gltf.data;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class ProcessedAnimation {
     private final String name;
     private final List<ProcessedChannel> channels;
-    private final Map<String, ProcessedChannel> channelsByTarget;
+    private final Map<String, ProcessedChannel[]> nameByChannels;
     private final float duration;
     private final boolean isLooping;
 
     public ProcessedAnimation(String name, List<ProcessedChannel> channels) {
         this.name = name != null ? name : "Animation";
         this.channels = new ArrayList<>(channels);
-        this.channelsByTarget = new HashMap<>();
+        this.nameByChannels = new HashMap<>();
         this.isLooping = true; // デフォルトでループ
 
-        // ターゲット別のチャンネルマッピングを作成
+        // ボーン別のチャンネルマッピングを作成
         for (ProcessedChannel channel : channels) {
-            String targetKey = channel.getTargetNode() + ":" + channel.getTargetPath();
-            channelsByTarget.put(targetKey, channel);
+            int index;
+            switch (channel.getTargetPath()) {
+                case "translation" -> index = 0;
+                case "rotation" -> index = 1;
+                case "scale" -> index = 2;
+                default -> index = -1;
+            }
+            if (index != -1) {
+                var targetChannels = nameByChannels
+                        .computeIfAbsent(channel.getTargetNode(), k -> new ProcessedChannel[3]);
+                targetChannels[index] = channel;
+            }
         }
 
         // アニメーション全体の長さを計算
@@ -44,15 +51,12 @@ public class ProcessedAnimation {
         return isLooping;
     }
 
-    // 特定のノードとパスのチャンネルを取得
-    public ProcessedChannel getChannel(String nodeName, String path) {
-        return channelsByTarget.get(nodeName + ":" + path);
+    public boolean hasBone(String name) {
+        return nameByChannels.containsKey(name);
     }
 
-    // 指定時間での値を取得
-    public Object getValueAt(String nodeName, String path, float time) {
-        ProcessedChannel channel = getChannel(nodeName, path);
-        return channel != null ? channel.getValueAt(time) : null;
+    public ProcessedChannel[] getChannels(String name) {
+        return nameByChannels.get(name);
     }
 
     // 時間の正規化（ループ対応）

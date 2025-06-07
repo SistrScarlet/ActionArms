@@ -11,17 +11,18 @@ import org.joml.Vector3f;
 import org.joml.Vector4f;
 
 import java.util.ArrayDeque;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 /**
- * 中間オブジェクトを作らない直接描画を行うプロセッサ
+ * 描画を行うプロセッサ
  * メモリプールを活用して効率的な描画を実現
  */
 public class DirectProcessor {
 
     /**
-     * メッシュを直接描画（中間オブジェクトなし）
+     * メッシュを直接描画
      * アニメーション計算→ボーン行列計算→頂点計算→描画を一気に実行
      */
     public void renderMeshDirect(ProcessedMesh mesh, RenderingContext context,
@@ -44,7 +45,7 @@ public class DirectProcessor {
         }
 
         try {
-            // ボーン行列を直接計算（中間オブジェクトなし）
+            // ボーン行列を直接計算
             if (boneMatrices != null && context.animations().length > 0) {
                 computeBoneMatricesDirect(context, skin, model, boneMatrices);
             }
@@ -55,8 +56,12 @@ public class DirectProcessor {
             }
 
             // 頂点を計算→即座に描画（頂点データをメモリに残さない）
-            renderVerticesDirect(mesh, boneMatrices, morphWeights,
-                    matrixStack, vertexConsumer, context);
+
+            int[] indices = mesh.getIndices();
+            for (int vertexIndex : indices) {
+                renderVertexDirect(mesh, vertexIndex, boneMatrices, morphWeights,
+                        matrixStack, vertexConsumer, context);
+            }
 
         } finally {
             // メモリプールに返却
@@ -67,7 +72,7 @@ public class DirectProcessor {
     }
 
     /**
-     * ボーン行列を直接計算（ComputedTRSData、ComputedBoneMatricesDataを作らない）
+     * ボーン行列を直接計算
      */
     private void computeBoneMatricesDirect(RenderingContext context, ProcessedSkin skin,
                                            ProcessedGltfModel model, Matrix4f[] boneMatrices) {
@@ -75,12 +80,12 @@ public class DirectProcessor {
         var bones = skin.getBones();
         int stride = 3 + 4 + 3; // translation + rotation + scale
 
-        // アニメーションデータを一時配列に計算（メモリプール使用）
+        // アニメーションデータを一時配列に計算
         float[] animationData = GltfMemoryPool.borrowFloatArray(bones.size() * stride);
         Matrix4f[] localMatrices = GltfMemoryPool.borrowMatrixArray(bones.size());
 
         try {
-            // アニメーションデータ計算（ComputedTRSDataを作らない）
+            // アニメーションデータ計算
             computeAnimationDataDirect(context, skin, model, animationData);
 
             // ローカル変換行列を計算
@@ -120,89 +125,74 @@ public class DirectProcessor {
     }
 
     /**
-     * アニメーションデータを直接計算（ComputedTRSDataを作らない）
+     * アニメーションデータを直接計算
      */
     private void computeAnimationDataDirect(RenderingContext context, ProcessedSkin skin,
                                             ProcessedGltfModel model, float[] animationData) {
+        var animations = Arrays.stream(context.animations())
+                .map(state -> model.getAnimation(state.name()))
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .toList();
         var bones = skin.getBones();
-        int stride = 3 + 4 + 3;
-
-        // ボーンごとのデフォルト値を設定
         for (int i = 0; i < bones.size(); i++) {
             var bone = bones.get(i);
+
+            int stride = 3 + 4 + 3;
             int offset = i * stride;
 
-            {
-                // デフォルトのTRS値を設定
-                Vector3f translation = bone.getTranslation();
-                Quaternionf rotation = bone.getRotation();
-                Vector3f scale = bone.getScale();
+            // デフォルトのTRS値を設定
+            Vector3f translation = bone.getTranslation();
+            Quaternionf rotation = bone.getRotation();
+            Vector3f scale = bone.getScale();
 
-                animationData[offset] = translation.x;
-                animationData[offset + 1] = translation.y;
-                animationData[offset + 2] = translation.z;
-                animationData[offset + 3] = rotation.x;
-                animationData[offset + 4] = rotation.y;
-                animationData[offset + 5] = rotation.z;
-                animationData[offset + 6] = rotation.w;
-                animationData[offset + 7] = scale.x;
-                animationData[offset + 8] = scale.y;
-                animationData[offset + 9] = scale.z;
+            animationData[offset] = translation.x;
+            animationData[offset + 1] = translation.y;
+            animationData[offset + 2] = translation.z;
+            animationData[offset + 3] = rotation.x;
+            animationData[offset + 4] = rotation.y;
+            animationData[offset + 5] = rotation.z;
+            animationData[offset + 6] = rotation.w;
+            animationData[offset + 7] = scale.x;
+            animationData[offset + 8] = scale.y;
+            animationData[offset + 9] = scale.z;
+
+            for (int j = 0; j < context.animations().length; j++) {
+                var animation = animations.get(j);
+                if (!animation.hasBone(bone.name())) {
+                    continue;
+                }
+                var state = context.animations()[j];
+                float time = animation.normalizeTime(state.seconds());
+                animationOverwrite(bone, animation, time, offset, animationData);
             }
+        }
+    }
 
-            // アニメーション状態を収集
-            List<Vector3f> translations = new ArrayList<>();
-            List<Float> translationsWeight = new ArrayList<>();
-            List<Quaternionf> rotations = new ArrayList<>();
-            List<Float> rotationsWeight = new ArrayList<>();
-            List<Vector3f> scales = new ArrayList<>();
-            List<Float> scalesWeight = new ArrayList<>();
+    // 単に上書きするのみ
+    private void animationOverwrite(ProcessedBone bone, ProcessedAnimation animation,
+                                    float time, int offset, float[] animationData) {
+        var boneName = bone.name();
+        var channels = animation.getChannels(boneName);
+        var translation = channels[0] != null ? channels[0].getValueAt(time) : null;
+        var rotation = channels[1] != null ? channels[1].getValueAt(time) : null;
+        var scale = channels[2] != null ? channels[2].getValueAt(time) : null;
 
-            // 各アニメーション状態を処理
-            for (RenderingContext.AnimationState animationState : context.animations()) {
-                model.getAnimation(animationState.name())
-                        .ifPresent(animation -> {
-                            float time = animation.normalizeTime(animationState.seconds() * animationState.speed());
-                            var translation = animation.getValueAt(bone.name(), "translation", time);
-                            var rotation = animation.getValueAt(bone.name(), "rotation", time);
-                            var scale = animation.getValueAt(bone.name(), "scale", time);
-                            if (translation instanceof Vector3f v) {
-                                translations.add(v);
-                                translationsWeight.add(animationState.weight());
-                            }
-                            if (rotation instanceof Quaternionf q) {
-                                rotations.add(q);
-                                rotationsWeight.add(animationState.weight());
-                            }
-                            if (scale instanceof Vector3f v) {
-                                scales.add(v);
-                                scalesWeight.add(animationState.weight());
-                            }
-                        });
-            }
-
-            // 重み付き平均を計算して最終値を設定
-            if (!translations.isEmpty()) {
-                var result = weightedAverageV(translations, translationsWeight);
-                animationData[offset] = result.x;
-                animationData[offset + 1] = result.y;
-                animationData[offset + 2] = result.z;
-            }
-
-            if (!rotations.isEmpty()) {
-                var result = weightedAverageQ(rotations, rotationsWeight);
-                animationData[offset + 3] = result.x;
-                animationData[offset + 4] = result.y;
-                animationData[offset + 5] = result.z;
-                animationData[offset + 6] = result.w;
-            }
-
-            if (!scales.isEmpty()) {
-                var result = weightedAverageV(scales, scalesWeight);
-                animationData[offset + 7] = result.x;
-                animationData[offset + 8] = result.y;
-                animationData[offset + 9] = result.z;
-            }
+        if (translation instanceof Vector3f v) {
+            animationData[offset] = v.x;
+            animationData[offset + 1] = v.y;
+            animationData[offset + 2] = v.z;
+        }
+        if (rotation instanceof Quaternionf q) {
+            animationData[offset + 3] = q.x;
+            animationData[offset + 4] = q.y;
+            animationData[offset + 5] = q.z;
+            animationData[offset + 6] = q.w;
+        }
+        if (scale instanceof Vector3f v) {
+            animationData[offset + 7] = v.x;
+            animationData[offset + 8] = v.y;
+            animationData[offset + 9] = v.z;
         }
     }
 
@@ -235,17 +225,6 @@ public class DirectProcessor {
                     stack.push(child);
                 }
             }
-        }
-    }
-
-    private void renderVerticesDirect(ProcessedMesh mesh, Matrix4f[] boneMatrices,
-                                      float[] morphWeights, MatrixStack matrixStack,
-                                      VertexConsumer vertexConsumer, RenderingContext context) {
-
-        int[] indices = mesh.getIndices();
-        for (int vertexIndex : indices) {
-            renderVertexDirect(mesh, vertexIndex, boneMatrices, morphWeights,
-                    matrixStack, vertexConsumer, context);
         }
     }
 
@@ -306,7 +285,7 @@ public class DirectProcessor {
             nz /= normalLength;
         }
 
-        // 即座に描画（メモリに保存しない）
+        // 即座に描画
         vertexConsumer.vertex(matrixStack.peek().getPositionMatrix(), x, y, z)
                 .color(255, 255, 255, 255)
                 .texture(uvs[uvIdx], uvs[uvIdx + 1])
@@ -344,7 +323,7 @@ public class DirectProcessor {
     }
 
     /**
-     * 単一頂点へのスキニング適用（汎用版）
+     * 単一頂点へのスキニング適用
      *
      * @param isPosition trueの場合は位置（w=1.0）、falseの場合は法線（w=0.0）として処理
      */
@@ -396,96 +375,5 @@ public class DirectProcessor {
     private Vector3f applySkinningToNormal(ProcessedMesh mesh, int vertexIndex, Matrix4f[] boneMatrices,
                                            float nx, float ny, float nz) {
         return applySkinning(mesh, vertexIndex, boneMatrices, nx, ny, nz, false);
-    }
-
-    public static Quaternionf weightedAverageQ(List<Quaternionf> quaternions,
-                                               List<Float> weights) {
-        if (quaternions.isEmpty()) {
-            throw new IllegalArgumentException("空のリストです");
-        }
-
-        if (quaternions.size() != weights.size()) {
-            throw new IllegalArgumentException("クォータニオンと重みの数が一致しません");
-        }
-
-        // 基準となる最初のクォータニオン
-        Quaternionf reference = new Quaternionf(quaternions.get(0));
-
-        float w = 0, x = 0, y = 0, z = 0;
-        float totalWeight = 0;
-
-        for (int i = 0; i < quaternions.size(); i++) {
-            Quaternionf q = quaternions.get(i);
-            float weight = weights.get(i);
-
-            // 内積を計算（JOMLのdot()メソッドを使用）
-            float dot = reference.dot(q);
-
-            // 内積が負の場合、クォータニオンを反転
-            if (dot < 0) {
-                w -= q.w * weight;
-                x -= q.x * weight;
-                y -= q.y * weight;
-                z -= q.z * weight;
-            } else {
-                w += q.w * weight;
-                x += q.x * weight;
-                y += q.y * weight;
-                z += q.z * weight;
-            }
-
-            totalWeight += weight;
-        }
-
-        // 重みで正規化
-        w /= totalWeight;
-        x /= totalWeight;
-        y /= totalWeight;
-        z /= totalWeight;
-
-        // 結果のクォータニオンを作成して正規化
-        Quaternionf result = new Quaternionf(x, y, z, w);
-        return result.normalize();
-    }
-
-    /**
-     * Vector3fの重み付き平均を計算
-     *
-     * @param vectors ベクトルのリスト
-     * @param weights 各ベクトルに対応する重みのリスト
-     * @return 重み付き平均ベクトル
-     */
-    public static Vector3f weightedAverageV(List<Vector3f> vectors,
-                                            List<Float> weights) {
-        if (vectors.isEmpty()) {
-            throw new IllegalArgumentException("空のリストです");
-        }
-
-        if (vectors.size() != weights.size()) {
-            throw new IllegalArgumentException("ベクトルと重みの数が一致しません");
-        }
-
-        float x = 0, y = 0, z = 0;
-        float totalWeight = 0;
-
-        for (int i = 0; i < vectors.size(); i++) {
-            Vector3f v = vectors.get(i);
-            float weight = weights.get(i);
-
-            x += v.x * weight;
-            y += v.y * weight;
-            z += v.z * weight;
-
-            totalWeight += weight;
-        }
-
-        // 重みで正規化
-        if (totalWeight != 0) {
-            x /= totalWeight;
-            y /= totalWeight;
-            z /= totalWeight;
-        }
-
-        return new Vector3f(x, y, z);
     }
 }

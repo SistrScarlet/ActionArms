@@ -10,7 +10,7 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
 import net.sistr.actionarms.ActionArms;
-import net.sistr.actionarms.client.render.gltf.*;
+import net.sistr.actionarms.client.render.gltf.GltfModelManager;
 import net.sistr.actionarms.client.render.gltf.renderer.GltfRenderer;
 import net.sistr.actionarms.client.render.gltf.renderer.RenderingContext;
 import net.sistr.actionarms.item.util.GLTFModelItem;
@@ -59,7 +59,7 @@ public class MixinItemRenderer {
                     .tickDelta(tickDelta)
                     .light(light)
                     .overlay(overlay)
-                    .addAnimationState(new RenderingContext.AnimationState("cocking", (entity.age + tickDelta) * 0.05f, 1, 1.0f))
+                    .addAnimationState(new RenderingContext.AnimationState("cocking", (entity.age + tickDelta) * 0.05f))
                     .build();
 
             // レンダラーの取得または作成

@@ -53,6 +53,6 @@ public record RenderingContext(
         }
     }
 
-    public record AnimationState(String name, float seconds, float speed, float weight) {
+    public record AnimationState(String name, float seconds) {
     }
 }
