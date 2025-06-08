@@ -16,7 +16,7 @@ public class Networking {
 
     @Environment(EnvType.CLIENT)
     public static void initClient() {
-
+        registerClientReceiver(ItemAnimationEventPacket.ID, ItemAnimationEventPacket::receiveS2C);
     }
 
     private static void registerServerReceiver(Identifier id, NetworkManager.NetworkReceiver receiver) {

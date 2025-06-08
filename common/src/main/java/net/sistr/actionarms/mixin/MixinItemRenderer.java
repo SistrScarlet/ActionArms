@@ -11,14 +11,22 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
 import net.sistr.actionarms.ActionArms;
 import net.sistr.actionarms.client.render.gltf.GltfModelManager;
+import net.sistr.actionarms.client.render.gltf.ItemAnimationManager;
 import net.sistr.actionarms.client.render.gltf.renderer.GltfRenderer;
 import net.sistr.actionarms.client.render.gltf.renderer.RenderingContext;
-import net.sistr.actionarms.item.util.GLTFModelItem;
+import net.sistr.actionarms.item.component.IItemComponent;
+import net.sistr.actionarms.item.component.LeverActionGunComponent;
+import net.sistr.actionarms.item.util.GlftModelItem;
+import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.Map;
 
 @Mixin(ItemRenderer.class)
 public class MixinItemRenderer {
@@ -55,11 +63,16 @@ public class MixinItemRenderer {
 
             float tickDelta = MinecraftClient.getInstance().getTickDelta();
 
+            var gunComponent = IItemComponent.query(LeverActionGunComponent::new, stack, c -> c);
+            var itemStates = ItemAnimationManager.INSTANCE.getItemStateMap(stack);
+
+            var animationStates = getAnimationStates(entity, gunComponent, itemStates, tickDelta);
+
             var renderingContext = RenderingContext.builder()
                     .tickDelta(tickDelta)
                     .light(light)
                     .overlay(overlay)
-                    .addAnimationState(new RenderingContext.AnimationState("cocking", (entity.age + tickDelta) * 0.05f))
+                    .addAnimationState(animationStates)
                     .build();
 
             // レンダラーの取得または作成
@@ -72,6 +85,47 @@ public class MixinItemRenderer {
             ActionArms.LOGGER.error("Error during glTF item rendering with entity: {}", e.getMessage(), e);
             matrices.pop(); // エラー時もスタックを戻す
         }
+    }
+
+    @Unique
+    private static @NotNull ArrayList<RenderingContext.AnimationState> getAnimationStates(
+            LivingEntity entity, LeverActionGunComponent component,
+            Map<String, ItemAnimationManager.State> itemStates, float tickDelta) {
+        var states = new ArrayList<RenderingContext.AnimationState>();
+
+        var gun = component.leverActionGunItem;
+        float entityAge = entity.age * (1f / 20f) + tickDelta;
+
+        if (gun.isHammerReady()) {
+            states.add(new RenderingContext.AnimationState(
+                    "hammerReady",
+                    entityAge,
+                    true));
+        } else {
+            states.add(new RenderingContext.AnimationState(
+                    "hammerNotReady",
+                    entityAge,
+                    true));
+        }
+        if (gun.isLeverDown()) {
+            states.add(new RenderingContext.AnimationState(
+                    "leverDown",
+                    entityAge,
+                    true));
+        } else {
+            states.add(new RenderingContext.AnimationState(
+                    "leverUp",
+                    entityAge,
+                    true));
+        }
+
+        float secondDelta = tickDelta * (1f / 20f);
+        itemStates.values().stream()
+                .sorted(Comparator.comparingDouble(ItemAnimationManager.State::seconds).reversed())
+                .forEach(state -> states.add(new RenderingContext.AnimationState(
+                        state.id(), state.seconds() + secondDelta, false)));
+
+        return states;
     }
 
     /**
@@ -100,7 +154,7 @@ public class MixinItemRenderer {
      */
     @Unique
     private boolean actionArms$shouldRenderWithGltf(ItemStack stack) {
-        return !stack.isEmpty() && stack.getItem() instanceof GLTFModelItem;
+        return !stack.isEmpty() && stack.getItem() instanceof GlftModelItem;
     }
 
 }

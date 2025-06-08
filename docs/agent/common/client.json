@@ -2,7 +2,7 @@
   "ActionArmsClient.java": {
     "desc": "クライアント側の初期化処理、glTFモデルマネージャー登録",
     "importance": "high",
-    "last_accessed": "2025-06-03",
+    "last_accessed": "2025-06-08",
     "key_features": ["クライアント初期化のエントリーポイント", "AAKeys初期化", "GLTFModelManagerリソースリローダー登録"],
     "dependencies": ["AAKeys", "GLTFModelManager"],
     "note": "preInit/initの分離により初期化順序を適切に制御"
@@ -44,5 +44,33 @@
     ],
     "dependencies": ["GLTFModelItem", "GLTFModelManager", "GltfRenderer"],
     "note": "現在全モデルを描画、将来的にアイテム別モデル選択機能必要"
+  },
+  "render/gltf/ItemAnimationManager.java": {
+    "desc": "アイテム個体別のアニメーション状態を管理するシングルトンマネージャー。UUIDベースでアニメーション状態を時間管理",
+    "importance": "high",
+    "last_accessed": "2025-06-08",
+    "key_features": [
+      "シングルトンパターンによる一元管理",
+      "UUIDベースのアイテム個体識別",
+      "アニメーション状態の時間管理",
+      "10秒での自動クリーンアップ",
+      "UniqueComponentとの連携",
+      "マルチプレイヤー対応"
+    ],
+    "dependencies": ["UniqueComponent.java"],
+    "note": "レバーアクション等のアニメーション同期システムの中核"
+  },
+  "render/gltf/MixinHeldItemRenderer.java": {
+    "desc": "手持ちアイテムの描画位置をカスタマイズするMixin。glTFモデルアイテムの特別な描画位置制御を実装",
+    "importance": "medium",
+    "last_accessed": "2025-06-08",
+    "key_features": [
+      "applyEquipOffset()のカスタマイズ",
+      "applySwingOffset()の無効化",
+      "GLTFModelItemの特別な位置制御",
+      "左右の腕に応じた位置調整"
+    ],
+    "dependencies": ["GlftModelItem.java"],
+    "note": "銃の描画位置を適切に制御するために重要"
   }
 }

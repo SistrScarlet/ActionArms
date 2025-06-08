@@ -2,7 +2,7 @@
   "GunItem.java": {
     "desc": "全ての銃アイテムの基底クラス、glTFモデル描画対応",
     "importance": "high",
-    "last_accessed": "2025-06-03",
+    "last_accessed": "2025-06-08",
     "key_features": ["Minecraftアイテム継承", "GLTFModelItemインターフェース実装", "銃の基本構造"],
     "dependencies": ["GLTFModelItem", "MixinItemRenderer"],
     "note": "glTF描画システムとの連携により、カスタム3Dモデル描画が可能"
@@ -10,23 +10,23 @@
   "LeverActionGunItem.java": {
     "desc": "レバーアクション機構を持つ銃アイテム",
     "importance": "high",
-    "last_accessed": "2025-05-29",
+    "last_accessed": "2025-06-08",
     "key_features": ["GunItem継承", "レバーアクション機構"],
     "parent": "GunItem",
     "note": "MODの主要機能となるレバーアクション銃の実装"
   },
-  "util/GLTFModelItem.java": {
+  "util/GlftModelItem.java": {
     "desc": "glTFモデルを使用するアイテム用のマーカーインターフェース",
     "importance": "medium",
-    "last_accessed": "2025-06-03",
+    "last_accessed": "2025-06-08",
     "key_features": ["MixinItemRendererでの描画判定", "将来的にモデル指定機能拡張予定"],
-    "dependencies": ["MixinItemRenderer"],
-    "note": "現在は空インターフェース、アイテム別モデル指定機能を今後追加予定"
+    "dependencies": ["MixinItemRenderer", "MixinHeldItemRenderer"],
+    "note": "現在は空インターフェース、アイテム別モデル指定機能を今後追加予定（GLTFModelItemからGlftModelItemにリネーム）"
   },
   "component/IItemComponent.java": {
     "desc": "アイテムコンポーネントシステムのインターフェース",
     "importance": "high",
-    "last_accessed": "2025-05-29",
+    "last_accessed": "2025-06-08",
     "key_features": [
       "NBT読み書きメソッド",
       "静的executeメソッド（ComponentResult返り値）",
@@ -38,13 +38,45 @@
     ],
     "note": "銃の状態管理の核。ComponentResultでシンプルかつ明確な制御が可能"
   },
-  "component/BasicGunComponent.java": {
-    "desc": "基本的な銃コンポーネントの実装（現在空実装）",
-    "importance": "medium",
-    "last_accessed": "2025-05-29",
-    "key_features": ["IItemComponent実装"],
+  "component/LeverActionGunComponent.java": {
+    "desc": "レバーアクション銃の機構コンポーネント。LeverActionGunを内包し、NBT永続化を管理",
+    "importance": "high",
+    "last_accessed": "2025-06-08",
+    "key_features": [
+      "IItemComponent実装",
+      "LeverActionGunの内包",
+      "ハードコーディングされた設定値",
+      "NBT永続化処理"
+    ],
     "parent": "IItemComponent",
-    "note": "今後銃の基本ステータス管理を実装予定"
+    "dependencies": ["LeverActionGun.java", "LeverActionGunType.java", "MagazineType.java"],
+    "note": "レバーアクション機構とアイテムシステムを接続する重要なブリッジ"
+  },
+  "component/UniqueComponent.java": {
+    "desc": "アイテム個体を一意に識別するUUIDを管理するコンポーネント。アニメーション同期に不可欠",
+    "importance": "high",
+    "last_accessed": "2025-06-08",
+    "key_features": [
+      "IItemComponent実装",
+      "UUIDの自動生成と管理",
+      "get()静的メソッドで簡単アクセス",
+      "アイテム個体識別システムの基盤"
+    ],
+    "parent": "IItemComponent",
+    "dependencies": ["ItemUniqueManager.java"],
+    "note": "アニメーション同期やマルチプレイヤー対応に不可欠"
+  },
+  "ItemUniqueManager.java": {
+    "desc": "アイテムのUUID管理を一元化するユーティリティクラス。UniqueComponentと連携して動作",
+    "importance": "medium",
+    "last_accessed": "2025-06-08",
+    "key_features": [
+      "getOrCreate()メソッドでUUID取得・生成",
+      "NBTキーの統一管理",
+      "UniqueComponentからの呼び出し専用"
+    ],
+    "dependencies": ["UniqueComponent.java"],
+    "note": "UUID管理の実装詳細を隠蔽し、シンプルなAPIを提供"
   },
   "component/ExampleComponent.java": {
     "desc": "コンポーネントシステムの使用例、カウンター機能を実装",

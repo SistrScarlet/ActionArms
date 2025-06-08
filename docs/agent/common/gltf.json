@@ -332,20 +332,20 @@
     "note": "パフォーマンス改善の基盤として新規追加、DirectProcessorと連携してメモリ効率を大幅向上"
   },
   "GLTFModelItem.java": {
-    "desc": "glTFモデルを使用するアイテム用のマーカーインターフェース",
-    "importance": "medium",
-    "last_accessed": "2025-06-05",
+    "desc": "glTFモデルを使用するアイテム用のマーカーインターフェース（廃止予定）",
+    "importance": "low",
+    "last_accessed": "2025-06-08",
     "key_features": [
       "MixinItemRendererでの描画判定に使用",
       "将来的にモデルファイル指定機能拡張予定"
     ],
     "dependencies": ["MixinItemRenderer", "GunItem"],
-    "note": "場所変更なし、現在は空インターフェース、将来的に機能拡張予定"
+    "note": "GlftModelItemにリネームされ、このファイルは廃止予定（大文字小文字の統一のため）"
   },
   "MixinItemRenderer.java": {
     "desc": "Minecraftのアイテム描画をフックしてglTF描画に切り替えるMixin（副作用ゼロ対応完了）",
     "importance": "high",
-    "last_accessed": "2025-06-05",
+    "last_accessed": "2025-06-08",
     "key_features": [
       "エンティティ保持アイテムとスタンドアロンアイテムの描画対応",
       "GLTFModelItemインターフェース判定",
@@ -356,6 +356,21 @@
     ],
     "dependencies": ["GLTFModelItem", "GltfModelManager", "renderer/GltfRenderer", "renderer/RenderingContext"],
     "note": "副作用ゼロシステム完全対応、新レンダリングシステムを使用、場所はmixinディレクトリ"
+  },
+  "MixinHeldItemRenderer.java": {
+    "desc": "手持ちアイテムの描画位置をカスタマイズするMixin。glTFモデルアイテムの特別な描画位置制御を実装",
+    "importance": "medium",
+    "last_accessed": "2025-06-08",
+    "key_features": [
+      "applyEquipOffset()のカスタマイズ",
+      "applySwingOffset()の無効化",
+      "GlftModelItemの特別な位置制御",
+      "左右の腕に応じた位置調整",
+      "装備アニメーションのキャンセル",
+      "振りアニメーションのキャンセル"
+    ],
+    "dependencies": ["GlftModelItem.java"],
+    "note": "銃の描画位置を適切に制御するために重要、mixinディレクトリに配置"
   },
   "_deleted_files": {
     "note": "以下のファイルは今回のリファクタリングで削除されました",

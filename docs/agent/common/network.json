@@ -1,14 +1,30 @@
 {
   "Networking.java": {
-    "desc": "ネットワーク通信の管理クラス、現在は初期化のみ",
+    "desc": "ネットワーク通信の管理クラス、アニメーション同期処理を追加",
     "importance": "medium",
-    "last_accessed": "2025-05-29",
+    "last_accessed": "2025-06-08",
     "key_features": [
       "Architecturyネットワーク使用",
       "クライアント・サーバー分離",
       "EnvType判定",
       "C2S/S2C通信登録メソッド"
     ],
-    "note": "今後銃の発射・リロードなどの同期処理を追加予定"
+    "dependencies": ["ItemAnimationEventPacket.java"],
+    "note": "アニメーション同期処理を実装、今後銃の発射・リロードなどの同期処理を追加予定"
+  },
+  "ItemAnimationEventPacket.java": {
+    "desc": "アイテムのアニメーションイベントをサーバーからクライアントに同期するパケットクラス",
+    "importance": "high",
+    "last_accessed": "2025-06-08",
+    "key_features": [
+      "S2C（Server to Client）通信専用",
+      "UUIDベースのアイテム識別",
+      "アニメーションIDと時間情報の送信",
+      "Architectury NetworkManager使用",
+      "ワールド内全プレイヤーへのブロードキャスト",
+      "ItemAnimationManagerとの連携"
+    ],
+    "dependencies": ["ItemAnimationManager.java"],
+    "note": "レバーアクションのアニメーションをマルチプレイヤーで同期するために不可欠"
   }
 }

@@ -43,6 +43,11 @@ public record RenderingContext(
             return this;
         }
 
+        public Builder addAnimationState(List<AnimationState> states) {
+            this.animations.addAll(states);
+            return this;
+        }
+
         public RenderingContext build() {
             return new RenderingContext(
                     tickDelta,
@@ -53,6 +58,6 @@ public record RenderingContext(
         }
     }
 
-    public record AnimationState(String name, float seconds) {
+    public record AnimationState(String name, float seconds, boolean isLooping) {
     }
 }

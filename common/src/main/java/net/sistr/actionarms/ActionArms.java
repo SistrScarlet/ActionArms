@@ -1,10 +1,12 @@
 package net.sistr.actionarms;
 
 import com.mojang.logging.LogUtils;
+import dev.architectury.event.events.common.TickEvent;
 import me.shedaniel.autoconfig.AutoConfig;
 import me.shedaniel.autoconfig.ConfigHolder;
 import me.shedaniel.autoconfig.serializer.Toml4jConfigSerializer;
 import net.sistr.actionarms.config.AAConfig;
+import net.sistr.actionarms.item.ItemUniqueManager;
 import net.sistr.actionarms.network.Networking;
 import net.sistr.actionarms.setup.Registration;
 import org.slf4j.Logger;
@@ -17,6 +19,10 @@ public class ActionArms {
     public static void init() {
         Registration.init();
         Networking.init();
+        TickEvent.SERVER_LEVEL_POST.register(world -> {
+            if (world.isClient) return;
+            ItemUniqueManager.INSTANCE.clearOld(world);
+        });
     }
 
     public static void preInit() {

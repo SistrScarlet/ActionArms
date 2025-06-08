@@ -7,13 +7,11 @@ public class ProcessedAnimation {
     private final List<ProcessedChannel> channels;
     private final Map<String, ProcessedChannel[]> nameByChannels;
     private final float duration;
-    private final boolean isLooping;
 
     public ProcessedAnimation(String name, List<ProcessedChannel> channels) {
         this.name = name != null ? name : "Animation";
         this.channels = new ArrayList<>(channels);
         this.nameByChannels = new HashMap<>();
-        this.isLooping = true; // デフォルトでループ
 
         // ボーン別のチャンネルマッピングを作成
         for (ProcessedChannel channel : channels) {
@@ -47,10 +45,6 @@ public class ProcessedAnimation {
         return duration;
     }
 
-    public boolean isLooping() {
-        return isLooping;
-    }
-
     public boolean hasBone(String name) {
         return nameByChannels.containsKey(name);
     }
@@ -60,7 +54,7 @@ public class ProcessedAnimation {
     }
 
     // 時間の正規化（ループ対応）
-    public float normalizeTime(float time) {
+    public float normalizeTime(float time, boolean isLooping) {
         if (duration <= 0) return 0;
 
         if (isLooping) {

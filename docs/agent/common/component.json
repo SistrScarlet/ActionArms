@@ -1,0 +1,148 @@
+{
+  "LeverActionGun.java": {
+    "desc": "レバーアクション銃の機構を統括するメインコンポーネント。FireTrigger、CyclingLever、Reloadableの3つのインターフェースを実装し、複雑な状態管理を行う",
+    "importance": "high",
+    "last_accessed": "2025-06-08",
+    "key_features": [
+      "複数インターフェースの統合実装",
+      "レバー状態管理（leverDown、cycling、hammerReady）",
+      "タイミング制御（各種coolTimeとcancelableTime）",
+      "チューブマガジン（FILO）の制御",
+      "薬室とマガジンの連携",
+      "NBT永続化対応",
+      "ステートマシン的な状態遷移"
+    ],
+    "dependencies": ["Chamber.java", "Magazine.java", "LeverActionGunType.java", "MagazineType.java"],
+    "note": "レバーアクション銃システムの心臓部。複雑だが非常によく設計されている"
+  },
+  "CyclingLever.java": {
+    "desc": "レバー操作（サイクリング）機能を定義するインターフェース。レバーの上下動作とそれに伴う薬莢排出を管理",
+    "importance": "high",
+    "last_accessed": "2025-06-08",
+    "key_features": [
+      "cycle()メソッドによるレバー操作開始",
+      "canCycle()/shouldCycle()による操作可否判定",
+      "レバー状態取得メソッド群",
+      "CycleTickContext/CycleStartContextによるコールバック",
+      "薬莢排出処理の抽象化"
+    ],
+    "dependencies": ["Cartridge.java"],
+    "note": "レバーアクション特有の操作を抽象化した重要なインターフェース"
+  },
+  "FireTrigger.java": {
+    "desc": "発射トリガー機能を定義するインターフェース。発射処理と発射可否判定を管理",
+    "importance": "high",
+    "last_accessed": "2025-06-08",
+    "key_features": [
+      "trigger()メソッドによる発射処理",
+      "canTrigger()による発射可否判定",
+      "isFiring()/getFiringTime()による発射状態管理",
+      "FireStartContextによるコールバック"
+    ],
+    "dependencies": ["Bullet.java"],
+    "note": "全ての銃に共通の発射機能を抽象化"
+  },
+  "Reloadable.java": {
+    "desc": "リロード機能を定義するインターフェース。弾薬補給の処理を管理",
+    "importance": "high",
+    "last_accessed": "2025-06-08",
+    "key_features": [
+      "reload()メソッドによるリロード開始",
+      "canReload()/shouldReload()による判定",
+      "リロード状態管理メソッド",
+      "ReloadTickContext/ReloadStartContextによるコールバック"
+    ],
+    "dependencies": ["Bullet.java"],
+    "note": "銃種に応じたリロード方式を抽象化"
+  },
+  "Chamber.java": {
+    "desc": "銃の薬室（チャンバー）を表現するクラス。薬莢の装填・排出・発射を管理",
+    "importance": "medium",
+    "last_accessed": "2025-06-08",
+    "key_features": [
+      "薬莢の保持と状態管理",
+      "shoot()による弾丸発射処理",
+      "ejectCartridge()による薬莢排出",
+      "発射可否判定",
+      "NBT永続化対応"
+    ],
+    "dependencies": ["Cartridge.java", "Bullet.java"],
+    "note": "銃の核となる薬室の実装。シンプルだが重要"
+  },
+  "Magazine.java": {
+    "desc": "弾倉（マガジン）を表現するクラス。弾薬の保管と供給を管理",
+    "importance": "medium",
+    "last_accessed": "2025-06-08",
+    "key_features": [
+      "弾丸リストの管理",
+      "FILO（First In Last Out）方式の実装",
+      "容量制限と弾薬タイプ制限",
+      "addFirstBullets()/popFirstBullet()による操作",
+      "NBT永続化対応"
+    ],
+    "dependencies": ["Bullet.java", "MagazineType.java"],
+    "note": "チューブマガジンの特性を反映したFILO実装"
+  },
+  "Bullet.java": {
+    "desc": "弾丸を表現するクラス。弾丸の基本情報を保持",
+    "importance": "medium",
+    "last_accessed": "2025-06-08",
+    "key_features": [
+      "弾丸タイプの保持",
+      "NBT永続化対応",
+      "シンプルなデータクラス"
+    ],
+    "dependencies": ["BulletType.java"],
+    "note": "弾丸の基本的なデータ構造"
+  },
+  "Cartridge.java": {
+    "desc": "薬莢を表現するクラス。弾丸を含む薬莢の状態を管理",
+    "importance": "medium",
+    "last_accessed": "2025-06-08",
+    "key_features": [
+      "弾丸の保持状態管理",
+      "発射可否判定",
+      "NBT永続化対応",
+      "空薬莢状態の表現"
+    ],
+    "dependencies": ["Bullet.java"],
+    "note": "発射前後の薬莢状態を表現。リアルな弾薬システム"
+  },
+  "BulletType.java": {
+    "desc": "弾丸の種類を定義するクラス。弾丸の仕様を管理",
+    "importance": "low",
+    "last_accessed": "2025-06-08",
+    "key_features": [
+      "弾丸名の保持",
+      "Recordクラスによるイミュータブルデータ"
+    ],
+    "dependencies": [],
+    "note": "弾丸タイプの定義。将来的にダメージや速度などの仕様を追加予定"
+  },
+  "LeverActionGunType.java": {
+    "desc": "レバーアクション銃の仕様を定義するクラス。タイミングや操作性の設定を管理",
+    "importance": "medium",
+    "last_accessed": "2025-06-08",
+    "key_features": [
+      "各種操作時間の定義（leverDownLength、leverUpLength等）",
+      "クールタイムとキャンセル可能時間の設定",
+      "リロード回数の設定",
+      "Recordクラスによるイミュータブル設計"
+    ],
+    "dependencies": [],
+    "note": "レバーアクション銃の挙動を決める重要な設定クラス"
+  },
+  "MagazineType.java": {
+    "desc": "マガジンの仕様を定義するクラス。容量と許可弾薬タイプを管理",
+    "importance": "medium",
+    "last_accessed": "2025-06-08",
+    "key_features": [
+      "マガジン名と容量の定義",
+      "弾薬タイプ制限の実装",
+      "Predicateによる柔軟な制限設定",
+      "Recordクラスによるイミュータブル設計"
+    ],
+    "dependencies": ["Bullet.java"],
+    "note": "マガジンの仕様定義。弾薬制限が柔軟に設定可能"
+  }
+}

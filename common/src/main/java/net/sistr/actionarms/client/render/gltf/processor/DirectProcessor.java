@@ -13,7 +13,6 @@ import org.joml.Vector4f;
 import java.util.ArrayDeque;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 
 /**
  * 描画を行うプロセッサ
@@ -129,10 +128,10 @@ public class DirectProcessor {
      */
     private void computeAnimationDataDirect(RenderingContext context, ProcessedSkin skin,
                                             ProcessedGltfModel model, float[] animationData) {
+        // コンテキストのアニメーション名からアニメーションを取得
         var animations = Arrays.stream(context.animations())
-                .map(state -> model.getAnimation(state.name()))
-                .filter(Optional::isPresent)
-                .map(Optional::get)
+                .map(state -> new Animation(model.getAnimation(state.name()).orElse(null), state))
+                .filter(animation -> animation.animation != null)
                 .toList();
         var bones = skin.getBones();
         for (int i = 0; i < bones.size(); i++) {
@@ -157,16 +156,19 @@ public class DirectProcessor {
             animationData[offset + 8] = scale.y;
             animationData[offset + 9] = scale.z;
 
-            for (int j = 0; j < context.animations().length; j++) {
-                var animation = animations.get(j);
-                if (!animation.hasBone(bone.name())) {
+            for (Animation value : animations) {
+                var animation = value.animation;
+                var state = value.state;
+                if (animation == null || !animation.hasBone(bone.name())) {
                     continue;
                 }
-                var state = context.animations()[j];
-                float time = animation.normalizeTime(state.seconds());
+                float time = animation.normalizeTime(state.seconds(), state.isLooping());
                 animationOverwrite(bone, animation, time, offset, animationData);
             }
         }
+    }
+
+    private record Animation(ProcessedAnimation animation, RenderingContext.AnimationState state) {
     }
 
     // 単に上書きするのみ

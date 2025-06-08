@@ -1,6 +1,6 @@
 {
   "description": "ActionArms MOD - 銃の機構と操作の心地よさを重視したMinecraft用銃MOD（副作用ゼロレンダリングシステム完全実装済み）",
-  "last_updated": "2025-06-05",
+  "last_updated": "2025-06-08",
   "structure": {
     "common/": {
       "description": "プラットフォーム共通コード",
@@ -11,7 +11,8 @@
         "item.json": "銃アイテム・コンポーネント",
         "network.json": "ネットワーク通信",
         "setup.json": "登録処理",
-        "gltf.json": "glTFモデル描画システム（副作用ゼロ設計完全対応）"
+        "gltf.json": "glTFモデル描画システム（副作用ゼロ設計完全対応）",
+        "component.json": "銃の機構コンポーネントシステム（レバーアクション実装）"
       }
     },
     "fabric/": {
@@ -29,7 +30,9 @@
     "純粋関数型アニメーション計算（AnimationProcessor）",
     "統合された状態管理システム",
     "パッケージ構造の完全整理（converter/data/processor/renderer/util）",
-    "レバーアクション機構",
+    "レバーアクション機構の完全実装",
+    "コンポーネントベースの銃の機構システム",
+    "アニメーション同期システム",
     "カスタマイズ可能なキーバインド",
     "リアルタイムアニメーション対応",
     "スレッドセーフなレンダリング",
@@ -38,6 +41,20 @@
     "メモリ効率と保守性の両立"
   ],
   "recent_major_changes": {
+    "2025-06-08": {
+      "title": "レバーアクション銃システム完全実装",
+      "changes": [
+        "LeverActionGunを中心とした機構コンポーネントシステム実装",
+        "FireTrigger/CyclingLever/Reloadableインターフェース設計",
+        "Chamber/Magazine/Bullet/Cartridgeによる銃の内部構造実装",
+        "複雑な状態管理とタイミング制御（coolTime/cancelableTime）",
+        "ItemAnimationManagerによるUUIDベースアニメーション管理",
+        "ネットワーク同期によるマルチプレイヤーアニメーション対応",
+        "MixinHeldItemRendererによる描画位置カスタマイズ",
+        "チューブマガジン（FILO）の実装",
+        "UniqueComponentによるアイテム個体識別システム"
+      ]
+    },
     "2025-06-05": {
       "title": "中間オブジェクト完全削除による最大効率化完了",
       "changes": [
