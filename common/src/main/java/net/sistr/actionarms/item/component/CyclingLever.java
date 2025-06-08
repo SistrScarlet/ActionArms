@@ -1,8 +1,8 @@
-package net.sistr.actionarms.component;
+package net.sistr.actionarms.item.component;
 
 public interface CyclingLever {
 
-    boolean cycle(CycleStartContext context);
+    boolean cycle(AnimationContext context);
 
     boolean canCycle();
 
@@ -12,16 +12,8 @@ public interface CyclingLever {
 
     boolean isLeverDown();
 
-    boolean isCycling();
-
-    float getCyclingTime();
-
     interface CycleTickContext {
         void ejectCartridge(Cartridge cartridge);
-    }
-
-    interface CycleStartContext {
-        void cycle(float seconds);
     }
 
 }

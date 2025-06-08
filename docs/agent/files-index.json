@@ -12,7 +12,7 @@
         "network.json": "ネットワーク通信",
         "setup.json": "登録処理",
         "gltf.json": "glTFモデル描画システム（副作用ゼロ設計完全対応）",
-        "component.json": "銃の機構コンポーネントシステム（レバーアクション実装）"
+        "component.json": "移行完了ファイル（全クラスがitem/componentに統合済み）"
       }
     },
     "fabric/": {
@@ -42,9 +42,28 @@
   ],
   "recent_major_changes": {
     "2025-06-08": {
-      "title": "レバーアクション銃システム完全実装",
+      "title": "コンポーネントシステムの大幅リファクタリングとレジストリシステム導入",
       "changes": [
-        "LeverActionGunを中心とした機構コンポーネントシステム実装",
+        "コンポーネントパッケージ統合（component→item/component）",
+        "DataTypeとComponentの明確な分離実装",
+        "レジストリベースのコンポーネント管理システム導入",
+        "Bullet/BulletType/MagazineTypeの旧実装を削除",
+        "BulletComponent/BulletDataTypeの新実装を追加",
+        "Magazine→MagazineComponentへのリファクタリング",
+        "LeverActionGunType→LeverActionGunDataTypeに名称変更",
+        "GunComponentTypes/GunDataTypesレジストリを新設",
+        "ExampleComponentを削除（不要になったため）",
+        "AnimationContextインターフェース追加",
+        "BaseItemComponent基底クラス導入",
+        "ファクトリーパターンと型安全性の向上",
+        "より柔軟で拡張性のあるコンポーネントシステムを構築"
+      ]
+    },
+    "2025-06-08-previous": {
+      "title": "コンポーネント統合とレバーアクション銃システム完全実装",
+      "changes": [
+        "LeverActionGunとLeverActionGunComponentの統合実装",
+        "無駄な抽象化削除とシンプルな構造実現",
         "FireTrigger/CyclingLever/Reloadableインターフェース設計",
         "Chamber/Magazine/Bullet/Cartridgeによる銃の内部構造実装",
         "複雑な状態管理とタイミング制御（coolTime/cancelableTime）",

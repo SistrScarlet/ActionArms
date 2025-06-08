@@ -14,9 +14,20 @@ public interface IItemComponent {
     void write(NbtCompound nbt);
 
     static <T extends IItemComponent> void execute(Supplier<T> constructor,
+                                                   ItemStack stack,
+                                                   ExecuteFunction<T> function) {
+        execute(constructor.get(), stack.getOrCreateNbt(), function);
+    }
+
+    static <T extends IItemComponent> void execute(Supplier<T> constructor,
                                                    NbtCompound nbt,
                                                    ExecuteFunction<T> function) {
-        var component = constructor.get();
+        execute(constructor.get(), nbt, function);
+    }
+
+    private static <T extends IItemComponent> void execute(T component,
+                                                           NbtCompound nbt,
+                                                           ExecuteFunction<T> function) {
         component.read(nbt);
         var result = function.execute(component);
         if (result == ComponentResult.MODIFIED) {
@@ -24,65 +35,61 @@ public interface IItemComponent {
         }
     }
 
-    static <T extends IItemComponent> void execute(Supplier<T> constructor,
-                                                   ItemStack stack,
-                                                   ExecuteFunction<T> function) {
-        execute(constructor, stack.getOrCreateNbt(), function);
+    static <T extends IItemComponent, R> R query(Supplier<T> constructor,
+                                                 ItemStack stack,
+                                                 Function<T, R> function) {
+        return query(constructor.get(), stack.getOrCreateNbt(), function);
     }
 
     static <T extends IItemComponent, R> R query(Supplier<T> constructor,
                                                  NbtCompound nbt,
                                                  Function<T, R> function) {
-        var component = constructor.get();
-        component.read(nbt);
-        return function.apply(component);
+        return query(constructor.get(), nbt, function);
     }
 
     /**
      * コンポーネントから値を読み取ります（読み取り専用、保存しません）。
      *
-     * @param constructor コンポーネントのコンストラクタ
-     * @param stack       対象のItemStack
-     * @param function    読み取り処理
-     * @param <T>         コンポーネントの型
-     * @param <R>         戻り値の型
+     * @param component コンポーネント
+     * @param nbt       対象のItemStackのnbt
+     * @param function  読み取り処理
+     * @param <T>       コンポーネントの型
+     * @param <R>       戻り値の型
      * @return 読み取った値
      */
-    static <T extends IItemComponent, R> R query(Supplier<T> constructor,
-                                                 ItemStack stack,
-                                                 Function<T, R> function) {
-        return query(constructor, stack.getOrCreateNbt(), function);
+    private static <T extends IItemComponent, R> R query(T component,
+                                                         NbtCompound nbt,
+                                                         Function<T, R> function) {
+        component.read(nbt);
+        return function.apply(component);
+    }
+
+    static <T extends IItemComponent> void update(Supplier<T> constructor,
+                                                  ItemStack stack,
+                                                  Consumer<T> function) {
+        update(constructor.get(), stack.getOrCreateNbt(), function);
     }
 
     static <T extends IItemComponent> void update(Supplier<T> constructor,
                                                   NbtCompound nbt,
                                                   Consumer<T> function) {
-        var component = constructor.get();
-        component.read(nbt);
-        function.accept(component);
-        component.write(nbt);
+        update(constructor.get(), nbt, function);
     }
 
     /**
      * コンポーネントを更新します（常に保存されます）。
      *
-     * @param constructor コンポーネントのコンストラクタ
-     * @param stack       対象のItemStack
+     * @param component コンポーネント
+     * @param nbt         対象のItemStackのnbt
      * @param function    更新処理
      * @param <T>         コンポーネントの型
      */
-    static <T extends IItemComponent> void update(Supplier<T> constructor,
-                                                  ItemStack stack,
+    private static <T extends IItemComponent> void update(T component,
+                                                  NbtCompound nbt,
                                                   Consumer<T> function) {
-        update(constructor, stack.getOrCreateNbt(), function);
-    }
-
-    static <T extends IItemComponent> NbtCompound getComponentNbt(Supplier<T> constructor, ItemStack stack) {
-        var component = constructor.get();
-        component.read(stack.getOrCreateNbt());
-        var nbt = new NbtCompound();
+        component.read(nbt);
+        function.accept(component);
         component.write(nbt);
-        return nbt;
     }
 
     /**

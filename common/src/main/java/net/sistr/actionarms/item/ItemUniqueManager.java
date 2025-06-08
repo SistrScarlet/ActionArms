@@ -23,7 +23,7 @@ public class ItemUniqueManager {
             return;
         }
         long worldTime = world.getTime();
-        var uuid = IItemComponent.query(UniqueComponent::new, stack, UniqueComponent::getUUID);
+        var uuid = UniqueComponent.get(stack);
         var savedWorldTime = stateMap.get(uuid);
         // 重複した状態が存在している
         if (savedWorldTime != null && savedWorldTime.equals(worldTime)) {

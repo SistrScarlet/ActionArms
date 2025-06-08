@@ -1,47 +1,48 @@
-package net.sistr.actionarms.component;
+package net.sistr.actionarms.item.component;
 
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtList;
+import net.sistr.actionarms.item.component.registry.GunComponentTypes;
 
 import java.util.*;
 
-public class Magazine {
-    private final MagazineType type;
-    private final LinkedList<Bullet> bullets;
+public class MagazineComponent implements IItemComponent {
+    private final MagazineDataType magazineDataType;
+    private final LinkedList<BulletComponent> bullets;
 
-    public Magazine(MagazineType type) {
-        this.type = type;
+    public MagazineComponent(MagazineDataType magazineDataType) {
+        this.magazineDataType = magazineDataType;
         this.bullets = new LinkedList<>();
     }
 
-    public boolean addFirstBullet(Bullet bullet) {
-        if (bullets.size() < type.capacity()
-                && this.type.allowBullet().test(bullet)) {
+    public boolean addFirstBullet(BulletComponent bullet) {
+        if (bullets.size() < magazineDataType.capacity()
+                && this.magazineDataType.allowBullet().test(bullet)) {
             bullets.addFirst(bullet);
             return true;
         }
         return false;
     }
 
-    public boolean addLastBullet(Bullet bullet) {
-        if (bullets.size() < type.capacity()
-                && this.type.allowBullet().test(bullet)) {
+    public boolean addLastBullet(BulletComponent bullet) {
+        if (bullets.size() < magazineDataType.capacity()
+                && this.magazineDataType.allowBullet().test(bullet)) {
             bullets.addLast(bullet);
             return true;
         }
         return false;
     }
 
-    public List<Bullet> addFirstBullets(List<Bullet> bulletList, boolean reverse, boolean first) {
-        var compat = new ArrayList<Bullet>();
-        var incompat = new ArrayList<Bullet>();
+    public List<BulletComponent> addBullets(List<BulletComponent> bulletList, boolean reverse, boolean first) {
+        var compat = new ArrayList<BulletComponent>();
+        var incompat = new ArrayList<BulletComponent>();
         splitBullets(bulletList, compat, incompat);
         if (reverse) {
             compat = new ArrayList<>(compat);
             Collections.reverse(compat);
         }
 
-        if (bullets.size() + compat.size() <= type.capacity()) {
+        if (bullets.size() + compat.size() <= magazineDataType.capacity()) {
             if (first) {
                 bullets.addAll(0, compat);
             } else {
@@ -51,17 +52,17 @@ public class Magazine {
         return incompat;
     }
 
-    public List<Bullet> addFirstBullets(List<Bullet> bulletList, boolean reverse) {
-        return addFirstBullets(bulletList, reverse, true);
+    public List<BulletComponent> addFirstBullets(List<BulletComponent> bulletList, boolean reverse) {
+        return addBullets(bulletList, reverse, true);
     }
 
-    public List<Bullet> addLastBullets(List<Bullet> bulletList, boolean reverse) {
-        return addFirstBullets(bulletList, reverse, false);
+    public List<BulletComponent> addLastBullets(List<BulletComponent> bulletList, boolean reverse) {
+        return addBullets(bulletList, reverse, false);
     }
 
-    public void splitBullets(List<Bullet> bulletList, List<Bullet> compat, List<Bullet> incompat) {
-        for (Bullet bullet : bulletList) {
-            if (this.type.allowBullet().test(bullet)) {
+    public void splitBullets(List<BulletComponent> bulletList, List<BulletComponent> compat, List<BulletComponent> incompat) {
+        for (BulletComponent bullet : bulletList) {
+            if (this.magazineDataType.allowBullet().test(bullet)) {
                 compat.add(bullet);
             } else {
                 incompat.add(bullet);
@@ -77,28 +78,28 @@ public class Magazine {
         bullets.removeLast();
     }
 
-    public Optional<Bullet> popFirstBullet() {
+    public Optional<BulletComponent> popFirstBullet() {
         if (!bullets.isEmpty()) {
             return Optional.of(bullets.removeFirst());
         }
         return Optional.empty();
     }
 
-    public Optional<Bullet> popLastBullet() {
+    public Optional<BulletComponent> popLastBullet() {
         if (!bullets.isEmpty()) {
             return Optional.of(bullets.removeLast());
         }
         return Optional.empty();
     }
 
-    public Optional<Bullet> getFirstBullet() {
+    public Optional<BulletComponent> getFirstBullet() {
         if (!bullets.isEmpty()) {
             return Optional.of(bullets.getFirst());
         }
         return Optional.empty();
     }
 
-    public Optional<Bullet> getLastBullet() {
+    public Optional<BulletComponent> getLastBullet() {
         if (!bullets.isEmpty()) {
             return Optional.of(bullets.getLast());
         }
@@ -106,11 +107,11 @@ public class Magazine {
     }
 
     public boolean canAddBullet() {
-        return bullets.size() < type.capacity();
+        return bullets.size() < magazineDataType.capacity();
     }
 
-    public boolean canAddBullet(Bullet bullet) {
-        return this.type.allowBullet().test(bullet);
+    public boolean canAddBullet(BulletComponent bullet) {
+        return this.magazineDataType.allowBullet().test(bullet);
     }
 
     public boolean hasBullet() {
@@ -118,23 +119,23 @@ public class Magazine {
     }
 
     public boolean isFull() {
-        return bullets.size() >= type.capacity();
+        return bullets.size() >= magazineDataType.capacity();
     }
 
-    public List<Bullet> getBullets() {
+    public List<BulletComponent> getBullets() {
         return bullets;
     }
 
     public int getMaxCapacity() {
-        return type.capacity();
+        return magazineDataType.capacity();
     }
 
     public boolean isEmpty() {
         return this.bullets.isEmpty();
     }
 
-    public MagazineType getType() {
-        return type;
+    public MagazineDataType getMagazineType() {
+        return magazineDataType;
     }
 
     public int size() {
@@ -150,14 +151,15 @@ public class Magazine {
         var bulletList = nbt.getList("Bullets", 10);
         for (int i = 0; i < bulletList.size(); i++) {
             var bulletNbt = bulletList.getCompound(i);
-            var bullet = Bullet.read(bulletNbt);
-            bullets.add(bullet);
+            var bullet = GunComponentTypes.MIDDLE_CALIBER.get();
+            bullet.read(bulletNbt);
+            this.bullets.add(bullet);
         }
     }
 
     public void write(NbtCompound nbt) {
         var bulletList = new NbtList();
-        for (Bullet bullet : bullets) {
+        for (BulletComponent bullet : bullets) {
             var bulletNbt = new NbtCompound();
             bullet.write(bulletNbt);
             bulletList.add(bulletNbt);

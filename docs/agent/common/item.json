@@ -39,18 +39,23 @@
     "note": "銃の状態管理の核。ComponentResultでシンプルかつ明確な制御が可能"
   },
   "component/LeverActionGunComponent.java": {
-    "desc": "レバーアクション銃の機構コンポーネント。LeverActionGunを内包し、NBT永続化を管理",
+    "desc": "レバーアクション銃の統合コンポーネント。銃の機構（FireTrigger/CyclingLever/Reloadable）とアイテムシステム（IItemComponent）を直接実装",
     "importance": "high",
     "last_accessed": "2025-06-08",
     "key_features": [
       "IItemComponent実装",
-      "LeverActionGunの内包",
-      "ハードコーディングされた設定値",
-      "NBT永続化処理"
+      "FireTrigger/CyclingLever/Reloadable直接実装",
+      "レバー状態管理（leverDown、cycling、hammerReady）",
+      "タイミング制御（各種coolTimeとcancelableTime）",
+      "Chamber/Magazine統合管理",
+      "tick処理による状態更新",
+      "NBT永続化処理",
+      "ハードコーディングされた設定値"
     ],
     "parent": "IItemComponent",
-    "dependencies": ["LeverActionGun.java", "LeverActionGunType.java", "MagazineType.java"],
-    "note": "レバーアクション機構とアイテムシステムを接続する重要なブリッジ"
+    "interfaces": ["FireTrigger", "CyclingLever", "Reloadable"],
+    "dependencies": ["LeverActionGunType.java", "MagazineType.java", "Chamber.java", "Magazine.java"],
+    "note": "LeverActionGunクラスを統合し、銃の機構とアイテムシステムを一元化。無駄な抽象化を削除してよりシンプルな構造を実現"
   },
   "component/UniqueComponent.java": {
     "desc": "アイテム個体を一意に識別するUUIDを管理するコンポーネント。アニメーション同期に不可欠",
@@ -78,21 +83,108 @@
     "dependencies": ["UniqueComponent.java"],
     "note": "UUID管理の実装詳細を隠蔽し、シンプルなAPIを提供"
   },
-  "component/ExampleComponent.java": {
-    "desc": "コンポーネントシステムの使用例、カウンター機能を実装",
-    "importance": "low",
-    "last_accessed": "2025-05-29",
+  "component/AnimationContext.java": {
+    "desc": "アニメーション処理のコンテキストインターフェース",
+    "importance": "medium",
+    "last_accessed": "2025-06-08",
+    "key_features": ["アニメーション処理の共通インターフェース", "将来的な拡張予定"],
+    "note": "現在は空インターフェース、今後アニメーション処理の標準化に使用予定"
+  },
+  "component/BulletComponent.java": {
+    "desc": "弾丸コンポーネントの新実装。BaseItemComponentを継承しDataType分離設計を採用",
+    "importance": "high",
+    "last_accessed": "2025-06-08",
     "key_features": [
-      "count変数管理",
-      "NBT永続化",
-      "incrementExample（基本的なexecute使用例）",
-      "incrementWithLimit（NO_CHANGE/MODIFIEDの使い分け）",
-      "resetIfCorrupted（データ整合性チェック例）",
-      "getCount（query使用例）",
-      "setCount/addCount（update使用例）",
-      "3つの操作パターンの実例"
+      "BaseItemComponent継承",
+      "BulletDataType分離設計",
+      "NBT読み書き実装",
+      "型安全なコンポーネント管理"
     ],
-    "parent": "IItemComponent",
-    "note": "execute/query/updateの全パターンとシンプルなComponentResultの使い分けを示す"
+    "parent": "BaseItemComponent",
+    "dependencies": ["BulletDataType.java", "GunComponentTypes.java"],
+    "note": "旧Bullet.javaから大幅リファクタリング、DataTypeとComponentの明確分離"
+  },
+  "component/BulletDataType.java": {
+    "desc": "弾丸の基本データ定義。ダメージとヘッドショットダメージを管理",
+    "importance": "high",
+    "last_accessed": "2025-06-08",
+    "key_features": [
+      "damage/headshotDamageパラメータ",
+      "record型による不変データ",
+      "レジストリ管理対応"
+    ],
+    "dependencies": ["GunDataTypes.java"],
+    "note": "旧BulletType.javaを置き換え、よりシンプルで明確な設計"
+  },
+  "component/MagazineComponent.java": {
+    "desc": "マガジンコンポーネント（旧Magazine.java）。BaseItemComponentを継承しDataType分離設計を採用",
+    "importance": "high",
+    "last_accessed": "2025-06-08",
+    "key_features": [
+      "BaseItemComponent継承",
+      "MagazineDataType分離設計",
+      "LinkedList<Bullet>による弾丸管理",
+      "チューブマガジン（FILO）対応",
+      "弾丸互換性チェック",
+      "NBT永続化"
+    ],
+    "parent": "BaseItemComponent",
+    "dependencies": ["MagazineDataType.java", "BulletComponent.java", "GunComponentTypes.java"],
+    "note": "旧Magazine.javaから名称変更とDataType分離リファクタリング"
+  },
+  "component/MagazineDataType.java": {
+    "desc": "マガジンの基本データ定義。容量と弾丸互換性を管理",
+    "importance": "high",
+    "last_accessed": "2025-06-08",
+    "key_features": [
+      "capacity（弾丸容量）",
+      "allowBullet（弾丸互換性判定）",
+      "record型による不変データ",
+      "Predicate<Bullet>による柔軟な互換性管理"
+    ],
+    "dependencies": ["BulletComponent.java", "GunDataTypes.java"],
+    "note": "旧MagazineType.javaを置き換え、よりシンプルで明確な設計"
+  },
+  "component/LeverActionGunDataType.java": {
+    "desc": "レバーアクション銃の基本データ定義（旧LeverActionGunType.java）",
+    "importance": "high",
+    "last_accessed": "2025-06-08",
+    "key_features": [
+      "各種アクションのクールタイム定義",
+      "fireCoolLength/reloadLength設定",
+      "leverDownLength/leverUpLength設定",
+      "record型による不変データ",
+      "name削除でよりシンプルに"
+    ],
+    "dependencies": ["GunDataTypes.java"],
+    "note": "LeverActionGunType.javaからリネーム、name削除でシンプル化"
+  },
+  "component/registry/GunComponentTypes.java": {
+    "desc": "銃コンポーネントの型定義レジストリ。具体的なコンポーネントインスタンスを定義",
+    "importance": "high",
+    "last_accessed": "2025-06-08",
+    "key_features": [
+      "MIDDLE_CALIBER（弾丸コンポーネント）",
+      "LEVER_ACTION_TUBE_MAGAZINE（マガジンコンポーネント）",
+      "M1873（レバーアクション銃コンポーネント）",
+      "ComponentTypeRegistries連携",
+      "ファクトリーパターン実装"
+    ],
+    "dependencies": ["GunDataTypes.java", "ComponentTypeRegistries.java"],
+    "note": "新設されたレジストリシステム、コンポーネントの型安全な管理を実現"
+  },
+  "component/registry/GunDataTypes.java": {
+    "desc": "銃データタイプのレジストリ。具体的なデータ定義と登録を管理",
+    "importance": "high",
+    "last_accessed": "2025-06-08",
+    "key_features": [
+      "MIDDLE_CALIBER（弾丸データ）",
+      "LEVER_ACTION_TUBE_MAGAZINE（マガジンデータ）",
+      "M1873（レバーアクション銃データ）",
+      "DataTypeRegistries連携",
+      "型別register()メソッド"
+    ],
+    "dependencies": ["DataTypeRegistries.java", "各DataType.java"],
+    "note": "新設されたレジストリシステム、データの一元管理を実現"
   }
 }

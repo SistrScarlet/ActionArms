@@ -1,4 +1,4 @@
-package net.sistr.actionarms.component;
+package net.sistr.actionarms.item.component;
 
 import net.minecraft.nbt.NbtCompound;
 import org.jetbrains.annotations.Nullable;
@@ -33,7 +33,7 @@ public class Chamber {
         return this.cartridge != null && this.cartridge.canShoot();
     }
 
-    public Optional<Bullet> shoot() {
+    public Optional<BulletComponent> shoot() {
         if (this.cartridge == null || this.cartridge.getBullet().isEmpty()) {
             return Optional.empty();
         }

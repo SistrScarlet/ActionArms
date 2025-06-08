@@ -1,37 +1,40 @@
-package net.sistr.actionarms.component;
+package net.sistr.actionarms.item.component;
 
 import net.minecraft.nbt.NbtCompound;
+import net.sistr.actionarms.item.component.registry.GunComponentTypes;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Optional;
 
 public class Cartridge {
     @Nullable
-    private Bullet bullet;
+    private BulletComponent bullet;
 
-    public Cartridge(@Nullable Bullet bullet) {
+    public Cartridge(@Nullable BulletComponent bullet) {
         this.bullet = bullet;
     }
 
-    public Optional<Bullet> getBullet() {
+    public Optional<BulletComponent> getBullet() {
         return Optional.ofNullable(bullet);
     }
 
-    public void setBullet(@Nullable Bullet bullet) {
+    public void setBullet(@Nullable BulletComponent bullet) {
         this.bullet = bullet;
-    }
-
-    public boolean isInBullet() {
-        return bullet != null;
     }
 
     public boolean canShoot() {
         return bullet != null;
     }
 
+    public boolean isEmpty() {
+        return bullet == null;
+    }
+
     public void read(NbtCompound nbt) {
         if (nbt.contains("bullet")) {
-            this.bullet = Bullet.read(nbt.getCompound("bullet"));
+            var bulletNbt = nbt.getCompound("bullet");
+            this.bullet = GunComponentTypes.MIDDLE_CALIBER.get();
+            this.bullet.read(bulletNbt);
         }
     }
 

@@ -9,19 +9,21 @@ import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.Hand;
 import net.minecraft.util.TypedActionResult;
 import net.minecraft.world.World;
-import net.sistr.actionarms.component.*;
-import net.sistr.actionarms.item.component.IItemComponent;
-import net.sistr.actionarms.item.component.LeverActionGunComponent;
-import net.sistr.actionarms.item.component.UniqueComponent;
+import net.sistr.actionarms.item.component.*;
+import net.sistr.actionarms.item.component.registry.GunComponentTypes;
 import net.sistr.actionarms.network.ItemAnimationEventPacket;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 public class LeverActionGunItem extends GunItem {
-    public LeverActionGunItem(Settings settings) {
+    private final Supplier<LeverActionGunComponent> gunComponentSupplier;
+
+    public LeverActionGunItem(Settings settings, Supplier<LeverActionGunComponent> gunComponentSupplier) {
         super(settings);
+        this.gunComponentSupplier = gunComponentSupplier;
     }
 
     @Override
@@ -31,31 +33,28 @@ public class LeverActionGunItem extends GunItem {
         }
         boolean isSelected = entity instanceof LivingEntity
                 && ((LivingEntity) entity).getStackInHand(Hand.MAIN_HAND) == stack;
-        IItemComponent.execute(LeverActionGunComponent::new, stack, component -> {
-            component.leverActionGunItem.tick(
-                    isSelected,
-                    new CyclingLever.CycleTickContext() {
-                        @Override
-                        public void ejectCartridge(Cartridge cartridge) {
-                            // todo 排莢処理
-                        }
+        IItemComponent.execute(getGunComponent(), stack, component -> {
+            component.tick(
+                    cartridge -> {
+                        // todo 排莢処理
                     },
                     new Reloadable.ReloadTickContext() {
                         @Override
-                        public List<Bullet> popBullets(Predicate<Bullet> predicate, int count) {
-                            List<Bullet> bullets = new ArrayList<>(count);
+                        public List<BulletComponent> popBullets(Predicate<BulletComponent> predicate, int count) {
+                            List<BulletComponent> bullets = new ArrayList<>(count);
                             for (int i = 0; i < count; i++) {
-                                bullets.add(new Bullet(BulletType.DEFAULT_TYPE));
+                                bullets.add(GunComponentTypes.MIDDLE_CALIBER.get());
                             }
                             return bullets;
                         }
 
                         @Override
-                        public void returnBullets(List<Bullet> bullets) {
+                        public void returnBullets(List<BulletComponent> bullets) {
                             // todo 弾薬返還処理
                         }
                     },
-                    1f / 20f
+                    1f / 20f,
+                    isSelected
             );
             return IItemComponent.ComponentResult.MODIFIED;
         });
@@ -67,11 +66,11 @@ public class LeverActionGunItem extends GunItem {
         if (!world.isClient) {
             var stack = user.getStackInHand(hand);
             var uuid = UniqueComponent.get(stack);
-            IItemComponent.execute(LeverActionGunComponent::new, stack, component -> {
-                var gun = component.leverActionGunItem;
+            var animationContext = AnimationContext.of(world, uuid);
+            IItemComponent.execute(getGunComponent(), stack, gun -> {
                 if (gun.shouldCycle()) {
                     if (gun.canCycle()) {
-                        if (gun.cycle(s -> ItemAnimationEventPacket.sendS2C(world, uuid, "cycle", s))) {
+                        if (gun.cycle(animationContext)) {
                             world.playSound(null, user.getX(), user.getY(), user.getZ(),
                                     SoundEvents.UI_BUTTON_CLICK.value(), SoundCategory.PLAYERS, 1.0f, 1.0f);
                         }
@@ -80,7 +79,7 @@ public class LeverActionGunItem extends GunItem {
                 }
                 if (gun.shouldReload()) {
                     if (gun.canReload()) {
-                        if (gun.reload(s -> ItemAnimationEventPacket.sendS2C(world, uuid, "reload", s))) {
+                        if (gun.reload(animationContext)) {
                             world.playSound(null, user.getX(), user.getY(), user.getZ(),
                                     SoundEvents.BLOCK_DISPENSER_DISPENSE, SoundCategory.PLAYERS, 1.0f, 1.0f);
                         }
@@ -89,7 +88,7 @@ public class LeverActionGunItem extends GunItem {
                     }
                 }
                 if (gun.canTrigger()) {
-                    boolean result = gun.trigger(bullet -> {
+                    boolean result = gun.trigger(animationContext, bullet -> {
                         ItemAnimationEventPacket.sendS2C(world, uuid, "firing", 0);
                         world.playSound(null, user.getX(), user.getY(), user.getZ(),
                                 SoundEvents.ENTITY_GENERIC_EXPLODE, SoundCategory.PLAYERS, 1.0f, 1.0f);
@@ -106,5 +105,8 @@ public class LeverActionGunItem extends GunItem {
         return super.use(world, user, hand);
     }
 
+    public Supplier<LeverActionGunComponent> getGunComponent() {
+        return this.gunComponentSupplier;
+    }
 
 }

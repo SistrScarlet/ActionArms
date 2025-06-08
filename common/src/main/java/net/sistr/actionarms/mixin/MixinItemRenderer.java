@@ -14,6 +14,7 @@ import net.sistr.actionarms.client.render.gltf.GltfModelManager;
 import net.sistr.actionarms.client.render.gltf.ItemAnimationManager;
 import net.sistr.actionarms.client.render.gltf.renderer.GltfRenderer;
 import net.sistr.actionarms.client.render.gltf.renderer.RenderingContext;
+import net.sistr.actionarms.item.LeverActionGunItem;
 import net.sistr.actionarms.item.component.IItemComponent;
 import net.sistr.actionarms.item.component.LeverActionGunComponent;
 import net.sistr.actionarms.item.util.GlftModelItem;
@@ -63,7 +64,8 @@ public class MixinItemRenderer {
 
             float tickDelta = MinecraftClient.getInstance().getTickDelta();
 
-            var gunComponent = IItemComponent.query(LeverActionGunComponent::new, stack, c -> c);
+            var gunComponent = IItemComponent.query(((LeverActionGunItem) stack.getItem()).getGunComponent(),
+                    stack, c -> c);
             var itemStates = ItemAnimationManager.INSTANCE.getItemStateMap(stack);
 
             var animationStates = getAnimationStates(entity, gunComponent, itemStates, tickDelta);
@@ -93,10 +95,9 @@ public class MixinItemRenderer {
             Map<String, ItemAnimationManager.State> itemStates, float tickDelta) {
         var states = new ArrayList<RenderingContext.AnimationState>();
 
-        var gun = component.leverActionGunItem;
         float entityAge = entity.age * (1f / 20f) + tickDelta;
 
-        if (gun.isHammerReady()) {
+        if (component.isHammerReady()) {
             states.add(new RenderingContext.AnimationState(
                     "hammerReady",
                     entityAge,
@@ -107,7 +108,7 @@ public class MixinItemRenderer {
                     entityAge,
                     true));
         }
-        if (gun.isLeverDown()) {
+        if (component.isLeverDown()) {
             states.add(new RenderingContext.AnimationState(
                     "leverDown",
                     entityAge,

@@ -5,11 +5,19 @@ import net.minecraft.nbt.NbtCompound;
 
 import java.util.UUID;
 
+// todo:コンポーネント化する意味が薄い
 public class UniqueComponent implements IItemComponent {
     private UUID uniqueId;
 
     public static UUID get(ItemStack stack) {
-        return IItemComponent.query(UniqueComponent::new, stack, UniqueComponent::getUUID);
+        // queryだと値がセットされない
+        var nbt = stack.getOrCreateNbt();
+        if (!nbt.containsUuid("uniqueId")) {
+            var uuid = UUID.randomUUID();
+            nbt.putUuid("uniqueId", uuid);
+            return uuid;
+        }
+        return nbt.getUuid("uniqueId");
     }
 
     @Override
