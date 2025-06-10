@@ -22,4 +22,8 @@ public class BulletComponent implements IItemComponent {
     public BulletDataType getBulletDataType() {
         return bulletDataType;
     }
+
+    public BulletComponent copy() {
+        return new BulletComponent(this.bulletDataType);
+    }
 }

@@ -21,8 +21,11 @@ public class InventoryAmmoUtil {
             getBullet(stack)
                     .filter(predicate)
                     .ifPresent(bullet -> {
-                        bullets.add(bullet);
-                        inventory.setStack(finalI, ItemStack.EMPTY);
+                        int remain = limit - bullets.size();
+                        var stacks = inventory.removeStack(finalI, remain);
+                        for (int j = 0; j < stacks.getCount(); j++) {
+                            bullets.add(bullet.copy());
+                        }
                     });
             if (bullets.size() >= limit) {
                 return bullets;
