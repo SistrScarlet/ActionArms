@@ -1,6 +1,6 @@
 {
   "description": "ActionArms MOD - 銃の機構と操作の心地よさを重視したMinecraft用銃MOD（副作用ゼロレンダリングシステム完全実装済み）",
-  "last_updated": "2025-06-08",
+  "last_updated": "2025-06-10",
   "structure": {
     "common/": {
       "description": "プラットフォーム共通コード",
@@ -12,7 +12,8 @@
         "network.json": "ネットワーク通信",
         "setup.json": "登録処理",
         "gltf.json": "glTFモデル描画システム（副作用ゼロ設計完全対応）",
-        "component.json": "移行完了ファイル（全クラスがitem/componentに統合済み）"
+        "component.json": "移行完了ファイル（全クラスがitem/componentに統合済み）",
+        "entity.json": "エンティティシステム（弾丸エンティティ）"
       }
     },
     "fabric/": {
@@ -38,9 +39,29 @@
     "スレッドセーフなレンダリング",
     "高いテスタビリティ（純粋関数設計）",
     "Mixinベースのカスタムアイテム描画",
-    "メモリ効率と保守性の両立"
+    "メモリ効率と保守性の両立",
+    "物理演算付き弾丸エンティティシステム",
+    "ヘッドショット判定とダメージ処理",
+    "レイキャスト＋ProjectileUtilハイブリッド当たり判定"
   ],
   "recent_major_changes": {
+    "2025-06-10": {
+      "title": "弾丸エンティティシステムの完全実装",
+      "changes": [
+        "BulletEntityクラスの完全実装（217行）",
+        "BulletEntityRendererでエンティティ描画対応",
+        "LeverActionGunItemに実際の弾丸射撃処理実装",
+        "Registration.javaでBULLET_ENTITYタイプ登録",
+        "ActionArmsClientでエンティティレンダラー登録",
+        "BulletComponentにgetBulletDataType()メソッド追加",
+        "レイキャスト＋ProjectileUtilハイブリッド当たり判定",
+        "ヘッドショット判定システム（サイズ応動型）",
+        "重力と空気抵抗の物理演算",
+        "所有者追跡システム（UUID/Entity）",
+        "EnderDragonPart特別対応",
+        "マルチプレイヤー対応の完全実装"
+      ]
+    },
     "2025-06-08": {
       "title": "コンポーネントシステムの大幅リファクタリングとレジストリシステム導入",
       "changes": [

@@ -18,4 +18,8 @@ public class BulletComponent implements IItemComponent {
     public void write(NbtCompound nbt) {
 
     }
+
+    public BulletDataType getBulletDataType() {
+        return bulletDataType;
+    }
 }

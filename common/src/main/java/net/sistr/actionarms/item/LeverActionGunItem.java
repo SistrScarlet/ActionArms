@@ -9,9 +9,11 @@ import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.Hand;
 import net.minecraft.util.TypedActionResult;
 import net.minecraft.world.World;
+import net.sistr.actionarms.entity.BulletEntity;
 import net.sistr.actionarms.item.component.*;
 import net.sistr.actionarms.item.component.registry.GunComponentTypes;
 import net.sistr.actionarms.network.ItemAnimationEventPacket;
+import net.sistr.actionarms.setup.Registration;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -63,45 +65,50 @@ public class LeverActionGunItem extends GunItem {
 
     @Override
     public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {
-        if (!world.isClient) {
-            var stack = user.getStackInHand(hand);
-            var uuid = UniqueComponent.get(stack);
-            var animationContext = AnimationContext.of(world, uuid);
-            IItemComponent.execute(getGunComponent(), stack, gun -> {
-                if (gun.shouldCycle()) {
-                    if (gun.canCycle()) {
-                        if (gun.cycle(animationContext)) {
-                            world.playSound(null, user.getX(), user.getY(), user.getZ(),
-                                    SoundEvents.UI_BUTTON_CLICK.value(), SoundCategory.PLAYERS, 1.0f, 1.0f);
-                        }
-                        return IItemComponent.ComponentResult.MODIFIED;
-                    }
-                }
-                if (gun.shouldReload()) {
-                    if (gun.canReload()) {
-                        if (gun.reload(animationContext)) {
-                            world.playSound(null, user.getX(), user.getY(), user.getZ(),
-                                    SoundEvents.BLOCK_DISPENSER_DISPENSE, SoundCategory.PLAYERS, 1.0f, 1.0f);
-                        }
-
-                        return IItemComponent.ComponentResult.MODIFIED;
-                    }
-                }
-                if (gun.canTrigger()) {
-                    boolean result = gun.trigger(animationContext, bullet -> {
-                        ItemAnimationEventPacket.sendS2C(world, uuid, "firing", 0);
-                        world.playSound(null, user.getX(), user.getY(), user.getZ(),
-                                SoundEvents.ENTITY_GENERIC_EXPLODE, SoundCategory.PLAYERS, 1.0f, 1.0f);
-                    });
-                    if (result) {
-                        return IItemComponent.ComponentResult.MODIFIED;
-                    } else {
-                        return IItemComponent.ComponentResult.NO_CHANGE;
-                    }
-                }
-                return IItemComponent.ComponentResult.NO_CHANGE;
-            });
+        if (world.isClient) {
+            return super.use(world, user, hand);
         }
+        var stack = user.getStackInHand(hand);
+        var uuid = UniqueComponent.get(stack);
+        var animationContext = AnimationContext.of(world, uuid);
+        IItemComponent.execute(getGunComponent(), stack, gun -> {
+            if (gun.shouldCycle()) {
+                if (gun.canCycle()) {
+                    if (gun.cycle(animationContext)) {
+                        world.playSound(null, user.getX(), user.getY(), user.getZ(),
+                                SoundEvents.UI_BUTTON_CLICK.value(), SoundCategory.PLAYERS, 1.0f, 1.0f);
+                        return IItemComponent.ComponentResult.MODIFIED;
+                    }
+                }
+            }
+            if (gun.shouldReload()) {
+                if (gun.canReload()) {
+                    if (gun.reload(animationContext)) {
+                        world.playSound(null, user.getX(), user.getY(), user.getZ(),
+                                SoundEvents.BLOCK_DISPENSER_DISPENSE, SoundCategory.PLAYERS, 1.0f, 1.0f);
+                        return IItemComponent.ComponentResult.MODIFIED;
+                    }
+                }
+            }
+            if (gun.canTrigger()) {
+                boolean result = gun.trigger(animationContext, bullet -> {
+                    // 射撃処理
+                    var bulletEntity = BulletEntity.of(Registration.BULLET_ENTITY.get(), world, user,
+                            bullet, user.getEyePos(), BulletEntity.getVec(user.getYaw(), user.getPitch()), 3);
+                    world.spawnEntity(bulletEntity);
+
+                    ItemAnimationEventPacket.sendS2C(world, uuid, "firing", 0);
+                    world.playSound(null, user.getX(), user.getY(), user.getZ(),
+                            SoundEvents.ENTITY_GENERIC_EXPLODE, SoundCategory.PLAYERS, 1.0f, 1.0f);
+                });
+                if (result) {
+                    return IItemComponent.ComponentResult.MODIFIED;
+                } else {
+                    return IItemComponent.ComponentResult.NO_CHANGE;
+                }
+            }
+            return IItemComponent.ComponentResult.NO_CHANGE;
+        });
         return super.use(world, user, hand);
     }
 

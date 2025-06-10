@@ -1,12 +1,14 @@
 {
   "Registration.java": {
-    "desc": "MODのアイテム登録処理を管理",
+    "desc": "MODのアイテム・エンティティ登録処理を管理",
     "importance": "high",
-    "last_accessed": "2025-05-29",
+    "last_accessed": "2025-06-10",
     "key_features": [
       "DeferredRegister使用",
       "アイテム登録システム",
-      "テスト用レバーアクション銃登録"
+      "テスト用レバーアクション銃登録",
+      "BulletEntityエンティティタイプ登録",
+      "エンティティ設定（サイズ・追跡距離）"
     ],
     "registered_items": {
       "TEST_LEVER_ACTION_GUN": {
@@ -15,7 +17,17 @@
         "maxCount": 1
       }
     },
-    "dependencies": ["LeverActionGunItem"],
-    "note": "今後追加される銃アイテムもここに登録される"
+    "registered_entities": {
+      "BULLET_ENTITY": {
+        "id": "bullet",
+        "type": "BulletEntity",
+        "dimensions": "0.05f x 0.05f",
+        "maxTrackingRange": 4,
+        "trackingTickInterval": 20,
+        "spawnGroup": "MISC"
+      }
+    },
+    "dependencies": ["LeverActionGunItem", "BulletEntity"],
+    "note": "アイテムとエンティティの一元管理。弾丸エンティティシステム対応"
   }
 }

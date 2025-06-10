@@ -8,12 +8,13 @@
     "note": "glTF描画システムとの連携により、カスタム3Dモデル描画が可能"
   },
   "LeverActionGunItem.java": {
-    "desc": "レバーアクション機構を持つ銃アイテム",
+    "desc": "レバーアクション機構を持つ銃アイテム。実際の弾丸エンティティ射撃処理実装済み",
     "importance": "high",
-    "last_accessed": "2025-06-08",
-    "key_features": ["GunItem継承", "レバーアクション機構"],
+    "last_accessed": "2025-06-10",
+    "key_features": ["GunItem継承", "レバーアクション機構", "弾丸エンティティ生成処理", "方向ベクトル計算", "アニメーション同期"],
     "parent": "GunItem",
-    "note": "MODの主要機能となるレバーアクション銃の実装"
+    "dependencies": ["BulletEntity.java", "Registration.java"],
+    "note": "MODの主要機能となるレバーアクション銃の実装。trigger()で実際の弾丸エンティティを生成・射撃"
   },
   "util/GlftModelItem.java": {
     "desc": "glTFモデルを使用するアイテム用のマーカーインターフェース",
@@ -91,18 +92,20 @@
     "note": "現在は空インターフェース、今後アニメーション処理の標準化に使用予定"
   },
   "component/BulletComponent.java": {
-    "desc": "弾丸コンポーネントの新実装。BaseItemComponentを継承しDataType分離設計を採用",
+    "desc": "弾丸コンポーネントの新実装。BaseItemComponentを継承しDataType分離設計を採用。エンティティシステム連携対応",
     "importance": "high",
-    "last_accessed": "2025-06-08",
+    "last_accessed": "2025-06-10",
     "key_features": [
       "BaseItemComponent継承",
       "BulletDataType分離設計",
       "NBT読み書き実装",
-      "型安全なコンポーネント管理"
+      "型安全なコンポーネント管理",
+      "getBulletDataType()メソッド提供",
+      "BulletEntityとの連携"
     ],
     "parent": "BaseItemComponent",
-    "dependencies": ["BulletDataType.java", "GunComponentTypes.java"],
-    "note": "旧Bullet.javaから大幅リファクタリング、DataTypeとComponentの明確分離"
+    "dependencies": ["BulletDataType.java", "GunComponentTypes.java", "BulletEntity.java"],
+    "note": "旧Bullet.javaから大幅リファクタリング、DataTypeとComponentの明確分離。エンティティへのデータ提供対応"
   },
   "component/BulletDataType.java": {
     "desc": "弾丸の基本データ定義。ダメージとヘッドショットダメージを管理",

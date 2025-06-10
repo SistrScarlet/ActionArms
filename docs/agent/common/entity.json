@@ -1,0 +1,22 @@
+{
+  "BulletEntity.java": {
+    "desc": "弾丸エンティティクラス。物理演算、当たり判定、ダメージ処理を含む完全実装",
+    "importance": "high",
+    "last_accessed": "2025-06-10",
+    "key_features": [
+      "Entity継承とOwnable実装",
+      "レイキャスト当たり判定システム",
+      "エンティティ/ブロック衝突処理",
+      "ヘッドショット判定システム",
+      "重力と空気抵抗の物理演算",
+      "所有者追跡システム（UUID/Entity）",
+      "BulletComponentとの連携",
+      "デカイタイマー（10tick後自動消去）",
+      "マルチプレイヤー対応",
+      "EnderDragonPart特別対応",
+      "大型敵でのヘッドショット判定無効化"
+    ],
+    "dependencies": ["BulletComponent.java", "GunComponentTypes.java", "Registration.java"],
+    "note": "217行の完全実装。レイキャスト＋ProjectileUtil組み合わせで高精度な当たり判定を実現。ヘッドショット判定は敵のサイズに応じて動的に決定"
+  }
+}

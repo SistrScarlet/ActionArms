@@ -1,11 +1,11 @@
 {
   "ActionArmsClient.java": {
-    "desc": "クライアント側の初期化処理、glTFモデルマネージャー登録",
+    "desc": "クライアント側の初期化処理、glTFモデルマネージャー・エンティティレンダラー登録",
     "importance": "high",
-    "last_accessed": "2025-06-08",
-    "key_features": ["クライアント初期化のエントリーポイント", "AAKeys初期化", "GLTFModelManagerリソースリローダー登録"],
-    "dependencies": ["AAKeys", "GLTFModelManager"],
-    "note": "preInit/initの分離により初期化順序を適切に制御"
+    "last_accessed": "2025-06-10",
+    "key_features": ["クライアント初期化のエントリーポイント", "AAKeys初期化", "GLTFModelManagerリソースリローダー登録", "BulletEntityRendererエンティティレンダラー登録"],
+    "dependencies": ["AAKeys", "GLTFModelManager", "BulletEntityRenderer", "Registration"],
+    "note": "preInit/initの分離により初期化順序を適切に制御。弾丸エンティティの描画システム対応"
   },
   "key/AAKeys.java": {
     "desc": "銃操作用のキーバインド定義・登録処理",
@@ -72,5 +72,18 @@
     ],
     "dependencies": ["GlftModelItem.java"],
     "note": "銃の描画位置を適切に制御するために重要"
+  },
+  "render/entity/BulletEntityRenderer.java": {
+    "desc": "弾丸エンティティの描画レンダラー。Minecraftの標準エンティティレンダラーシステムに対応",
+    "importance": "medium",
+    "last_accessed": "2025-06-10",
+    "key_features": [
+      "EntityRenderer継承",
+      "EntityRendererFactory.Context対応",
+      "暫定的に矢のテクスチャを使用",
+      "将来的なglTFモデル描画対応予定"
+    ],
+    "dependencies": ["BulletEntity.java", "ActionArmsClient.java"],
+    "note": "現在は矢のテクスチャを使用、今後glTFモデルでの描画を検討"
   }
 }

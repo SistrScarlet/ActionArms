@@ -2,11 +2,13 @@ package net.sistr.actionarms.client;
 
 import dev.architectury.event.events.client.ClientTickEvent;
 import dev.architectury.registry.ReloadListenerRegistry;
+import dev.architectury.registry.client.level.entity.EntityRendererRegistry;
 import net.minecraft.resource.ResourceType;
 import net.sistr.actionarms.client.key.AAKeys;
+import net.sistr.actionarms.client.render.entity.BulletEntityRenderer;
 import net.sistr.actionarms.client.render.gltf.GltfModelManager;
 import net.sistr.actionarms.client.render.gltf.ItemAnimationManager;
-import net.sistr.actionarms.item.ItemUniqueManager;
+import net.sistr.actionarms.setup.Registration;
 
 public class ActionArmsClient {
     public static void init() {
@@ -19,6 +21,7 @@ public class ActionArmsClient {
     public static void preInit() {
         AAKeys.init();
         ReloadListenerRegistry.register(ResourceType.CLIENT_RESOURCES, GltfModelManager.INSTANCE);
+        EntityRendererRegistry.register(Registration.BULLET_ENTITY, BulletEntityRenderer::new);
     }
 
 }
