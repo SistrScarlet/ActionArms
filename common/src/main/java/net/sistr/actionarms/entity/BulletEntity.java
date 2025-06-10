@@ -75,12 +75,16 @@ public class BulletEntity extends Entity implements Ownable {
 
     @Override
     protected void readCustomDataFromNbt(NbtCompound nbt) {
-
+        if (nbt.contains("ownerId")) {
+            this.ownerId = nbt.getUuid("ownerId");
+        }
     }
 
     @Override
     protected void writeCustomDataToNbt(NbtCompound nbt) {
-
+        if (this.ownerId != null) {
+            nbt.putUuid("ownerId", this.ownerId);
+        }
     }
 
     @Override
