@@ -1,0 +1,42 @@
+{
+  "item.gun.rifle.shot": {
+    "sounds": [
+      "actionarms:item/gun/gun_rifle_shot_01",
+      "actionarms:item/gun/gun_rifle_shot_02",
+      "actionarms:item/gun/gun_rifle_shot_03",
+      "actionarms:item/gun/gun_rifle_shot_04"
+    ],
+    "subtitle": "subtitles.actionarms.item.gun.shot"
+  },
+  "item.gun.rifle.cock": {
+    "sounds": [
+      "actionarms:item/gun/gun_rifle_cock_01",
+      "actionarms:item/gun/gun_rifle_cock_02",
+      "actionarms:item/gun/gun_rifle_cock_03",
+      "actionarms:item/gun/gun_rifle_cock_04"
+    ],
+    "subtitle": "subtitles.actionarms.item.gun.cock"
+  },
+  "item.gun.rifle.dry_fire": {
+    "sounds": [
+      "actionarms:item/gun/gun_rifle_dry_fire_01",
+      "actionarms:item/gun/gun_rifle_dry_fire_02",
+      "actionarms:item/gun/gun_rifle_dry_fire_03",
+      "actionarms:item/gun/gun_rifle_dry_fire_04"
+    ],
+    "subtitle": "subtitles.actionarms.item.gun.dry_fire"
+  },
+  "item.gun.rifle.load_bullet": {
+    "sounds": [
+      "actionarms:item/gun/gun_rifle_load_bullet_01",
+      "actionarms:item/gun/gun_rifle_load_bullet_02",
+      "actionarms:item/gun/gun_rifle_load_bullet_03",
+      "actionarms:item/gun/gun_rifle_load_bullet_04",
+      "actionarms:item/gun/gun_rifle_load_bullet_05",
+      "actionarms:item/gun/gun_rifle_load_bullet_06",
+      "actionarms:item/gun/gun_rifle_load_bullet_07",
+      "actionarms:item/gun/gun_rifle_load_bullet_08"
+    ],
+    "subtitle": "subtitles.actionarms.item.gun.load_bullet"
+  }
+}

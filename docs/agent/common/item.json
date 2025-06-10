@@ -8,13 +8,28 @@
     "note": "glTF描画システムとの連携により、カスタム3Dモデル描画が可能"
   },
   "LeverActionGunItem.java": {
-    "desc": "レバーアクション機構を持つ銃アイテム。実際の弾丸エンティティ射撃処理実装済み",
+    "desc": "レバーアクション機構を持つ銃アイテム。サウンド再生と実際の弾薬管理システムを実装",
     "importance": "high",
     "last_accessed": "2025-06-10",
-    "key_features": ["GunItem継承", "レバーアクション機構", "弾丸エンティティ生成処理", "方向ベクトル計算", "アニメーション同期"],
+    "key_features": [
+      "GunItem継承",
+      "レバーアクション機構",
+      "弾丸エンティティ生成処理",
+      "サウンド再生システム（LeverActionPlaySoundContext）",
+      "実際の弾薬管理（InventoryAmmoUtil）",
+      "クリエイティブモードでの無限弾薬",
+      "コンテキストパターンで処理分離",
+      "アニメーション同期"
+    ],
     "parent": "GunItem",
-    "dependencies": ["BulletEntity.java", "Registration.java"],
-    "note": "MODの主要機能となるレバーアクション銃の実装。trigger()で実際の弾丸エンティティを生成・射撃"
+    "dependencies": [
+      "BulletEntity.java",
+      "Registration.java",
+      "InventoryAmmoUtil.java",
+      "LeverActionPlaySoundContext.java",
+      "LeverActionGunComponent.java"
+    ],
+    "note": "約170行に大幅拡張。サウンドと弾薬管理を統合した完全なレバーアクション銃システム"
   },
   "util/GlftModelItem.java": {
     "desc": "glTFモデルを使用するアイテム用のマーカーインターフェース",
@@ -40,9 +55,9 @@
     "note": "銃の状態管理の核。ComponentResultでシンプルかつ明確な制御が可能"
   },
   "component/LeverActionGunComponent.java": {
-    "desc": "レバーアクション銃の統合コンポーネント。銃の機構（FireTrigger/CyclingLever/Reloadable）とアイテムシステム（IItemComponent）を直接実装",
+    "desc": "レバーアクション銃の統合コンポーネント。サウンド再生機能と実際の弾薬管理を統合",
     "importance": "high",
-    "last_accessed": "2025-06-08",
+    "last_accessed": "2025-06-10",
     "key_features": [
       "IItemComponent実装",
       "FireTrigger/CyclingLever/Reloadable直接実装",
@@ -51,12 +66,21 @@
       "Chamber/Magazine統合管理",
       "tick処理による状態更新",
       "NBT永続化処理",
-      "ハードコーディングされた設定値"
+      "サウンド再生統合（LeverActionPlaySoundContext）",
+      "実際の弾薬管理（ReloadStartContext）",
+      "空撃ち音再生対応",
+      "クリエイティブモードでの無限弾薬対応"
     ],
     "parent": "IItemComponent",
     "interfaces": ["FireTrigger", "CyclingLever", "Reloadable"],
-    "dependencies": ["LeverActionGunType.java", "MagazineType.java", "Chamber.java", "Magazine.java"],
-    "note": "LeverActionGunクラスを統合し、銃の機構とアイテムシステムを一元化。無駄な抽象化を削除してよりシンプルな構造を実現"
+    "dependencies": [
+      "LeverActionGunDataType.java",
+      "MagazineComponent.java",
+      "Chamber.java",
+      "LeverActionPlaySoundContext.java",
+      "InventoryAmmoUtil.java"
+    ],
+    "note": "約220行に拡張。サウンド再生と実際の弾薬管理を統合した完全なレバーアクション銃システム"
   },
   "component/UniqueComponent.java": {
     "desc": "アイテム個体を一意に識別するUUIDを管理するコンポーネント。アニメーション同期に不可欠",
@@ -189,5 +213,35 @@
     ],
     "dependencies": ["DataTypeRegistries.java", "各DataType.java"],
     "note": "新設されたレジストリシステム、データの一元管理を実現"
+  },
+  "BulletItem.java": {
+    "desc": "弾丸アイテムクラス。BulletComponentとの連携でコンポーネントベース弾薬システムを実現",
+    "importance": "high",
+    "last_accessed": "2025-06-10",
+    "key_features": [
+      "Item継承",
+      "Supplier<BulletComponent> componentSupplier",
+      "getComponentSupplier()メソッド",
+      "InventoryAmmoUtilとの連携",
+      "コンポーネントベース弾薬管理"
+    ],
+    "parent": "Item",
+    "dependencies": ["BulletComponent.java", "InventoryAmmoUtil.java"],
+    "note": "20行のシンプルな実装。コンポーネントサプライヤーパターンでBulletComponentとの疎結合を実現"
+  },
+  "component/LeverActionPlaySoundContext.java": {
+    "desc": "レバーアクション銃のサウンド再生コンテキスト。サウンドイベントと再生処理を管理",
+    "importance": "medium",
+    "last_accessed": "2025-06-10",
+    "key_features": [
+      "playSound()インターフェースメソッド",
+      "Sound enum（CYCLE/RELOAD/FIRE/DRY_FIRE）",
+      "各サウンドのボリューム・ピッチ設定",
+      "Registration.javaのサウンドイベント連携",
+      "playSound()デフォルト実装",
+      "SoundCategoryによる音量制御"
+    ],
+    "dependencies": ["Registration.java"],
+    "note": "49行の実装。銃のサウンド再生を一元管理し、各コンポーネントから統一的に使用可能"
   }
 }

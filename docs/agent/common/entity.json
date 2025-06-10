@@ -18,5 +18,20 @@
     ],
     "dependencies": ["BulletComponent.java", "GunComponentTypes.java", "Registration.java"],
     "note": "217行の完全実装。レイキャスト＋ProjectileUtil組み合わせで高精度な当たり判定を実現。ヘッドショット判定は敵のサイズに応じて動的に決定"
+  },
+  "InventoryAmmoUtil.java": {
+    "desc": "インベントリから弾薬を管理するユーティリティクラス。弾薬検索・取得・消費機能を提供",
+    "importance": "medium",
+    "last_accessed": "2025-06-10",
+    "key_features": [
+      "popBullets() - 条件に合う弾薬を取得してインベントリから削除",
+      "getBullets() - 条件に合う弾薬を検索（削除しない）",
+      "hasBullet() - 条件に合う弾薬の存在確認",
+      "getBullet() - ItemStackからBulletComponentを抽出",
+      "Predicate<BulletComponent>による柔軟な弾薬フィルタリング",
+      "BulletItemとの連携によるコンポーネント取得"
+    ],
+    "dependencies": ["BulletItem.java", "BulletComponent.java", "IItemComponent.java"],
+    "note": "64行の簡潔な実装。銃のリロード処理で使用される重要なユーティリティ"
   }
 }

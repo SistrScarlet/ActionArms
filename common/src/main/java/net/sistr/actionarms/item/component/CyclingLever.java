@@ -2,7 +2,7 @@ package net.sistr.actionarms.item.component;
 
 public interface CyclingLever {
 
-    boolean cycle(AnimationContext context);
+    boolean cycle(LeverActionPlaySoundContext playSoundContext, AnimationContext context);
 
     boolean canCycle();
 

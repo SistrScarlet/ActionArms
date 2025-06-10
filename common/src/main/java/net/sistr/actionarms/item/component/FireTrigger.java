@@ -2,7 +2,7 @@ package net.sistr.actionarms.item.component;
 
 public interface FireTrigger {
 
-    boolean trigger(AnimationContext animationContext, FireStartContext context);
+    boolean trigger(LeverActionPlaySoundContext playSoundContext, AnimationContext animationContext, FireStartContext fireContext);
 
     boolean canTrigger();
 

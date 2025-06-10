@@ -1,19 +1,29 @@
 {
   "Registration.java": {
-    "desc": "MODのアイテム・エンティティ登録処理を管理",
+    "desc": "MODのアイテム・エンティティ・サウンド登録処理を管理",
     "importance": "high",
     "last_accessed": "2025-06-10",
     "key_features": [
-      "DeferredRegister使用",
+      "DeferredRegister使用（Item/EntityType/SoundEvent）",
       "アイテム登録システム",
-      "テスト用レバーアクション銃登録",
+      "サウンドイベント登録システム",
+      "弾丸アイテム登録",
+      "M1873銃登録",
       "BulletEntityエンティティタイプ登録",
-      "エンティティ設定（サイズ・追跡距離）"
+      "エンティティ設定（サイズ・追跡距離）",
+      "銃サウンドイベント一式"
     ],
     "registered_items": {
-      "TEST_LEVER_ACTION_GUN": {
-        "id": "test_lever_action_gun",
+      "MIDDLE_CALIBER_BULLET": {
+        "id": "middle_caliber_bullet",
+        "type": "BulletItem",
+        "componentSupplier": "GunComponentTypes.MIDDLE_CALIBER",
+        "maxCount": 64
+      },
+      "M1873": {
+        "id": "m1873",
         "type": "LeverActionGunItem",
+        "componentSupplier": "GunComponentTypes.M1873",
         "maxCount": 1
       }
     },
@@ -27,7 +37,30 @@
         "spawnGroup": "MISC"
       }
     },
-    "dependencies": ["LeverActionGunItem", "BulletEntity"],
-    "note": "アイテムとエンティティの一元管理。弾丸エンティティシステム対応"
+    "registered_sounds": {
+      "RIFLE_SHOT_SOUND": {
+        "id": "item.gun.rifle.shot",
+        "variants": 4
+      },
+      "RIFLE_DRY_FIRE_SOUND": {
+        "id": "item.gun.rifle.dry_fire",
+        "variants": 4
+      },
+      "RIFLE_LOAD_BULLET_SOUND": {
+        "id": "item.gun.rifle.load_bullet",
+        "variants": 8
+      },
+      "RIFLE_COCK_SOUND": {
+        "id": "item.gun.rifle.cock",
+        "variants": 4
+      }
+    },
+    "dependencies": [
+      "LeverActionGunItem",
+      "BulletItem",
+      "BulletEntity",
+      "GunComponentTypes"
+    ],
+    "note": "アイテム・エンティティ・サウンドの一元管理。サウンドシステムと弾薬システム完全対応"
   }
 }

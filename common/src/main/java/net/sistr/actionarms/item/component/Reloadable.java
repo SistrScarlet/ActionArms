@@ -5,11 +5,15 @@ import java.util.function.Predicate;
 
 public interface Reloadable {
 
-    boolean reload(AnimationContext animationContext);
+    boolean reload(LeverActionPlaySoundContext playSoundContext, AnimationContext animationContext, ReloadStartContext context);
 
-    boolean canReload();
+    boolean canReload(ReloadStartContext context);
 
-    boolean shouldReload();
+    boolean shouldReload(ReloadStartContext context);
+
+    interface ReloadStartContext {
+        boolean hasBullet(Predicate<BulletComponent> predicate);
+    }
 
     interface ReloadTickContext {
         List<BulletComponent> popBullets(Predicate<BulletComponent> predicate, int count);

@@ -42,9 +42,32 @@
     "メモリ効率と保守性の両立",
     "物理演算付き弾丸エンティティシステム",
     "ヘッドショット判定とダメージ処理",
-    "レイキャスト＋ProjectileUtilハイブリッド当たり判定"
+    "レイキャスト＋ProjectileUtilハイブリッド当たり判定",
+    "統合サウンドシステム（サイクル・リロード・射撃・空撃ち）",
+    "リアルな弾薬管理システム（インベントリ連携）",
+    "コンポーネントベース弾薬アイテムシステム",
+    "クリエイティブモードでの無限弾薬対応"
   ],
   "recent_major_changes": {
+    "2025-06-10-latest": {
+      "title": "サウンド再生と弾薬システムの完全実装",
+      "changes": [
+        "InventoryAmmoUtil.java - インベントリから弾薬管理ユーティリティ実装",
+        "BulletItem.java - 弾丸アイテムクラス実装",
+        "LeverActionPlaySoundContext.java - サウンド再生コンテキスト実装",
+        "LeverActionGunItem.java - サウンドと弾薬管理の統合",
+        "LeverActionGunComponent.java - サウンド再生機能追加",
+        "FireTrigger/CyclingLever/Reloadable - サウンドコンテキスト対応",
+        "Registration.java - サウンドイベントと新アイテム登録",
+        "MIDDLE_CALIBER_BULLETアイテム追加",
+        "M1873銃アイテム追加（旧TEST_LEVER_ACTION_GUN）",
+        "4種類の銃サウンドイベント実装",
+        "sounds.jsonでサウンドバリエーション対応",
+        "クリエイティブモードでの無限弾薬対応",
+        "空撃ち音再生機能実装",
+        "アイテムモデルとテクスチャファイル追加"
+      ]
+    },
     "2025-06-10": {
       "title": "弾丸エンティティシステムの完全実装",
       "changes": [
