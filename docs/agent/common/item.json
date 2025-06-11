@@ -96,6 +96,79 @@
     "dependencies": ["ItemUniqueManager.java"],
     "note": "アニメーション同期やマルチプレイヤー対応に不可欠"
   },
+  "component/Cartridge.java": {
+    "desc": "薬莢（カートリッジ）クラス。弾丸を包含し、発射可能状態を管理する銃の内部機構",
+    "importance": "high",
+    "last_accessed": "2025-06-12",
+    "key_features": [
+      "BulletComponentの包含管理",
+      "canShoot()/isEmpty()による状態判定",
+      "Optional<BulletComponent>による安全なアクセス",
+      "NBT読み書き対応",
+      "薬莢の実弾・空薬莢状態管理"
+    ],
+    "dependencies": ["BulletComponent.java", "GunComponentTypes.java"],
+    "note": "44行の実装。銃の薬莢概念を表現し、Chamber→Cartridge→Bulletの階層構造を実現"
+  },
+  "component/Chamber.java": {
+    "desc": "薬室クラス。カートリッジを装填し、発射・排出処理を管理する銃の心臓部",
+    "importance": "high",
+    "last_accessed": "2025-06-12",
+    "key_features": [
+      "Cartridgeの装填・排出管理",
+      "shoot()メソッドによる発射処理",
+      "ejectCartridge()による薬莢排出",
+      "canShoot()による発射可能判定",
+      "Optional<>による安全な操作",
+      "NBT永続化対応"
+    ],
+    "dependencies": ["Cartridge.java", "BulletComponent.java"],
+    "note": "66行の実装。銃の薬室を表現し、実際の発射処理とカートリッジ管理の中核"
+  },
+  "component/CyclingLever.java": {
+    "desc": "レバーサイクル操作のインターフェース。レバーアクション機構の操作制御を定義",
+    "importance": "high",
+    "last_accessed": "2025-06-12",
+    "key_features": [
+      "cycle()メソッドによるレバー操作",
+      "canCycle()/shouldCycle()による操作可能性判定",
+      "isHammerReady()/isLeverDown()による状態取得",
+      "CycleTickContextによる薬莢排出処理",
+      "LeverActionPlaySoundContext連携",
+      "AnimationContext連携"
+    ],
+    "dependencies": ["LeverActionPlaySoundContext.java", "AnimationContext.java", "Cartridge.java"],
+    "note": "17行のインターフェース。レバーアクション機構の操作ロジックを抽象化"
+  },
+  "component/FireTrigger.java": {
+    "desc": "発射トリガーのインターフェース。引き金による発射処理の制御を定義",
+    "importance": "high",
+    "last_accessed": "2025-06-12",
+    "key_features": [
+      "trigger()メソッドによる発射処理",
+      "canTrigger()による発射可能性判定",
+      "FireStartContextによる弾丸発射処理",
+      "LeverActionPlaySoundContext連携",
+      "AnimationContext連携"
+    ],
+    "dependencies": ["LeverActionPlaySoundContext.java", "AnimationContext.java", "BulletComponent.java"],
+    "note": "11行のインターフェース。発射処理の抽象化により、様々な銃タイプに対応可能"
+  },
+  "component/Reloadable.java": {
+    "desc": "リロード可能インターフェース。弾薬の再装填処理制御を定義",
+    "importance": "high",
+    "last_accessed": "2025-06-12",
+    "key_features": [
+      "reload()メソッドによるリロード処理",
+      "canReload()/shouldReload()によるリロード可能性判定",
+      "ReloadStartContext/ReloadTickContextによる弾薬管理",
+      "Predicate<BulletComponent>による弾薬フィルタリング",
+      "popBullets()/returnBullets()による弾薬操作",
+      "LeverActionPlaySoundContext連携"
+    ],
+    "dependencies": ["LeverActionPlaySoundContext.java", "AnimationContext.java", "BulletComponent.java"],
+    "note": "21行のインターフェース。リロード処理の抽象化により、各種マガジンタイプに対応"
+  },
   "ItemUniqueManager.java": {
     "desc": "アイテムのUUID管理を一元化するユーティリティクラス。UniqueComponentと連携して動作",
     "importance": "medium",
@@ -173,18 +246,19 @@
     "note": "旧MagazineType.javaを置き換え、よりシンプルで明確な設計"
   },
   "component/LeverActionGunDataType.java": {
-    "desc": "レバーアクション銃の基本データ定義（旧LeverActionGunType.java）",
+    "desc": "レバーアクション銃の基本データ定義。パラメータ順序を整理して可読性を向上",
     "importance": "high",
-    "last_accessed": "2025-06-08",
+    "last_accessed": "2025-06-11",
     "key_features": [
-      "各種アクションのクールタイム定義",
-      "fireCoolLength/reloadLength設定",
-      "leverDownLength/leverUpLength設定",
       "record型による不変データ",
-      "name削除でよりシンプルに"
+      "fireCoolLength/leverDownLength/leverUpLength設定",
+      "cycleCoolLength/cycleCancelableLength設定",
+      "reloadLength/reloadCoolLength/reloadCancelableLength設定",
+      "reloadCount設定",
+      "パラメータ順序の整理（fire→cycle→reloadの時系列順）"
     ],
     "dependencies": ["GunDataTypes.java"],
-    "note": "LeverActionGunType.javaからリネーム、name削除でシンプル化"
+    "note": "パラメータ順序を整理して可読性を大幅向上。時系列順に並べることで理解しやすくなった"
   },
   "component/registry/GunComponentTypes.java": {
     "desc": "銃コンポーネントの型定義レジストリ。具体的なコンポーネントインスタンスを定義",
@@ -201,18 +275,19 @@
     "note": "新設されたレジストリシステム、コンポーネントの型安全な管理を実現"
   },
   "component/registry/GunDataTypes.java": {
-    "desc": "銃データタイプのレジストリ。具体的なデータ定義と登録を管理",
+    "desc": "銃データタイプのレジストリ。具体的なデータ定義と登録を管理。M1873パラメータを整理",
     "importance": "high",
-    "last_accessed": "2025-06-08",
+    "last_accessed": "2025-06-11",
     "key_features": [
       "MIDDLE_CALIBER（弾丸データ）",
       "LEVER_ACTION_TUBE_MAGAZINE（マガジンデータ）",
       "M1873（レバーアクション銃データ）",
       "DataTypeRegistries連携",
-      "型別register()メソッド"
+      "型別register()メソッド",
+      "M1873パラメータの時系列順整理（fire→cycle→reload）"
     ],
     "dependencies": ["DataTypeRegistries.java", "各DataType.java"],
-    "note": "新設されたレジストリシステム、データの一元管理を実現"
+    "note": "M1873のパラメータ順序をLeverActionGunDataTypeの新しい順序に合わせて整理。可読性と保守性が大幅向上"
   },
   "BulletItem.java": {
     "desc": "弾丸アイテムクラス。BulletComponentとの連携でコンポーネントベース弾薬システムを実現",

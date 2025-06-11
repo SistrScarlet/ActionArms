@@ -3,11 +3,7 @@ package net.sistr.actionarms.item;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
 import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.util.Hand;
-import net.minecraft.util.TypedActionResult;
 import net.minecraft.world.World;
 import net.sistr.actionarms.entity.BulletEntity;
 import net.sistr.actionarms.entity.util.InventoryAmmoUtil;
@@ -30,73 +26,15 @@ public class LeverActionGunItem extends GunItem {
         this.gunComponentSupplier = gunComponentSupplier;
     }
 
-    @Override
-    public void inventoryTick(ItemStack stack, World world, Entity entity, int slot, boolean selected) {
-        if (world.isClient) {
-            return;
-        }
-        boolean isSelected = entity instanceof LivingEntity
-                && ((LivingEntity) entity).getStackInHand(Hand.MAIN_HAND) == stack;
-        IItemComponent.execute(getGunComponent(), stack, component -> {
-            LeverActionPlaySoundContext playSoundContext = createPlaySoundContext(world, entity);
-            component.tick(playSoundContext,
-                    createCycleTickContext(),
-                    createReloadTickContext(entity),
-                    1f / 20f,
-                    isSelected
-            );
-            return IItemComponent.ComponentResult.MODIFIED;
-        });
-        ItemUniqueManager.INSTANCE.uniqueCheck(world, stack);
-    }
-
-    @Override
-    public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {
-        if (world.isClient) {
-            return super.use(world, user, hand);
-        }
-        var stack = user.getStackInHand(hand);
-        var uuid = UniqueComponent.get(stack);
-        IItemComponent.execute(getGunComponent(), stack, gun -> {
-            var animationContext = createAnimationContext(world, uuid);
-            LeverActionPlaySoundContext playSoundContext = createPlaySoundContext(world, user);
-            if (gun.shouldCycle()) {
-                if (gun.canCycle()) {
-                    if (gun.cycle(playSoundContext, animationContext)) {
-                        return IItemComponent.ComponentResult.MODIFIED;
-                    }
-                }
-            }
-            Reloadable.ReloadStartContext reloadContext = createReloadStartContext(user);
-            if (gun.shouldReload(reloadContext)) {
-                if (gun.canReload(reloadContext)) {
-                    if (gun.reload(playSoundContext, animationContext, reloadContext)) {
-                        return IItemComponent.ComponentResult.MODIFIED;
-                    }
-                }
-            }
-            if (gun.canTrigger()) {
-                boolean result = gun.trigger(playSoundContext, animationContext, createFireStartContext(world, user, uuid));
-                if (result) {
-                    return IItemComponent.ComponentResult.MODIFIED;
-                } else {
-                    return IItemComponent.ComponentResult.NO_CHANGE;
-                }
-            }
-            return IItemComponent.ComponentResult.NO_CHANGE;
-        });
-        return super.use(world, user, hand);
-    }
-
-    private LeverActionPlaySoundContext createPlaySoundContext(World world, Entity entity) {
+    public LeverActionPlaySoundContext createPlaySoundContext(World world, Entity entity) {
         return sound -> sound.playSound(world, entity, SoundCategory.PLAYERS);
     }
 
-    private AnimationContext createAnimationContext(World world, UUID uuid) {
+    public AnimationContext createAnimationContext(World world, UUID uuid) {
         return AnimationContext.of(world, uuid);
     }
 
-    private FireTrigger.FireStartContext createFireStartContext(World world, PlayerEntity user, UUID uuid) {
+    public FireTrigger.FireStartContext createFireStartContext(World world, LivingEntity user, UUID uuid) {
         return bullet -> {
             // 射撃処理
             var bulletEntity = BulletEntity.of(Registration.BULLET_ENTITY.get(), world, user,
@@ -107,16 +45,20 @@ public class LeverActionGunItem extends GunItem {
         };
     }
 
-    private CyclingLever.CycleTickContext createCycleTickContext() {
+    public CyclingLever.CycleTickContext createCycleTickContext() {
         return cartridge -> {
             // todo 排莢処理
         };
     }
 
-    private Reloadable.ReloadStartContext createReloadStartContext(PlayerEntity user) {
+    public Reloadable.ReloadStartContext createReloadStartContext(LivingEntity user) {
+        if (!(user instanceof PlayerEntity)) {
+            return (Predicate<BulletComponent> predicate) -> true;
+        }
         return (Predicate<BulletComponent> predicate) ->
-                user.isCreative() ||
-                        InventoryAmmoUtil.hasBullet(user.getInventory(), predicate);
+                ((PlayerEntity) user).isCreative()
+                        || InventoryAmmoUtil.hasBullet(((PlayerEntity) user).getInventory(), predicate);
+
     }
 
     public Reloadable.ReloadTickContext createReloadTickContext(Entity user) {

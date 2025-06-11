@@ -19,7 +19,7 @@
     "dependencies": ["BulletComponent.java", "GunComponentTypes.java", "Registration.java"],
     "note": "217行の完全実装。レイキャスト＋ProjectileUtil組み合わせで高精度な当たり判定を実現。ヘッドショット判定は敵のサイズに応じて動的に決定"
   },
-  "InventoryAmmoUtil.java": {
+  "util/InventoryAmmoUtil.java": {
     "desc": "インベントリから弾薬を管理するユーティリティクラス。弾薬検索・取得・消費機能を提供",
     "importance": "medium",
     "last_accessed": "2025-06-10",
@@ -32,6 +32,58 @@
       "BulletItemとの連携によるコンポーネント取得"
     ],
     "dependencies": ["BulletItem.java", "BulletComponent.java", "IItemComponent.java"],
-    "note": "64行の簡潔な実装。銃のリロード処理で使用される重要なユーティリティ"
+    "note": "64行の簡潔な実装。銃のリロード処理で使用される重要なユーティリティ。実際はentity/utilディレクトリに配置"
+  },
+  "util/KeyInputManager.java": {
+    "desc": "プレイヤーのキー入力状態を管理する汎用システム。現在・過去の状態を保持し、押し・離し判定を提供",
+    "importance": "high",
+    "last_accessed": "2025-06-11",
+    "key_features": [
+      "Key列挙型（FIRE/AIM/COCK/RELOAD）",
+      "InputLogクラスによる8フレーム状態履歴",
+      "isTurnPress/isTurnRelease判定",
+      "input()によるキー状態更新",
+      "postTick()による状態同期",
+      "マルチプレイヤー対応設計"
+    ],
+    "dependencies": [],
+    "note": "純粋な状態管理クラス。クライアント・サーバー両方で使用される汎用システム。実際はentity/utilディレクトリに配置"
+  },
+  "util/GunController.java": {
+    "desc": "プレイヤーの銃操作を統合制御するシステム。キー入力に応じた銃のトリガー・サイクル・リロード処理を自動化",
+    "importance": "high",
+    "last_accessed": "2025-06-11",
+    "key_features": [
+      "LivingEntity/KeyInputManager/アイテム取得の統合管理",
+      "インベントリ全体の銃アイテム自動処理",
+      "選択中アイテムでのキー操作処理",
+      "非選択アイテムでもtick処理継続",
+      "LeverActionGunItemとの完全連携",
+      "サーバーサイド専用処理"
+    ],
+    "dependencies": ["LeverActionGunItem.java", "KeyInputManager.java", "UniqueComponent.java"],
+    "note": "105行の実装。従来の右クリック操作をキーバインド操作に完全移行させる中核システム。実際はentity/utilディレクトリに配置"
+  },
+  "util/HasKeyInputManager.java": {
+    "desc": "KeyInputManagerアクセス用インターフェース。Mixinでプレイヤーエンティティに実装される",
+    "importance": "medium",
+    "last_accessed": "2025-06-11",
+    "key_features": [
+      "actionArms$getKeyInputManager()メソッド定義",
+      "Mixinパターンでの実装"
+    ],
+    "dependencies": ["KeyInputManager.java"],
+    "note": "Mixin設計の一部。プレイヤーエンティティにキー管理機能を注入。実際はentity/utilディレクトリに配置"
+  },
+  "util/HasGunController.java": {
+    "desc": "GunControllerアクセス用インターフェース。Mixinでプレイヤーエンティティに実装される",
+    "importance": "medium",
+    "last_accessed": "2025-06-11",
+    "key_features": [
+      "actionArms$getGunController()メソッド定義",
+      "Mixinパターンでの実装"
+    ],
+    "dependencies": ["GunController.java"],
+    "note": "Mixin設計の一部。プレイヤーエンティティに銃制御機能を注入。実際はentity/utilディレクトリに配置"
   }
 }

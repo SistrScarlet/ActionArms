@@ -1,6 +1,6 @@
 {
   "description": "ActionArms MOD - 銃の機構と操作の心地よさを重視したMinecraft用銃MOD（副作用ゼロレンダリングシステム完全実装済み）",
-  "last_updated": "2025-06-10",
+  "last_updated": "2025-06-12",
   "structure": {
     "common/": {
       "description": "プラットフォーム共通コード",
@@ -46,9 +46,52 @@
     "統合サウンドシステム（サイクル・リロード・射撃・空撃ち）",
     "リアルな弾薬管理システム（インベントリ連携）",
     "コンポーネントベース弾薬アイテムシステム",
-    "クリエイティブモードでの無限弾薬対応"
+    "クリエイティブモードでの無限弾薬対応",
+    "キー入力システムとGunControllerの完全実装",
+    "専用キーバインド操作システム（右クリック廃止）",
+    "クライアント・サーバー間キー入力同期",
+    "プレイヤーエンティティへのMixin機能注入",
+    "インベントリ全体の銃アイテム自動処理",
+    "マルチプレイヤー対応のリアルタイム銃操作"
   ],
   "recent_major_changes": {
+    "2025-06-12": {
+      "title": "知見管理システムの齟齬修正とファイル情報の更新",
+      "changes": [
+        "item.jsonに未記載のコンポーネントファイルを追加",
+        "Cartridge.java - 薬莢（カートリッジ）クラスの情報追加",
+        "Chamber.java - 薬室クラスの情報追加",
+        "CyclingLever.java - レバーサイクルインターフェースの情報追加",
+        "FireTrigger.java - 発射トリガーインターフェースの情報追加",
+        "Reloadable.java - リロード可能インターフェースの情報追加",
+        "entity.jsonのファイル配置情報を修正",
+        "entity/util/ディレクトリへの正しいパス表示に修正",
+        "InventoryAmmoUtil/KeyInputManager/GunController/Has*ファイルの配置情報修正",
+        "実際のプロジェクト構造と知見管理システムの齟齬を完全解消"
+      ]
+    },
+    "2025-06-11-latest": {
+      "title": "キー入力システムとGunControllerの完全実装",
+      "changes": [
+        "KeyInputManager.java - 汎用キー入力状態管理システム実装",
+        "ClientKeyInputManager.java - クライアント側キー管理とサーバー同期",
+        "GunController.java - プレイヤーの銃操作統合制御システム",
+        "KeyInputPacket.java - クライアント・サーバー間キー入力同期パケット",
+        "MixinServerPlayerEntity.java - プレイヤーエンティティ機能拡張Mixin",
+        "HasKeyInputManager/HasGunController - インターフェース定義",
+        "AAKeys.java - KeyInputManager連携とキーバインドシステム改修",
+        "LeverActionGunItem.java - 従来のuse()/inventoryTick()削除、GunController連携",
+        "LeverActionGunComponent.java - tick()最適化、can系メソッド精密化",
+        "LeverActionGunDataType.java - パラメータ順序整理(時系列順)",
+        "GunDataTypes.java - M1873パラメータ順序更新",
+        "Networking.java - KeyInputPacket受信登録",
+        "ActionArms.java - サーバーティックでKeyInputManager.postTick()処理",
+        "ActionArmsClient.java - ClientKeyInputManagerティック登録",
+        "actionarms-common.mixins.json - MixinServerPlayerEntity登録",
+        ".gitignore - /fabric/mods_runtime/追加",
+        "fabric/build.gradle - modRuntimeOnly設定追加"
+      ]
+    },
     "2025-06-10-latest": {
       "title": "サウンド再生と弾薬システムの完全実装",
       "changes": [

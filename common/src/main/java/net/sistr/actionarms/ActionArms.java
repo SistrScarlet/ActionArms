@@ -6,6 +6,7 @@ import me.shedaniel.autoconfig.AutoConfig;
 import me.shedaniel.autoconfig.ConfigHolder;
 import me.shedaniel.autoconfig.serializer.Toml4jConfigSerializer;
 import net.sistr.actionarms.config.AAConfig;
+import net.sistr.actionarms.entity.util.HasKeyInputManager;
 import net.sistr.actionarms.item.ItemUniqueManager;
 import net.sistr.actionarms.network.Networking;
 import net.sistr.actionarms.setup.Registration;
@@ -22,6 +23,10 @@ public class ActionArms {
         TickEvent.SERVER_LEVEL_POST.register(world -> {
             if (world.isClient) return;
             ItemUniqueManager.INSTANCE.clearOld(world);
+            world.getPlayers().forEach(player -> {
+                var keyInputManager = ((HasKeyInputManager) player).actionArms$getKeyInputManager();
+                keyInputManager.postTick();
+            });
         });
     }
 

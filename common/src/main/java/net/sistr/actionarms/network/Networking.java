@@ -12,6 +12,8 @@ public class Networking {
         if (Platform.getEnv() == EnvType.CLIENT) {
             initClient();
         }
+
+        registerServerReceiver(KeyInputPacket.ID, KeyInputPacket::receiveC2S);
     }
 
     @Environment(EnvType.CLIENT)

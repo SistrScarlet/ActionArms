@@ -24,34 +24,54 @@ public class LeverActionGunComponent implements IItemComponent, FireTrigger, Cyc
     }
 
     // tick処理
-    public void tick(LeverActionPlaySoundContext playSoundContext, CycleTickContext cycleContext,
-                     ReloadTickContext reloadContext, float timeDelta, boolean active) {
+    public boolean tick(LeverActionPlaySoundContext playSoundContext, CycleTickContext cycleContext,
+                        ReloadTickContext reloadContext, float timeDelta, boolean active) {
+        boolean markDuty = false;
+
         // 時間経過処理
-        this.fireCoolTime = Math.max(0, this.fireCoolTime - timeDelta);
-        this.cycleCoolTime = Math.max(0, this.cycleCoolTime - timeDelta);
-        this.reloadCoolTime = Math.max(0, this.reloadCoolTime - timeDelta);
+        if (this.fireCoolTime > 0) {
+            this.fireCoolTime = Math.max(0, this.fireCoolTime - timeDelta);
+            markDuty = true;
+        }
+        if (cycleCoolTime > 0) {
+            this.cycleCoolTime = Math.max(0, this.cycleCoolTime - timeDelta);
+            markDuty = true;
+        }
+        if (reloadCoolTime > 0) {
+            this.reloadCoolTime = Math.max(0, this.reloadCoolTime - timeDelta);
+            markDuty = true;
+        }
+
 
         // アクティブ時処理
         if (active) {
             // サイクル処理
             if (this.cycling) {
                 cycleTick(playSoundContext, cycleContext, timeDelta);
+                markDuty = true;
             }
 
             // リロード処理
             if (this.reloading) {
                 reloadTick(playSoundContext, reloadContext, timeDelta);
+                markDuty = true;
             }
         }
+        return markDuty;
     }
 
     // FireTriggerインターフェース実装
     @Override
     public boolean trigger(LeverActionPlaySoundContext playSoundContext, AnimationContext animationContext,
                            FireStartContext fireContext) {
+        if (!canTrigger()) {
+            return false;
+        }
         if (!canShoot()) {
             playSoundContext.playSound(LeverActionPlaySoundContext.Sound.DRY_FIRE);
-            return false;
+            animationContext.setAnimation("dry_fire", 0);
+            this.hammerReady = false;
+            return true;
         }
         var bullet = this.chamber.shoot().orElseThrow();
         fireContext.fire(bullet);
@@ -64,7 +84,10 @@ public class LeverActionGunComponent implements IItemComponent, FireTrigger, Cyc
 
     @Override
     public boolean canTrigger() {
-        return canShoot();
+        return this.hammerReady
+                && !this.leverDown
+                && this.fireCoolTime == 0
+                && this.cycleCoolTime == 0;
     }
 
     // CyclingLeverインターフェース実装
@@ -117,7 +140,10 @@ public class LeverActionGunComponent implements IItemComponent, FireTrigger, Cyc
     @Override
     public boolean canCycle() {
         return !this.cycling
-                && (!this.reloading || this.reloadCancelableTime > 0);
+                && this.cycleCoolTime == 0
+                && this.reloadCoolTime == 0
+                && (!this.reloading || this.reloadCancelableTime > 0)
+                && (this.chamber.isInCartridge() || this.magazine.hasBullet());
     }
 
     @Override
@@ -176,6 +202,7 @@ public class LeverActionGunComponent implements IItemComponent, FireTrigger, Cyc
     @Override
     public boolean canReload(ReloadStartContext context) {
         return !this.reloading
+                && this.reloadCoolTime == 0
                 && (!this.cycling || this.cycleCancelableTime > 0)
                 && this.magazine.canAddBullet()
                 && context.hasBullet(this.magazine.getMagazineType().allowBullet());

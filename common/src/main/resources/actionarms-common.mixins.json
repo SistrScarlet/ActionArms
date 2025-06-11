@@ -8,6 +8,7 @@
     "MixinItemRenderer"
   ],
   "mixins": [
+    "MixinServerPlayerEntity"
   ],
   "injectors": {
     "defaultRequire": 1

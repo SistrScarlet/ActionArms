@@ -8,18 +8,30 @@
     "note": "preInit/initの分離により初期化順序を適切に制御。弾丸エンティティの描画システム対応"
   },
   "key/AAKeys.java": {
-    "desc": "銃操作用のキーバインド定義・登録処理",
+    "desc": "銃操作用のキーバインド定義・登録処理とKeyInputManager連携",
     "importance": "high",
-    "last_accessed": "2025-05-29",
+    "last_accessed": "2025-06-11",
     "key_features": [
-      "射撃キー (左クリック)",
-      "照準キー (右クリック)", 
-      "リロードキー (R)",
-      "コッキングキー (C)",
-      "キー競合設定"
+      "FIRE/AIM/RELOAD/COCKキーの定義",
+      "KeyInputManager.Keyとの対応付け",
+      "キー競合設定",
+      "ClientKeyInputManagerとの連携"
     ],
-    "dependencies": ["KeyRegisterCallback"],
-    "note": "銃操作の基本となるキーバインドを管理"
+    "dependencies": ["KeyRegisterCallback", "KeyInputManager"],
+    "note": "従来の右クリック操作から専用キーバインドシステムに移行完了"
+  },
+  "key/ClientKeyInputManager.java": {
+    "desc": "クライアント側のキー入力管理とサーバー同期処理",
+    "importance": "high",
+    "last_accessed": "2025-06-11",
+    "key_features": [
+      "シングルトンパターンによる一元管理",
+      "KeyInputManagerでのキー状態追跡",
+      "キー変化時のサーバー送信",
+      "preTick/postTickでの状態管理"
+    ],
+    "dependencies": ["AAKeys", "KeyInputManager", "KeyInputPacket"],
+    "note": "クライアント・サーバー間のキー入力同期システムの中核"
   },
   "key/KeyRegisterCallback.java": {
     "desc": "プラットフォーム依存のキー登録処理インターフェース",

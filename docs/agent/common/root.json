@@ -1,16 +1,37 @@
 {
   "ActionArms.java": {
-    "desc": "MODのメインクラス。設定管理、登録処理、ネットワーク初期化を担当",
+    "desc": "MODのメインクラス。設定管理、登録処理、ネットワーク初期化、サーバーティック処理を担当",
     "importance": "high",
-    "last_accessed": "2025-06-03",
+    "last_accessed": "2025-06-11",
     "key_features": [
       "MOD_ID定数定義",
       "LOGGERインスタンス管理",
       "AutoConfig使用した設定管理",
       "preInit/initの初期化フロー分離",
-      "RegistrationとNetworkingの初期化連携"
+      "RegistrationとNetworkingの初期化連携",
+      "SERVER_LEVEL_POSTティックイベント登録",
+      "ItemUniqueManager.clearOld()処理",
+      "プレイヤーKeyInputManager.postTick()処理",
+      "HasKeyInputManagerインターフェース連携"
     ],
-    "dependencies": ["AAConfig", "Registration", "Networking"],
-    "note": "初期化順序を適切に制御し、全MOD機能の基盤を提供"
+    "dependencies": ["AAConfig", "Registration", "Networking", "HasKeyInputManager", "ItemUniqueManager"],
+    "note": "初期化順序を適切に制御し、全MOD機能の基盤を提供。サーバーサイドのキー入力管理も担当"
+  },
+  "mixin/MixinServerPlayerEntity.java": {
+    "desc": "ServerPlayerEntityにKeyInputManagerとGunController機能を注入するMixin。マルチプレイヤーでの銃操作を実現",
+    "importance": "high",
+    "last_accessed": "2025-06-11",
+    "key_features": [
+      "ServerPlayerEntityをターゲットとしたMixin",
+      "HasKeyInputManagerインターフェース実装",
+      "HasGunControllerインターフェース実装",
+      "@UniqueフィールドでKeyInputManagerインスタンス保持",
+      "@UniqueフィールドでGunControllerインスタンス保持",
+      "tick()メソッドでGunController.tick()呼び出し",
+      "getItems()メソッドでインベントリ全体を取得",
+      "@Injectでtickメソッドにフック"
+    ],
+    "dependencies": ["KeyInputManager.java", "GunController.java", "HasKeyInputManager.java", "HasGunController.java"],
+    "note": "67行の実装。プレイヤーエンティティに銃操作機能を注入し、サーバーサイドでの自動銃操作を実現。actionarms-common.mixins.jsonに登録済み"
   }
 }

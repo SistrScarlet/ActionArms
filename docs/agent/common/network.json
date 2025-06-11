@@ -1,16 +1,33 @@
 {
   "Networking.java": {
-    "desc": "ネットワーク通信の管理クラス、アニメーション同期処理を追加",
-    "importance": "medium",
-    "last_accessed": "2025-06-08",
+    "desc": "ネットワーク通信の管理クラス。アニメーション同期とキー入力同期を統合管理",
+    "importance": "high",
+    "last_accessed": "2025-06-11",
     "key_features": [
       "Architecturyネットワーク使用",
       "クライアント・サーバー分離",
       "EnvType判定",
-      "C2S/S2C通信登録メソッド"
+      "C2S/S2C通信登録メソッド",
+      "KeyInputPacket.receiveC2S登録"
     ],
-    "dependencies": ["ItemAnimationEventPacket.java"],
-    "note": "アニメーション同期処理を実装、今後銃の発射・リロードなどの同期処理を追加予定"
+    "dependencies": ["ItemAnimationEventPacket.java", "KeyInputPacket.java"],
+    "note": "アニメーション同期に加えてキー入力同期処理を実装。マルチプレイヤーでの銃操作を完全対応"
+  },
+  "KeyInputPacket.java": {
+    "desc": "クライアントからサーバーへのキー入力状態同期パケット。リアルタイムな銃操作のマルチプレイヤー対応を実現",
+    "importance": "high",
+    "last_accessed": "2025-06-11",
+    "key_features": [
+      "C2S（Client to Server）通信専用",
+      "Map<KeyInputManager.Key, Boolean>でのキー状態送信",
+      "createC2SPacket()でのパケット作成",
+      "receiveC2S()でのサーバー側受信処理",
+      "HasKeyInputManagerとの連携",
+      "メインスレッドでの安全な処理",
+      "VarInt効率的エンコーディング"
+    ],
+    "dependencies": ["KeyInputManager.java", "HasKeyInputManager.java", "ClientKeyInputManager.java"],
+    "note": "58行の実装。専用キーバインドシステムを支えるネットワーク通信の中核。従来のuse()メソッドを完全に置き換え"
   },
   "ItemAnimationEventPacket.java": {
     "desc": "アイテムのアニメーションイベントをサーバーからクライアントに同期するパケットクラス",
