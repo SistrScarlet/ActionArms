@@ -2,7 +2,7 @@
   "ActionArms.java": {
     "desc": "MODのメインクラス。設定管理、登録処理、ネットワーク初期化、サーバーティック処理を担当",
     "importance": "high",
-    "last_accessed": "2025-06-11",
+    "last_accessed": "2025-06-13",
     "key_features": [
       "MOD_ID定数定義",
       "LOGGERインスタンス管理",
@@ -33,5 +33,22 @@
     ],
     "dependencies": ["KeyInputManager.java", "GunController.java", "HasKeyInputManager.java", "HasGunController.java"],
     "note": "67行の実装。プレイヤーエンティティに銃操作機能を注入し、サーバーサイドでの自動銃操作を実現。actionarms-common.mixins.jsonに登録済み"
+  },
+  "../hud/ServerHudManager.java": {
+    "desc": "サーバー側HUD状態管理システム。プレイヤーごとに状態を管理し、変化時のみクライアントに送信",
+    "importance": "high",
+    "last_accessed": "2025-06-13",
+    "key_features": [
+      "シングルトンパターンによる一元管理",
+      "Map<UUID, Map<String, HudState<?>>>での階層的状態管理",
+      "tick()メソッドでの全プレイヤー状態更新",
+      "updateHud()での個別プレイヤー処理",
+      "状態変化時のみHudStatePacket送信（効率化）",
+      "20tickタイムアウトでの古い状態クリーンアップ",
+      "UniqueComponent連携でのアイテム個体識別",
+      "HudState<T>レコードでの型安全な状態保持"
+    ],
+    "dependencies": ["LeverActionHudState.java", "HudStatePacket.java", "UniqueComponent.java", "LeverActionGunItem.java"],
+    "note": "約50行の実装。ネットワーク効率を重視し、変化時のみ送信する効率的なHUD管理システム。プレイヤー離脫時の自動クリーンアップ機能も実装"
   }
 }

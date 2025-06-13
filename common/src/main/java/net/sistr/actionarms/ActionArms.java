@@ -7,6 +7,7 @@ import me.shedaniel.autoconfig.ConfigHolder;
 import me.shedaniel.autoconfig.serializer.Toml4jConfigSerializer;
 import net.sistr.actionarms.config.AAConfig;
 import net.sistr.actionarms.entity.util.HasKeyInputManager;
+import net.sistr.actionarms.hud.ServerHudManager;
 import net.sistr.actionarms.item.ItemUniqueManager;
 import net.sistr.actionarms.network.Networking;
 import net.sistr.actionarms.setup.Registration;
@@ -27,6 +28,7 @@ public class ActionArms {
                 var keyInputManager = ((HasKeyInputManager) player).actionArms$getKeyInputManager();
                 keyInputManager.postTick();
             });
+            ServerHudManager.INSTANCE.tick(world);
         });
     }
 

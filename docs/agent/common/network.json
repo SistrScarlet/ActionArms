@@ -1,17 +1,18 @@
 {
   "Networking.java": {
-    "desc": "ネットワーク通信の管理クラス。アニメーション同期とキー入力同期を統合管理",
+    "desc": "ネットワーク通信の管理クラス。アニメーション同期、キー入力同期、HUD状態同期を統合管理",
     "importance": "high",
-    "last_accessed": "2025-06-11",
+    "last_accessed": "2025-06-13",
     "key_features": [
       "Architecturyネットワーク使用",
       "クライアント・サーバー分離",
       "EnvType判定",
       "C2S/S2C通信登録メソッド",
-      "KeyInputPacket.receiveC2S登録"
+      "KeyInputPacket.receiveC2S登録",
+      "HudStatePacket.receiveS2C登録"
     ],
-    "dependencies": ["ItemAnimationEventPacket.java", "KeyInputPacket.java"],
-    "note": "アニメーション同期に加えてキー入力同期処理を実装。マルチプレイヤーでの銃操作を完全対応"
+    "dependencies": ["ItemAnimationEventPacket.java", "KeyInputPacket.java", "HudStatePacket.java"],
+    "note": "アニメーション同期に加えてキー入力同期、HUD状態同期処理を実装。マルチプレイヤーでの銃操作とHUD表示を完全対応"
   },
   "KeyInputPacket.java": {
     "desc": "クライアントからサーバーへのキー入力状態同期パケット。リアルタイムな銃操作のマルチプレイヤー対応を実現",
@@ -43,5 +44,22 @@
     ],
     "dependencies": ["ItemAnimationManager.java"],
     "note": "レバーアクションのアニメーションをマルチプレイヤーで同期するために不可欠"
+  },
+  "HudStatePacket.java": {
+    "desc": "HUD状態情報をサーバーからクライアントにリアルタイム同期するパケットシステム",
+    "importance": "high",
+    "last_accessed": "2025-06-13",
+    "key_features": [
+      "S2C（Server to Client）通信専用",
+      "String状態IDとNbtCompoundデータの送信",
+      "sendS2C()メソッドでの個別プレイヤー対象送信",
+      "receiveS2C()でのClientHudManager連携",
+      "createS2CPacket()でのパケット作成",
+      "PacketByteBufでの効率的なデータエンコーディング",
+      "Architectury NetworkManager使用",
+      "メインスレッドでの安全な処理"
+    ],
+    "dependencies": ["ClientHudManager.java", "ServerHudManager.java", "LeverActionHudState.java"],
+    "note": "約30行の実装。弾薬状況や銃のHUD情報を効率的にクライアントに送信。NBT形式で柔軟なデータ構造を実現"
   }
 }

@@ -259,4 +259,98 @@ public class LeverActionGunComponent implements IItemComponent, FireTrigger, Cyc
         this.magazine.write(magazineNbt);
         nbt.put("magazine", magazineNbt);
     }
+
+    // getter / setter
+
+    public LeverActionGunDataType getGunType() {
+        return gunType;
+    }
+
+    public Chamber getChamber() {
+        return chamber;
+    }
+
+    public MagazineComponent getMagazine() {
+        return magazine;
+    }
+
+    public void setHammerReady(boolean hammerReady) {
+        this.hammerReady = hammerReady;
+    }
+
+    public void setLeverDown(boolean leverDown) {
+        this.leverDown = leverDown;
+    }
+
+    public boolean isCycling() {
+        return cycling;
+    }
+
+    public void setCycling(boolean cycling) {
+        this.cycling = cycling;
+    }
+
+    public boolean isReloading() {
+        return reloading;
+    }
+
+    public void setReloading(boolean reloading) {
+        this.reloading = reloading;
+    }
+
+    public float getCycleTime() {
+        return cycleTime;
+    }
+
+    public void setCycleTime(float cycleTime) {
+        this.cycleTime = cycleTime;
+    }
+
+    public float getReloadTime() {
+        return reloadTime;
+    }
+
+    public void setReloadTime(float reloadTime) {
+        this.reloadTime = reloadTime;
+    }
+
+    public float getFireCoolTime() {
+        return fireCoolTime;
+    }
+
+    public void setFireCoolTime(float fireCoolTime) {
+        this.fireCoolTime = fireCoolTime;
+    }
+
+    public float getCycleCoolTime() {
+        return cycleCoolTime;
+    }
+
+    public void setCycleCoolTime(float cycleCoolTime) {
+        this.cycleCoolTime = cycleCoolTime;
+    }
+
+    public float getReloadCoolTime() {
+        return reloadCoolTime;
+    }
+
+    public void setReloadCoolTime(float reloadCoolTime) {
+        this.reloadCoolTime = reloadCoolTime;
+    }
+
+    public float getCycleCancelableTime() {
+        return cycleCancelableTime;
+    }
+
+    public void setCycleCancelableTime(float cycleCancelableTime) {
+        this.cycleCancelableTime = cycleCancelableTime;
+    }
+
+    public float getReloadCancelableTime() {
+        return reloadCancelableTime;
+    }
+
+    public void setReloadCancelableTime(float reloadCancelableTime) {
+        this.reloadCancelableTime = reloadCancelableTime;
+    }
 }

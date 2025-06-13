@@ -10,7 +10,7 @@
   "LeverActionGunItem.java": {
     "desc": "レバーアクション機構を持つ銃アイテム。サウンド再生と実際の弾薬管理システムを実装",
     "importance": "high",
-    "last_accessed": "2025-06-10",
+    "last_accessed": "2025-06-13",
     "key_features": [
       "GunItem継承",
       "レバーアクション機構",
@@ -57,7 +57,7 @@
   "component/LeverActionGunComponent.java": {
     "desc": "レバーアクション銃の統合コンポーネント。サウンド再生機能と実際の弾薬管理を統合",
     "importance": "high",
-    "last_accessed": "2025-06-10",
+    "last_accessed": "2025-06-13",
     "key_features": [
       "IItemComponent実装",
       "FireTrigger/CyclingLever/Reloadable直接実装",
@@ -69,7 +69,8 @@
       "サウンド再生統合（LeverActionPlaySoundContext）",
       "実際の弾薬管理（ReloadStartContext）",
       "空撃ち音再生対応",
-      "クリエイティブモードでの無限弾薬対応"
+      "クリエイティブモードでの無限弾薬対応",
+      "LeverActionHudState連携でのHUD情報提供"
     ],
     "parent": "IItemComponent",
     "interfaces": ["FireTrigger", "CyclingLever", "Reloadable"],
@@ -318,5 +319,21 @@
     ],
     "dependencies": ["Registration.java"],
     "note": "49行の実装。銃のサウンド再生を一元管理し、各コンポーネントから統一的に使用可能"
+  },
+  "../hud/LeverActionHudState.java": {
+    "desc": "レバーアクション銃のHUD表示用状態データ管理システム。薬室・マガジン状況をシリアライゼーション対応で管理",
+    "importance": "high",
+    "last_accessed": "2025-06-13",
+    "key_features": [
+      "MagazineContents/ChamberStateレコードによる型安全な状態管理",
+      "NBT形式でのシリアライゼーション・デシリアライゼーション対応",
+      "LeverActionGunComponentからの状態抽出機能（of()メソッド）",
+      "canShoot()による発射可能状態判定",
+      "List<String>による弾薬タイプ管理",
+      "薬室の装填状態とマガジン内容の完全な状態表現",
+      "NbtCompound/NbtListによる効率的なデータ保存"
+    ],
+    "dependencies": ["LeverActionGunComponent.java", "AAHudRenderer.java", "ServerHudManager.java"],
+    "note": "約60行の実装。HUD表示システムの中核データ構造。record型による不変性とNBT対応により安全で効率的な状態管理を実現"
   }
 }

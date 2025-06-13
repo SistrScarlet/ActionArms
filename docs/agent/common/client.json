@@ -2,10 +2,10 @@
   "ActionArmsClient.java": {
     "desc": "クライアント側の初期化処理、glTFモデルマネージャー・エンティティレンダラー登録",
     "importance": "high",
-    "last_accessed": "2025-06-10",
-    "key_features": ["クライアント初期化のエントリーポイント", "AAKeys初期化", "GLTFModelManagerリソースリローダー登録", "BulletEntityRendererエンティティレンダラー登録"],
-    "dependencies": ["AAKeys", "GLTFModelManager", "BulletEntityRenderer", "Registration"],
-    "note": "preInit/initの分離により初期化順序を適切に制御。弾丸エンティティの描画システム対応"
+    "last_accessed": "2025-06-13",
+    "key_features": ["クライアント初期化のエントリーポイント", "AAKeys初期化", "GLTFModelManagerリソースリローダー登録", "BulletEntityRendererエンティティレンダラー登録", "ClientHudManagerティック登録", "AAHudRendererレンダー登録"],
+    "dependencies": ["AAKeys", "GLTFModelManager", "BulletEntityRenderer", "Registration", "ClientHudManager", "AAHudRenderer"],
+    "note": "preInit/initの分離により初期化順序を適切に制御。弾丸エンティティの描画システム対応。HUD描画システムの統合管理を担当"
   },
   "key/AAKeys.java": {
     "desc": "銃操作用のキーバインド定義・登録処理とKeyInputManager連携",
@@ -97,5 +97,38 @@
     ],
     "dependencies": ["BulletEntity.java", "ActionArmsClient.java"],
     "note": "現在は矢のテクスチャを使用、今後glTFモデルでの描画を検討"
+  },
+  "render/hud/AAHudRenderer.java": {
+    "desc": "銃の弾薬状況を視覚的に表示するHUDレンダラー。薬室とマガジンの装填状況をリアルタイム描画",
+    "importance": "high",
+    "last_accessed": "2025-06-13",
+    "key_features": [
+      "シングルトンパターンによる一元管理",
+      "薬室とマガジンの弾薬状況を視覚化",
+      "縦並び（右下固定）表示システム",
+      "横並び（上部中央）表示システム（将来の設定切り替え用）",
+      "弾薬テクスチャと空テクスチャでの装填状況表示",
+      "LeverActionHudStateとの連携",
+      "UniqueComponentによる個別アイテム識別",
+      "HudStateクラスによる状態管理"
+    ],
+    "dependencies": ["LeverActionHudState.java", "ClientHudManager.java", "UniqueComponent.java"],
+    "note": "約120行の実装。マルチプレイヤー対応のリアルタイム弾薬表示システム。将来的に表示方式の設定切り替え機能予定"
+  },
+  "render/hud/ClientHudManager.java": {
+    "desc": "クライアント側HUD状態管理システム。サーバーからの状態更新を受信・管理",
+    "importance": "high",
+    "last_accessed": "2025-06-13",
+    "key_features": [
+      "シングルトンパターンによる一元管理",
+      "Map<String, HudState>での状態管理",
+      "20tick（1秒）でのタイムアウト処理",
+      "updateHud()メソッドでのサーバー同期",
+      "preTick()メソッドでの古い状態クリーンアップ",
+      "getState()メソッドでの型安全な状態取得",
+      "Function<NbtCompound, T>によるファクトリーパターン"
+    ],
+    "dependencies": ["AAHudRenderer.java", "HudStatePacket.java"],
+    "note": "約40行の実装。効率的なHUD状態管理とタイムアウト機能でメモリリークを防止"
   }
 }
