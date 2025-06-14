@@ -35,6 +35,12 @@ public class ClientAimManager {
                 AimPacket.sendC2S(aimManager.isAiming());
             }
         }
+
+        // リロード操作している場合はキャンセル
+        if (keyManager.isTurnPress(KeyInputManager.Key.RELOAD)) {
+            aimManager.setAiming(false);
+            AimPacket.sendC2S(aimManager.isAiming());
+        }
     }
 
 }

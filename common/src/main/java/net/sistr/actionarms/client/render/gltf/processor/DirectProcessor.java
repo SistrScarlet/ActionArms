@@ -117,6 +117,12 @@ public class DirectProcessor {
             // ワールド変換行列を計算（階層構造を考慮）
             computeWorldMatrices(skin, localMatrices, boneMatrices);
 
+            // ボーン行列を計算
+            for (ProcessedBone bone : skin.getBones()) {
+                // ボーン行列 = ワールド行列 * 逆バインド行列
+                boneMatrices[bone.index()].mul(bone.getInverseBindMatrix());
+            }
+
         } finally {
             GltfMemoryPool.returnFloatArray(animationData);
             GltfMemoryPool.returnMatrixArray(localMatrices);
@@ -218,10 +224,9 @@ public class DirectProcessor {
                 var currentLocal = localMatrices[current.index()];
                 var parentWorld = worldMatrices[parent.index()];
 
-                // ワールド行列 = 親のワールド行列 * ローカル行列 * 逆バインド行列
+                // ワールド行列 = 親のワールド行列 * ローカル行列
                 worldMatrices[current.index()].set(parentWorld)
-                        .mul(currentLocal)
-                        .mul(current.getInverseBindMatrix());
+                        .mul(currentLocal);
 
                 for (ProcessedBone child : current.getChildren()) {
                     stack.push(child);

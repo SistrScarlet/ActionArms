@@ -142,6 +142,7 @@ public class LeverActionGunComponent implements IItemComponent, FireTrigger, Cyc
         return !this.cycling
                 && this.cycleCoolTime == 0
                 && this.reloadCoolTime == 0
+                && this.fireCoolTime == 0
                 && (!this.reloading || this.reloadCancelableTime > 0)
                 && (this.chamber.isInCartridge() || this.magazine.hasBullet());
     }
@@ -190,7 +191,13 @@ public class LeverActionGunComponent implements IItemComponent, FireTrigger, Cyc
         if (!canReload(context)) {
             return false;
         }
-        animationContext.setAnimation("reload", 0);
+        int maxBullets = this.magazine.getMaxCapacity();
+        int bullets = this.magazine.getBullets().size();
+        if (bullets + this.gunType.reloadCount() >= maxBullets) {
+            animationContext.setAnimation("reload_end", 0);
+        } else {
+            animationContext.setAnimation("reload", 0);
+        }
         playSoundContext.playSound(LeverActionPlaySoundContext.Sound.RELOAD);
         this.reloading = true;
         this.cycling = false;

@@ -69,7 +69,7 @@ public class GunController {
             // FIREキー（射撃操作）
             if (keyInputManager.isTurnPress(KeyInputManager.Key.FIRE)) {
                 if (gunComponent.canTrigger()) {
-                    var fireStartContext = leverAction.createFireStartContext(user.getWorld(), user, uuid);
+                    var fireStartContext = leverAction.createFireStartContext(user.getWorld(), user);
                     if (gunComponent.trigger(playSoundContext, animationContext, fireStartContext)) {
                         markDuty = true;
                     }
@@ -87,8 +87,10 @@ public class GunController {
 
             // RELOADキー（リロード操作）
             if (keyInputManager.isTurnPress(KeyInputManager.Key.RELOAD)) {
+                var isAiming = user instanceof HasAimManager hasAimManager
+                        && hasAimManager.actionArms$getAimManager().isAiming();
                 Reloadable.ReloadStartContext reloadContext = leverAction.createReloadStartContext(user);
-                if (gunComponent.canReload(reloadContext)) {
+                if (!isAiming && gunComponent.canReload(reloadContext)) {
                     if (gunComponent.reload(playSoundContext, animationContext, reloadContext)) {
                         markDuty = true;
                     }

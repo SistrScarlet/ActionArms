@@ -1,20 +1,15 @@
 package net.sistr.actionarms.item;
 
-import net.minecraft.client.item.TooltipContext;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
 import net.minecraft.sound.SoundCategory;
-import net.minecraft.text.Text;
 import net.minecraft.world.World;
 import net.sistr.actionarms.entity.BulletEntity;
 import net.sistr.actionarms.entity.util.InventoryAmmoUtil;
 import net.sistr.actionarms.item.component.*;
 import net.sistr.actionarms.item.component.registry.GunComponentTypes;
-import net.sistr.actionarms.network.ItemAnimationEventPacket;
 import net.sistr.actionarms.setup.Registration;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -38,14 +33,12 @@ public class LeverActionGunItem extends GunItem {
         return AnimationContext.of(world, uuid);
     }
 
-    public FireTrigger.FireStartContext createFireStartContext(World world, LivingEntity user, UUID uuid) {
+    public FireTrigger.FireStartContext createFireStartContext(World world, LivingEntity user) {
         return bullet -> {
             // 射撃処理
             var bulletEntity = BulletEntity.of(Registration.BULLET_ENTITY.get(), world, user,
                     bullet, user.getEyePos(), BulletEntity.getVec(user.getYaw(), user.getPitch()), 3);
             world.spawnEntity(bulletEntity);
-
-            ItemAnimationEventPacket.sendS2C(world, uuid, "firing", 0);
         };
     }
 

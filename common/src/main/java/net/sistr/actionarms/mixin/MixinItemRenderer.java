@@ -124,12 +124,10 @@ public class MixinItemRenderer {
         }
 
         float secondDelta = tickDelta * (1f / 20f);
-        if (itemStates.isEmpty()) {
-            states.add(new RenderingContext.AnimationState(
-                    isAiming ? "idle_aiming" : "idle",
-                    secondDelta,
-                    false));
-        }
+        states.add(new RenderingContext.AnimationState(
+                isAiming ? "idle_aiming" : "idle",
+                entityAge,
+                true));
         itemStates.values().stream()
                 .sorted(Comparator.comparingDouble(ItemAnimationManager.State::seconds).reversed())
                 .forEach(state -> {
@@ -140,7 +138,6 @@ public class MixinItemRenderer {
                     states.add(new RenderingContext.AnimationState(
                             id, state.seconds() + secondDelta, false));
                 });
-
         return states;
     }
 

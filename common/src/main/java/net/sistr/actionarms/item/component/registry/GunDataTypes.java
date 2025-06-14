@@ -9,7 +9,7 @@ public class GunDataTypes {
     public static final MagazineDataType LEVER_ACTION_TUBE_MAGAZINE =
             new MagazineDataType(10, bullet -> true);
     public static final LeverActionGunDataType M1873 =
-            new LeverActionGunDataType(0.1f, 0.1f, 0.4f, 0.2f, 0.1f, 0.1f,
-                    0.1f, 0.05f,
-                    1);
+            new LeverActionGunDataType(0.15f,
+                    0.2f, 0.2f, 0.05f, 0.1f,
+                    0.05f, 0.05f, 0.05f, 1);
 }
