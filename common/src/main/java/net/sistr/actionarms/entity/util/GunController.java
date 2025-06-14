@@ -14,10 +14,10 @@ import java.util.function.Supplier;
 
 public class GunController {
     private final LivingEntity user;
-    private final KeyInputManager keyInputManager;
+    private final IKeyInputManager keyInputManager;
     private final Supplier<List<ItemStack>> itemsSupplier;
 
-    public GunController(LivingEntity user, KeyInputManager keyInputManager, Supplier<List<ItemStack>> itemsSupplier) {
+    public GunController(LivingEntity user, IKeyInputManager keyInputManager, Supplier<List<ItemStack>> itemsSupplier) {
         this.user = user;
         this.keyInputManager = keyInputManager;
         this.itemsSupplier = itemsSupplier;

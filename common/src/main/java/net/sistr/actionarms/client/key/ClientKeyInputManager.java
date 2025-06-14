@@ -10,6 +10,8 @@ public class ClientKeyInputManager {
     private final KeyInputManager keyInputManager = new KeyInputManager();
 
     public void preTick() {
+        keyInputManager.tick();
+
         var changedKeys = new HashMap<KeyInputManager.Key, Boolean>();
         for (var entry : AAKeys.getKeyBindings().entrySet()) {
             var key = entry.getKey();
@@ -26,8 +28,7 @@ public class ClientKeyInputManager {
         }
     }
 
-    public void postTick() {
-        keyInputManager.postTick();
+    public KeyInputManager getKeyInputManager() {
+        return keyInputManager;
     }
-
 }

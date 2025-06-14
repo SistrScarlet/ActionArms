@@ -26,7 +26,7 @@ public class ActionArms {
             ItemUniqueManager.INSTANCE.clearOld(world);
             world.getPlayers().forEach(player -> {
                 var keyInputManager = ((HasKeyInputManager) player).actionArms$getKeyInputManager();
-                keyInputManager.postTick();
+                keyInputManager.tick(); // キーパケットの受け取りがtick後のため、このタイミングでないとprevとnowが同じになる
             });
             ServerHudManager.INSTANCE.tick(world);
         });

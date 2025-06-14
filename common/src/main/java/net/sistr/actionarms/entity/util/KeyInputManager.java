@@ -3,7 +3,7 @@ package net.sistr.actionarms.entity.util;
 import java.util.HashMap;
 import java.util.Map;
 
-public class KeyInputManager {
+public class KeyInputManager implements IKeyInputManager {
     private final Map<Key, InputLog> keyInputLogMap;
 
     public KeyInputManager() {
@@ -13,28 +13,34 @@ public class KeyInputManager {
         }
     }
 
-    public void postTick() {
+    @Override
+    public void tick() {
         for (InputLog log : keyInputLogMap.values()) {
             log.tick();
         }
     }
 
+    @Override
     public void input(Key key, boolean isPress) {
         keyInputLogMap.get(key).input(isPress);
     }
 
+    @Override
     public boolean isPress(Key key) {
         return keyInputLogMap.get(key).isPressed();
     }
 
+    @Override
     public boolean isPressPrev(Key key) {
         return keyInputLogMap.get(key).isPressedPrev();
     }
 
+    @Override
     public boolean isTurnPress(Key key) {
         return isPress(key) && !isPressPrev(key);
     }
 
+    @Override
     public boolean isTurnRelease(Key key) {
         return !isPress(key) && isPressPrev(key);
     }

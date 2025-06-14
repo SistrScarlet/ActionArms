@@ -37,7 +37,7 @@
   "util/KeyInputManager.java": {
     "desc": "プレイヤーのキー入力状態を管理する汎用システム。現在・過去の状態を保持し、押し・離し判定を提供",
     "importance": "high",
-    "last_accessed": "2025-06-11",
+    "last_accessed": "2025-06-14",
     "key_features": [
       "Key列挙型（FIRE/AIM/COCK/RELOAD）",
       "InputLogクラスによる8フレーム状態履歴",
@@ -47,7 +47,7 @@
       "マルチプレイヤー対応設計"
     ],
     "dependencies": [],
-    "note": "純粋な状態管理クラス。クライアント・サーバー両方で使用される汎用システム。実際はentity/utilディレクトリに配置"
+    "note": "純粋な状態管理クラス。クライアント・サーバー両方で使用される汎用システム。IKeyInputManager実装でインターフェース対応。実際はentity/utilディレクトリに配置"
   },
   "util/GunController.java": {
     "desc": "プレイヤーの銃操作を統合制御するシステム。キー入力に応じた銃のトリガー・サイクル・リロード処理を自動化",
@@ -61,8 +61,8 @@
       "LeverActionGunItemとの完全連携",
       "サーバーサイド専用処理"
     ],
-    "dependencies": ["LeverActionGunItem.java", "KeyInputManager.java", "UniqueComponent.java"],
-    "note": "105行の実装。従来の右クリック操作をキーバインド操作に完全移行させる中核システム。実際はentity/utilディレクトリに配置"
+    "dependencies": ["LeverActionGunItem.java", "IKeyInputManager.java", "UniqueComponent.java"],
+    "note": "105行の実装。従来の右クリック操作をキーバインド操作に完全移行させる中核システム。IKeyInputManager対応で抽象化を向上。実際はentity/utilディレクトリに配置"
   },
   "util/HasKeyInputManager.java": {
     "desc": "KeyInputManagerアクセス用インターフェース。Mixinでプレイヤーエンティティに実装される",
@@ -72,8 +72,8 @@
       "actionArms$getKeyInputManager()メソッド定義",
       "Mixinパターンでの実装"
     ],
-    "dependencies": ["KeyInputManager.java"],
-    "note": "Mixin設計の一部。プレイヤーエンティティにキー管理機能を注入。実際はentity/utilディレクトリに配置"
+    "dependencies": ["IKeyInputManager.java"],
+    "note": "Mixin設計の一部。プレイヤーエンティティにキー管理機能を注入。IKeyInputManager型返却に変更。実際はentity/utilディレクトリに配置"
   },
   "util/HasGunController.java": {
     "desc": "GunControllerアクセス用インターフェース。Mixinでプレイヤーエンティティに実装される",
@@ -85,5 +85,77 @@
     ],
     "dependencies": ["GunController.java"],
     "note": "Mixin設計の一部。プレイヤーエンティティに銃制御機能を注入。実際はentity/utilディレクトリに配置"
+  },
+  "util/AimManager.java": {
+    "desc": "エイム状態管理システム。プレイヤーのエイム状態とアイテム切り替え時の自動エイム解除を実装",
+    "importance": "high",
+    "last_accessed": "2025-06-14",
+    "key_features": [
+      "IAimManagerインターフェース実装",
+      "PlayerEntityをコンストラクタで受け取り",
+      "aiming状態のboolean管理",
+      "prevAimStackによるアイテム切り替え検出",
+      "canAiming()によるエイム可能条件判定",
+      "LeverActionGunItemのエイム対象チェック",
+      "tick()でのアイテム変更時エイム解除",
+      "setAiming()での安全なエイム状態設定"
+    ],
+    "dependencies": ["IAimManager.java", "LeverActionGunItem.java"],
+    "note": "約50行の実装。エイム機能の中核システム。アイテム切り替え時の自動エイム解除でユーザビリティを向上"
+  },
+  "util/HasAimManager.java": {
+    "desc": "AimManagerアクセス用インターフェース。Mixinでプレイヤーエンティティに実装される",
+    "importance": "medium",
+    "last_accessed": "2025-06-14",
+    "key_features": [
+      "actionArms$getAimManager()メソッド定義",
+      "IAimManager型の返却",
+      "Mixinパターンでの実装"
+    ],
+    "dependencies": ["IAimManager.java"],
+    "note": "Mixin設計の一部。プレイヤーエンティティにエイム管理機能を注入。実際はentity/utilディレクトリに配置"
+  },
+  "util/IAimManager.java": {
+    "desc": "エイム管理システムのインターフェース。エイム状態の取得・設定メソッドを定義",
+    "importance": "medium",
+    "last_accessed": "2025-06-14",
+    "key_features": [
+      "isAiming()メソッド定義",
+      "setAiming(boolean aim)メソッド定義",
+      "エイム状態の抽象化",
+      "型安全なインターフェース設計"
+    ],
+    "dependencies": [],
+    "note": "約8行のシンプルなインターフェース。エイム機能の型安全性を保証"
+  },
+  "util/IKeyInputManager.java": {
+    "desc": "キー入力管理システムのインターフェース。KeyInputManagerの抽象化とダミー実装対応",
+    "importance": "medium",
+    "last_accessed": "2025-06-14",
+    "key_features": [
+      "tick()メソッド定義",
+      "input(Key, boolean)メソッド定義",
+      "isPress/isPressPrev/isTurnPress/isTurnReleaseメソッド定義",
+      "KeyInputManager.Key列挙型対応",
+      "ダミー実装での安全性確保",
+      "クライアント・サーバー間の抽象化"
+    ],
+    "dependencies": ["KeyInputManager.java"],
+    "note": "約17行のインターフェース。キー入力システムの抽象化で柔軟性を向上。ClientPlayerEntityでの特別処理を可能にする"
+  },
+  "mixin/MixinPlayerEntity.java": {
+    "desc": "PlayerEntityにAimManager機能を注入するMixin。全プレイヤーエンティティにエイム機能を追加",
+    "importance": "high",
+    "last_accessed": "2025-06-14",
+    "key_features": [
+      "PlayerEntityをターゲットとしたMixin",
+      "HasAimManagerインターフェース実装",
+      "@UniqueフィールドでAimManagerインスタンス保持",
+      "@Injectでtick()メソッドにフック",
+      "AimManager.tick()の自動呼び出し",
+      "サーバー・クライアント両対応"
+    ],
+    "dependencies": ["AimManager.java", "HasAimManager.java", "IAimManager.java"],
+    "note": "約27行の実装。全プレイヤーエンティティにエイム機能を注入。actionarms-common.mixins.jsonに登録済み"
   }
 }

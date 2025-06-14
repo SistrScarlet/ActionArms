@@ -20,6 +20,9 @@
     ],
     "client": [
       "net.sistr.actionarms.fabric.ActionArmsFabric"
+    ],
+    "modmenu": [
+      "net.sistr.actionarms.client.modmenu.AAModMenuIntegration"
     ]
   },
   "mixins": [

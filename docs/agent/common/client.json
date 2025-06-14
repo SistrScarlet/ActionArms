@@ -4,8 +4,8 @@
     "importance": "high",
     "last_accessed": "2025-06-13",
     "key_features": ["クライアント初期化のエントリーポイント", "AAKeys初期化", "GLTFModelManagerリソースリローダー登録", "BulletEntityRendererエンティティレンダラー登録", "ClientHudManagerティック登録", "AAHudRendererレンダー登録"],
-    "dependencies": ["AAKeys", "GLTFModelManager", "BulletEntityRenderer", "Registration", "ClientHudManager", "AAHudRenderer"],
-    "note": "preInit/initの分離により初期化順序を適切に制御。弾丸エンティティの描画システム対応。HUD描画システムの統合管理を担当"
+    "dependencies": ["AAKeys", "GLTFModelManager", "BulletEntityRenderer", "Registration", "ClientHudManager", "AAHudRenderer", "ClientAimManager"],
+    "note": "preInit/initの分離により初期化順序を適切に制御。弾丸エンティティの描画システム対応。HUD描画システムの統合管理を担当。ClientAimManagerティック統合"
   },
   "key/AAKeys.java": {
     "desc": "銃操作用のキーバインド定義・登録処理とKeyInputManager連携",
@@ -31,7 +31,7 @@
       "preTick/postTickでの状態管理"
     ],
     "dependencies": ["AAKeys", "KeyInputManager", "KeyInputPacket"],
-    "note": "クライアント・サーバー間のキー入力同期システムの中核"
+    "note": "クライアント・サーバー間のキー入力同期システムの中核。IKeyInputManager対応とgetKeyInputManager()メソッド追加"
   },
   "key/KeyRegisterCallback.java": {
     "desc": "プラットフォーム依存のキー登録処理インターフェース",
@@ -54,8 +54,8 @@
       "元描画処理のキャンセル",
       "GltfRendererとの連携"
     ],
-    "dependencies": ["GLTFModelItem", "GLTFModelManager", "GltfRenderer"],
-    "note": "現在全モデルを描画、将来的にアイテム別モデル選択機能必要"
+    "dependencies": ["GLTFModelItem", "GLTFModelManager", "GltfRenderer", "HasAimManager"],
+    "note": "エイム時のアニメーション名サフィックス追加(*_aiming)、idle_aimingアニメーション対応"
   },
   "render/gltf/ItemAnimationManager.java": {
     "desc": "アイテム個体別のアニメーション状態を管理するシングルトンマネージャー。UUIDベースでアニメーション状態を時間管理",
@@ -82,8 +82,8 @@
       "GLTFModelItemの特別な位置制御",
       "左右の腕に応じた位置調整"
     ],
-    "dependencies": ["GlftModelItem.java"],
-    "note": "銃の描画位置を適切に制御するために重要"
+    "dependencies": ["GlftModelItem.java", "HasAimManager.java"],
+    "note": "エイム時の描画位置調整（中央配置）、swingProgress無効化、手の位置カスタマイズ機能を実装"
   },
   "render/entity/BulletEntityRenderer.java": {
     "desc": "弾丸エンティティの描画レンダラー。Minecraftの標準エンティティレンダラーシステムに対応",
@@ -130,5 +130,36 @@
     ],
     "dependencies": ["AAHudRenderer.java", "HudStatePacket.java"],
     "note": "約40行の実装。効率的なHUD状態管理とタイムアウト機能でメモリリークを防止"
+  },
+  "key/ClientAimManager.java": {
+    "desc": "クライアント側エイム管理システム。キー入力に基づくエイム状態制御とサーバー同期",
+    "importance": "high",
+    "last_accessed": "2025-06-14",
+    "key_features": [
+      "シングルトンパターンによる一元管理",
+      "トグルエイム・プッシュエイム両対応",
+      "KeyInputManagerとの連携によるキー監視",
+      "HasAimManagerとの連携によるエイム状態制御",
+      "AimPacketによるリアルタイムサーバー同期",
+      "ActionArms.getConfig().key.aimToggle設定対応",
+      "preTick()でのキー状態チェック"
+    ],
+    "dependencies": ["HasAimManager.java", "ClientKeyInputManager.java", "AimPacket.java", "ActionArms.java"],
+    "note": "約40行の実装。エイム機能のクライアント側制御システム。トグル・プッシュ両方のエイム動作に対応"
+  },
+  "mixin/MixinClientPlayerEntity.java": {
+    "desc": "ClientPlayerEntityにKeyInputManager機能を注入するMixin。クライアント・サーバー判定機能",
+    "importance": "medium",
+    "last_accessed": "2025-06-14",
+    "key_features": [
+      "ClientPlayerEntityをターゲットとしたMixin",
+      "HasKeyInputManagerインターフェース実装",
+      "MinecraftClient.getInstance().player判定",
+      "ClientKeyInputManagerとの連携",
+      "ダミーKeyInputManagerでのフォールバック",
+      "@Uniqueフィールドによる安全な実装"
+    ],
+    "dependencies": ["ClientKeyInputManager.java", "HasKeyInputManager.java", "KeyInputManager.java"],
+    "note": "約24行の実装。クライアント側プレイヤーエンティティにキー管理機能を注入。actionarms-common.mixins.jsonに登録済み"
   }
 }

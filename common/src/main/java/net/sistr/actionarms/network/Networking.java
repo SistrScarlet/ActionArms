@@ -14,6 +14,7 @@ public class Networking {
         }
 
         registerServerReceiver(KeyInputPacket.ID, KeyInputPacket::receiveC2S);
+        registerServerReceiver(AimPacket.ID, AimPacket::receiveC2S);
     }
 
     @Environment(EnvType.CLIENT)

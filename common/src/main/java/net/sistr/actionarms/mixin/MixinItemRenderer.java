@@ -14,6 +14,7 @@ import net.sistr.actionarms.client.render.gltf.GltfModelManager;
 import net.sistr.actionarms.client.render.gltf.ItemAnimationManager;
 import net.sistr.actionarms.client.render.gltf.renderer.GltfRenderer;
 import net.sistr.actionarms.client.render.gltf.renderer.RenderingContext;
+import net.sistr.actionarms.entity.util.HasAimManager;
 import net.sistr.actionarms.item.LeverActionGunItem;
 import net.sistr.actionarms.item.component.IItemComponent;
 import net.sistr.actionarms.item.component.LeverActionGunComponent;
@@ -95,6 +96,8 @@ public class MixinItemRenderer {
             Map<String, ItemAnimationManager.State> itemStates, float tickDelta) {
         var states = new ArrayList<RenderingContext.AnimationState>();
 
+        boolean isAiming = entity instanceof HasAimManager hasAimManager
+                && hasAimManager.actionArms$getAimManager().isAiming();
         float entityAge = entity.age * (1f / 20f) + tickDelta;
 
         if (component.isHammerReady()) {
@@ -121,10 +124,22 @@ public class MixinItemRenderer {
         }
 
         float secondDelta = tickDelta * (1f / 20f);
+        if (itemStates.isEmpty()) {
+            states.add(new RenderingContext.AnimationState(
+                    isAiming ? "idle_aiming" : "idle",
+                    secondDelta,
+                    false));
+        }
         itemStates.values().stream()
                 .sorted(Comparator.comparingDouble(ItemAnimationManager.State::seconds).reversed())
-                .forEach(state -> states.add(new RenderingContext.AnimationState(
-                        state.id(), state.seconds() + secondDelta, false)));
+                .forEach(state -> {
+                    var id = state.id();
+                    if (isAiming) {
+                        id += "_aiming";
+                    }
+                    states.add(new RenderingContext.AnimationState(
+                            id, state.seconds() + secondDelta, false));
+                });
 
         return states;
     }

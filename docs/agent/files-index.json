@@ -1,6 +1,6 @@
 {
   "description": "ActionArms MOD - 銃の機構と操作の心地よさを重視したMinecraft用銃MOD（副作用ゼロレンダリングシステム完全実装済み）",
-  "last_updated": "2025-06-13",
+  "last_updated": "2025-06-14",
   "structure": {
     "common/": {
       "description": "プラットフォーム共通コード",
@@ -56,9 +56,33 @@
     "HUD描画システムの完全実装",
     "薬室・マガジン状況の視覚的表示機能",
     "リアルタイムHUD状態同期システム",
-    "効率的なネットワーク通信による弾薬状況表示"
+    "効率的なネットワーク通信による弾薬状況表示",
+    "エイム機能の完全実装（トグル・プッシュ両対応）",
+    "リアルタイムエイム同期システム",
+    "エイム時のアニメーションと描画位置調整",
+    "マルチプレイヤー対応のリアルタイムエイムシステム"
   ],
   "recent_major_changes": {
+    "2025-06-14": {
+      "title": "エイム機能の完全実装とリアルタイムエイムシステム完成",
+      "changes": [
+        "AimManager.java - エイム状態管理システム実装（アイテム切り替え時自動解除）",
+        "ClientAimManager.java - クライアント側エイム管理とトグル・プッシュ両対応",
+        "HasAimManager/IAimManager.java - エイム機能のインターフェース設計",
+        "IKeyInputManager.java - キー入力システムの抽象化とダミー実装対応",
+        "MixinPlayerEntity.java - 全プレイヤーエンティティにエイム機能注入",
+        "MixinClientPlayerEntity.java - クライアントプレイヤー特別処理対応",
+        "AimPacket.java - エイム状態のリアルタイムサーバー同期通信",
+        "MixinHeldItemRenderer.java - エイム時の銃描画位置調整（中央配置）",
+        "MixinItemRenderer.java - エイム時アニメーション名サフィックス(*_aiming)対応",
+        "KeyInputManager/GunController/HasKeyInputManager - IKeyInputManagerインターフェース対応",
+        "ClientKeyInputManager.java - getKeyInputManager()メソッド追加とインターフェース対応",
+        "ActionArms.java/ActionArmsClient.java - エイム管理システム統合とtick()タイミング調整",
+        "Networking.java - AimPacket受信登録とエイム状態同期対応",
+        "actionarms-common.mixins.json - MixinPlayerEntity/MixinClientPlayerEntity登録",
+        "マルチプレイヤー対応のリアルタイムエイムシステム完成"
+      ]
+    },
     "2025-06-13": {
       "title": "HUD描画システムの完全実装と弾薬状況の視覚的表示機能",
       "changes": [
