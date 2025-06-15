@@ -10,10 +10,12 @@ import net.sistr.actionarms.client.render.gltf.data.ProcessedGltfModel;
 import net.sistr.actionarms.client.render.gltf.data.ProcessedMesh;
 import net.sistr.actionarms.client.render.gltf.processor.DirectProcessor;
 import net.sistr.actionarms.client.render.gltf.util.DrawingMode;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * glTFレンダリングクラス
  */
+@SuppressWarnings("MethodParameterNamingConvention")
 public class GltfRenderer {
     private final ProcessedGltfModel model;
     private final DirectProcessor directProcessor;
@@ -41,7 +43,7 @@ public class GltfRenderer {
     private void renderDirect(MatrixStack matrixStack,
                               VertexConsumerProvider vertexConsumerProvider,
                               RenderingContext context) {
-        for (ProcessedMesh mesh : model.getMeshes()) {
+        for (ProcessedMesh mesh : model.meshes()) {
             RenderLayer renderLayer = getRenderLayer(mesh, context);
             VertexConsumer vertexConsumer = vertexConsumerProvider.getBuffer(renderLayer);
 
@@ -54,29 +56,28 @@ public class GltfRenderer {
      * レンダーレイヤーの決定
      */
     private RenderLayer getRenderLayer(ProcessedMesh mesh, RenderingContext context) {
-        // TODO: メッシュのマテリアル情報からレンダーレイヤーを決定
         // 現在はデフォルトテクスチャを使用
-        if (mesh.getDrawingMode() == DrawingMode.TRIANGLES) {
-            return GltfRenderLayer.getEntityCutoutTriangle(new Identifier(ActionArms.MOD_ID,
-                    "textures/test/texture.png"));
+        if (mesh.drawingMode() == DrawingMode.TRIANGLES) {
+            var material = mesh.getMaterial();
+            var texture = material.baseColorTexture();
+            if ("texture.png".equals(texture)) {
+                return GltfRenderLayer.getEntityCutoutTriangle(new Identifier(ActionArms.MOD_ID,
+                        "textures/test/texture.png"));
+            } else if ("skin_alex.png".equals(texture)) {
+                return GltfRenderLayer.getEntityTranslucentTriangle(new Identifier(ActionArms.MOD_ID,
+                        "textures/test/skin_alex.png"), true);
+            }
+            throw new IllegalArgumentException("そのテクスチャ無いよー");
         } else {
-            throw new RuntimeException();
+            throw new IllegalArgumentException("三角形描画以外は対応していません。drawingMode: " + mesh.drawingMode());
         }
     }
 
     /**
      * レンダリング可能かどうかをチェック
      */
-    public boolean canRender(RenderingContext context) {
-        return context != null && model != null && !model.getMeshes().isEmpty();
+    public boolean canRender(@Nullable RenderingContext context) {
+        return context != null && model != null && !model.meshes().isEmpty();
     }
 
-    /**
-     * パフォーマンス統計情報を取得（デバッグ用）
-     */
-    public String getPerformanceStats() {
-        return String.format("GltfRenderer [Meshes: %d, Vertices: %d]",
-                model.getMeshes().size(),
-                model.getMeshes().stream().mapToInt(ProcessedMesh::getVertexCount).sum());
-    }
 }

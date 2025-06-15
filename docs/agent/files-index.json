@@ -1,6 +1,6 @@
 {
   "description": "ActionArms MOD - 銃の機構と操作の心地よさを重視したMinecraft用銃MOD（副作用ゼロレンダリングシステム完全実装済み）",
-  "last_updated": "2025-06-14",
+  "last_updated": "2025-06-15",
   "structure": {
     "common/": {
       "description": "プラットフォーム共通コード",
@@ -63,6 +63,66 @@
     "マルチプレイヤー対応のリアルタイムエイムシステム"
   ],
   "recent_major_changes": {
+    "2025-06-15-ultimate": {
+      "title": "glTFレンダリングシステム大規模リファクタリング＆マテリアル対応＆FPV機能実装完了",
+      "changes": [
+        "recordクラス化大規模リファクタリング - 全gltf/dataクラスの不変設計への移行",
+        "builderパターン導入 - ProcessedMesh/ProcessedGltfModel/ProcessedAnimation等で柔軟な構築",
+        "GltfMaterialExtractor.java - glTFマテリアルからProcessedMaterialへの完全変換実装",
+        "ProcessedMaterial.java - PBRマテリアル管理recordクラスの完全実装",
+        "5種類テクスチャ対応 - baseColor/metallicRoughness/normal/occlusion/emissive",
+        "アルファモード完全対応 - OPAQUE/MASK/BLENDの適切な処理",
+        "FPV（一人称視点）対応 - hideFPVBones()による視点別描画制御実装",
+        "Nullableアノテーション完全対応 - 全gltfシステムで型安全性向上",
+        "switch式・パターンマッチング - Java 17機能を活用したコード簡素化",
+        "assert文導入 - 実行時チェックでバグの早期発見",
+        "統計情報record化 - MeshStats/AnimationStats/CacheStats等の構造化",
+        "GltfModelConverter.java - マテリアル連携とbuilderパターン構築完全実装",
+        "GltfVertexExtractor.java - マテリアル情報連携とProcessedMesh構築最適化",
+        "AccessorData/AccessorDataCache - Nullable強化とrecord統計情報対応",
+        "DirectProcessor - FPVボーン非表示機能追加",
+        "テクスチャリソース更新 - test/texture.png、test/skin_alex.png追加",
+        "m1873.glbモデル更新 - マテリアル情報の更新",
+        "知識の泉完全更新 - gltf.jsonに全リファクタリング情報追加"
+      ]
+    },
+    "2025-06-14-record": {
+      "title": "複数テクスチャ対応システム完成とgltf/data全クラスrecord化大規模リファクタリング",
+      "changes": [
+        "ProcessedKeyframe.java - record化とスプラインタンジェント完全対応",
+        "KeyframeInfo recordとビルダーパターン、自動バリデーション機能",
+        "MorphTarget.java - record化と統計情報機能大幅強化",
+        "MorphTargetStats recordとデータ型情報取得機能追加",
+        "ProcessedSkin.java - record化と階層構造管理機能完全実装",
+        "ルートボーン自動検出、循環参照検出、深度別ボーン取得機能",
+        "ProcessedChannel.java - record化と補間アルゴリズム完全移植",
+        "Vector3f/Quaternionf/float/float[]の線形補間実装とChannelStats record",
+        "ProcessedAnimation.java - record化とnameByChannelsマッピング最適化",
+        "ボーン別アクセス最適化、自動マッピング生成、AnimationStats record",
+        "全クラスにビルダーパターンとtoBuilder()メソッド追加",
+        "知識の泉完全更新 - gltf.jsonに全record化情報追加",
+        "ProcessedBoneはBuilderパターンが複雑すぎるためrecord化せず現状維持",
+        "5クラスのrecord化で不変設計とメモリ効率を大幅向上"
+      ]
+    },
+    "2025-06-14-material": {
+      "title": "複数テクスチャ対応のProcessedMaterialシステム完成とrecord化リファクタリング",
+      "changes": [
+        "ProcessedMaterial.java - recordクラスによる不変マテリアル管理システム実装",
+        "5種類のテクスチャ対応（baseColor/metallicRoughness/normal/occlusion/emissive）",
+        "PBRマテリアル係数の完全対応とアルファモード対応",
+        "ビルダーパターンと自動バリデーション機能",
+        "GltfMaterialExtractor.java - マテリアル変換処理の原型実装",
+        "GltfModelConverter.java - マテリアル抽出処理連携の原型追加",
+        "ProcessedGltfModel.java - record化とマテリアルリスト対応の完全リファクタリング",
+        "ビルダーパターンとModelStats recordによる統計情報拡張",
+        "ProcessedMesh.java - record化とProcessedMaterial直接参照対応",
+        "getMaterial()による安全なマテリアルアクセスとMeshStats record追加",
+        "互換性のためmaterialIndexも保持、既存コードへの影響最小化",
+        "知識の泉更新 - gltf.jsonにマテリアル関連ファイル情報追加",
+        "複数テクスチャ対応の基盤システム完成、GltfRenderer実装段階へ"
+      ]
+    },
     "2025-06-14": {
       "title": "エイム機能の完全実装とリアルタイムエイムシステム完成",
       "changes": [

@@ -6,6 +6,7 @@ import de.javagl.jgltf.model.NodeModel;
 import de.javagl.jgltf.model.SkinModel;
 import net.sistr.actionarms.client.render.gltf.data.ProcessedBone;
 import net.sistr.actionarms.client.render.gltf.data.ProcessedSkin;
+import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
@@ -17,12 +18,15 @@ import java.util.Map;
 public class GltfSkinExtractor {
 
     public ProcessedSkin extractSkin(SkinModel skin) {
+        var builder = ProcessedSkin.builder();
+
         List<NodeModel> jointNodes = skin.getJoints();
         if (jointNodes == null || jointNodes.isEmpty()) {
             throw new RuntimeException("Skin has no joints");
         }
 
         String skinName = getSkinName(skin);
+        builder.name(skinName);
 
         // ボーンの作成
         var boneBuilders = createProcessedBones(jointNodes);
@@ -32,16 +36,9 @@ public class GltfSkinExtractor {
 
         // 階層構造の構築
         var bones = buildBoneHierarchy(boneBuilders, jointNodes);
+        builder.addBones(List.of(bones));
 
-        // ProcessedSkinの作成
-        var processedSkin = new ProcessedSkin(skinName, List.of(bones));
-
-        // 階層の検証
-        if (!processedSkin.validateHierarchy()) {
-            throw new RuntimeException("Invalid bone hierarchy detected in skin: " + skinName);
-        }
-
-        return processedSkin;
+        return builder.build();
     }
 
     private String getSkinName(SkinModel skin) {
@@ -183,7 +180,7 @@ public class GltfSkinExtractor {
             NodeModel jointNode = jointNodes.get(i);
 
             // 親ノードを探す
-            NodeModel parentNode = findParentNode(jointNode, jointNodes);
+            var parentNode = findParentNode(jointNode, jointNodes);
             if (parentNode == null) {
                 // ルートボーンの場合
                 builders[i].build(null, bones);
@@ -193,6 +190,7 @@ public class GltfSkinExtractor {
         return bones;
     }
 
+    @Nullable
     private NodeModel findParentNode(NodeModel childNode, List<NodeModel> allJointNodes) {
         // すべてのジョイントノードを調べて、このノードを子に持つものを探す
         for (NodeModel candidate : allJointNodes) {

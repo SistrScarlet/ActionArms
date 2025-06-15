@@ -69,13 +69,15 @@ public class MixinItemRenderer {
                     stack, c -> c);
             var itemStates = ItemAnimationManager.INSTANCE.getItemStateMap(stack);
 
-            var animationStates = getAnimationStates(entity, gunComponent, itemStates, tickDelta);
+            boolean isFPV = renderMode == ModelTransformationMode.FIRST_PERSON_RIGHT_HAND;
+            var animationStates = getAnimationStates(entity, gunComponent, itemStates, tickDelta, isFPV);
 
             var renderingContext = RenderingContext.builder()
                     .tickDelta(tickDelta)
                     .light(light)
                     .overlay(overlay)
                     .addAnimationState(animationStates)
+                    .fpv(isFPV)
                     .build();
 
             // レンダラーの取得または作成
@@ -93,7 +95,7 @@ public class MixinItemRenderer {
     @Unique
     private static @NotNull ArrayList<RenderingContext.AnimationState> getAnimationStates(
             LivingEntity entity, LeverActionGunComponent component,
-            Map<String, ItemAnimationManager.State> itemStates, float tickDelta) {
+            Map<String, ItemAnimationManager.State> itemStates, float tickDelta, boolean isFPV) {
         var states = new ArrayList<RenderingContext.AnimationState>();
 
         boolean isAiming = entity instanceof HasAimManager hasAimManager
@@ -121,6 +123,10 @@ public class MixinItemRenderer {
                     "leverUp",
                     entityAge,
                     true));
+        }
+
+        if (!isFPV) {
+            return states;
         }
 
         float secondDelta = tickDelta * (1f / 20f);

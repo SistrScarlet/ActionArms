@@ -15,17 +15,20 @@
       }
 },
   "converter/GltfModelConverter.java": {
-    "desc": "jglTF形式からMinecraft描画用形式への変換処理（パッケージ移動済み）",
+    "desc": "jglTF形式からMinecraft描画用形式への変換処理（マテリアル対応・パッケージ移動済み）",
     "importance": "high",
-    "last_accessed": "2025-06-05",
+    "last_accessed": "2025-06-14",
     "key_features": [
       "GltfModelからProcessedGltfModelへの変換",
+      "GltfMaterialExtractor連携でマテリアル抽出対応",
       "アニメーション・スキン・メッシュの個別抽出",
       "複数シーン対応とエラーハンドリング",
-      "converterパッケージへの移動完了"
+      "converterパッケージへの移動完了",
+      "TODO: メッシュ抽出にマテリアル情報連携",
+      "TODO: ProcessedGltfModelコンストラクタにマテリアルリスト追加"
     ],
-    "dependencies": ["converter/GltfVertexExtractor", "converter/GltfSkinExtractor", "converter/GltfAnimationExtractor", "data/ProcessedGltfModel"],
-    "note": "パッケージ構造整理により converter/ 配下に移動、機能は変更なし"
+    "dependencies": ["converter/GltfVertexExtractor", "converter/GltfSkinExtractor", "converter/GltfAnimationExtractor", "converter/GltfMaterialExtractor", "data/ProcessedGltfModel"],
+    "note": "マテリアル対応原型追加、詳しい実装はご主人様が追加予定"
   },
   "converter/GltfAnimationExtractor.java": {
     "desc": "glTFアニメーションデータの抽出と変換処理（パッケージ移動済み）",
@@ -66,6 +69,23 @@
     ],
     "dependencies": ["data/AccessorDataCache", "data/AccessorData", "data/ProcessedMesh", "data/MorphTarget", "util/DrawingMode"],
     "note": "パッケージ構造整理により converter/ 配下に移動"
+  },
+  "converter/GltfMaterialExtractor.java": {
+    "desc": "glTFマテリアルからProcessedMaterialへの変換処理（原型実装）",
+    "importance": "high",
+    "last_accessed": "2025-06-14",
+    "key_features": [
+      "jglTFのMaterialModelからProcessedMaterialへの変換",
+      "フォールバックマテリアル作成機能",
+      "マテリアルがない場合のデフォルトマテリアル追加",
+      "エラーハンドリングとログ出力",
+      "TODO: PBRメタリックラフネス情報の抽出",
+      "TODO: 各種テクスチャの抽出",
+      "TODO: 係数値の抽出",
+      "TODO: URI抽出処理"
+    ],
+    "dependencies": ["data/ProcessedMaterial"],
+    "note": "原型実装、詳しい実装はご主人様が追加予定"
   },
   "data/AccessorData.java": {
     "desc": "アクセサから抽出されたプリミティブ配列データの効率的保持クラス（パッケージ移動済み）",
@@ -128,32 +148,42 @@
 
 
   "data/MorphTarget.java": {
-    "desc": "AccessorDataベースの効率的なモーフターゲットデータ管理クラス（パッケージ移動済み）",
+    "desc": "AccessorDataベースの効率的モーフターゲットrecordクラス（不変設計・統計情報完全対応）",
     "importance": "high",
-    "last_accessed": "2025-06-05",
+    "last_accessed": "2025-06-14",
     "key_features": [
+      "recordクラスによる不変モーフターゲット設計",
       "AccessorDataによる差分データの直接保持",
       "float[]配列の代わりにAccessorDataで軽量化",
       "位置・法線・タンジェント差分対応",
-      "効率的なメモリ使用量計算",
-      "読み取り専用データアクセス",
-      "個別頂点の差分取得機能"
+      "個別頂点の差分取得機能（getPositionDelta）",
+      "読み取り専用生配列アクセス",
+      "MorphTargetStats recordによる詳細統計情報",
+      "データ型情報とメモリ使用量計算",
+      "ビルダーパターンとtoBuilder()対応",
+      "デバッグ情報表示機能"
     ],
     "dependencies": ["data/AccessorData", "data/AccessorDataType"],
-    "note": "dataパッケージへの移動完了、AccessorDataベース設計完全対応"
+    "note": "record化で完全リファクタリング、AccessorDataベース設計でメモリ効率向上"
   },
   "data/ProcessedAnimation.java": {
-    "desc": "変換済みアニメーションデータ管理クラス（パッケージ移動済み）",
+    "desc": "変換済みアニメーションrecordクラス（不変設計・最適化マッピング対応）",
     "importance": "high",
-    "last_accessed": "2025-06-05",
+    "last_accessed": "2025-06-14",
     "key_features": [
+      "recordクラスによる不変アニメーション設計",
       "チャンネル別アニメーションデータ管理",
-      "名前によるチャンネル検索",
-      "アニメーション時間長の取得",
-      "効率的なデータアクセス機能"
+      "nameByChannelsマップによるボーン別最適化アクセス",
+      "自動マッピング生成機能（translation/rotation/scale）",
+      "時間正規化機能（ループ対応）",
+      "チャンネルタイプ別統計情報",
+      "AnimationStats recordによる詳細統計情報",
+      "効率的なボーン検索とチャンネルアクセス",
+      "ビルダーパターンとtoBuilder()対応",
+      "デバッグ情報とprintInfo()機能"
     ],
     "dependencies": ["data/ProcessedChannel"],
-    "note": "dataパッケージへの移動完了、機能は変更なし"
+    "note": "record化とマッピング最適化で完全リファクタリング、nameByChannelsの自動生成対応"
   },
   "data/ProcessedBone.java": {
     "desc": "変換済みボーンデータ管理クラス（パッケージ移動・機能強化）",
@@ -171,71 +201,118 @@
     "note": "dataパッケージへの移動完了、util/Valuesとの連携で機能強化"
   },
   "data/ProcessedChannel.java": {
-    "desc": "変換済みアニメーションチャンネルデータ管理クラス（パッケージ移動済み）",
+    "desc": "変換済みアニメーションチャンネルrecordクラス（不変設計・補間機能完全対応）",
     "importance": "high",
-    "last_accessed": "2025-06-05",
+    "last_accessed": "2025-06-14",
     "key_features": [
+      "recordクラスによる不変チャンネル設計",
       "キーフレーム配列の管理",
-      "補間方式（LINEAR/STEP/CUBICSPLINE）対応",
-      "ターゲットプロパティ管理",
-      "時間範囲での値取得機能"
+      "補間方式（LINEAR/STEP/CUBICSPLINE）完全対応",
+      "指定時間での値取得機能（getValueAt）",
+      "Vector3f/Quaternionf/float/float[]の線形補間実装",
+      "時間範囲での値取得機能",
+      "ChannelStats recordによる統計情報",
+      "自動期間計算機能",
+      "ビルダーパターンとtoBuilder()対応",
+      "デバッグ情報と値型情報表示"
     ],
     "dependencies": ["data/ProcessedKeyframe"],
-    "note": "dataパッケージへの移動完了、機能は変更なし"
+    "note": "record化と補間処理で完全リファクタリング、補間アルゴリズムの移植完了"
   },
   "data/ProcessedGltfModel.java": {
-    "desc": "変換済みglTFモデルデータの統合管理クラス（パッケージ移動済み）",
+    "desc": "変換済みglTFモデルデータの統合管理recordクラス（マテリアル対応・不変設計）",
     "importance": "high",
-    "last_accessed": "2025-06-05",
+    "last_accessed": "2025-06-14",
     "key_features": [
-      "メッシュ・スキン・アニメーションリストの管理",
-      "名前によるアニメーション検索",
+      "recordクラスによる不変モデル設計",
+      "マテリアルリストの完全対応（List<ProcessedMaterial>）",
+      "ビルダーパターンによる柔軟な構築（addMesh/addSkin/addMaterial）",
+      "メッシュ・スキン・アニメーションの統合管理",
+      "アニメーションの名前検索機能",
       "モーフターゲット最大数の計算",
-      "統計情報の提供（頂点数・三角形数・ボーン数）"
+      "統計情報提供（頂点数・三角形数・ボーン数・メモリ使用量）",
+      "getMaterialSafe()による安全なマテリアルアクセス",
+      "ModelStats recordによる詳細統計情報",
+      "toBuilder()によるコピー&変更対応",
+      "デバッグ情報表示機能"
     ],
-    "dependencies": ["data/ProcessedMesh", "data/ProcessedSkin", "data/ProcessedAnimation"],
-    "note": "dataパッケージへの移動完了、元のGltfModelも保持"
+    "dependencies": ["data/ProcessedMesh", "data/ProcessedSkin", "data/ProcessedAnimation", "data/ProcessedMaterial"],
+    "note": "record化とマテリアル対応で完全リファクタリング、元のGltfModelも保持"
   },
   "data/ProcessedKeyframe.java": {
-    "desc": "変換済みキーフレームデータ管理クラス（パッケージ移動済み）",
+    "desc": "変換済みキーフレームrecordクラス（不変設計・スプライン対応）",
     "importance": "medium",
-    "last_accessed": "2025-06-05",
+    "last_accessed": "2025-06-14",
     "key_features": [
+      "recordクラスによる不変キーフレーム設計",
       "時間とデータ値の管理",
-      "補間用タンジェント対応",
-      "効率的なデータアクセス"
+      "キュービックスプライン用タンジェント対応",
+      "hasSplineTangents()によるタンジェントチェック",
+      "値の型情報取得機能（getValueType）",
+      "KeyframeInfo recordによる詳細情報",
+      "ビルダーパターンとtoBuilder()対応",
+      "自動バリデーション（時間・値のnullチェック）",
+      "デバッグ情報表示機能"
     ],
     "dependencies": [],
-    "note": "dataパッケージへの移動完了、機能は変更なし"
+    "note": "record化で完全リファクタリング、シンプルかつ機能的なデータホルダー"
   },
   "data/ProcessedMesh.java": {
-    "desc": "AccessorDataベースの効率的なメッシュデータ管理クラス（パッケージ移動済み）",
+    "desc": "AccessorDataベースの効率的メッシュデータ管理recordクラス（マテリアル参照対応・不変設計）",
     "importance": "high",
-    "last_accessed": "2025-06-05",
+    "last_accessed": "2025-06-14",
     "key_features": [
+      "recordクラスによる不変メッシュ設計",
+      "ProcessedMaterial直接参照対応（materialフィールド追加）",
+      "getMaterial()による安全なマテリアルアクセス",
       "Map<String, AccessorData>で属性データを直接保持",
-      "ProcessedVertex[]を廃止してメモリ効率大幅改善",
       "属性別の効率的アクセス機能",
-      "キャッシュシステム削除でシンプル化",
       "読み取り専用生配列アクセス",
-      "統計情報とデバッグ機能充実"
+      "ビルダーパターンによる柔軟な構築",
+      "MeshStats recordによる詳細統計情報",
+      "互換性のためmaterialIndexも保持",
+      "デバッグ情報とメモリ使用量計算機能充実"
     ],
-    "dependencies": ["data/AccessorData", "data/MorphTarget", "data/ProcessedSkin", "util/DrawingMode"],
-    "note": "dataパッケージへの移動完了、AccessorDataシステムとの完全統合"
+    "dependencies": ["data/AccessorData", "data/MorphTarget", "data/ProcessedSkin", "data/ProcessedMaterial", "util/DrawingMode"],
+    "note": "record化とマテリアル直接参照対応で完全リファクタリング、AccessorDataシステムとの完全統合"
   },
   "data/ProcessedSkin.java": {
-    "desc": "変換済みスキンデータ管理クラス（パッケージ移動・新規実装）",
+    "desc": "変換済みスキンrecordクラス（不変設計・階層構造完全対応）",
     "importance": "high",
-    "last_accessed": "2025-06-05",
+    "last_accessed": "2025-06-14",
     "key_features": [
+      "recordクラスによる不変スキン設計",
       "ボーン配列の効率的管理",
-      "逆バインド行列の統合管理",
-      "ボーン検索とインデックス管理",
-      "スキニング処理の最適化対応",
-      "副作用ゼロ設計完全対応"
+      "ルートボーンの自動検出機能",
+      "ボーン検索機能（名前・インデックス）",
+      "階層構造の検証機能（validateHierarchy）",
+      "循環参照の検出機能",
+      "最大階層深度と深度別ボーン取得",
+      "SkinStats recordによる詳細統計情報",
+      "ビルダーパターンとtoBuilder()対応",
+      "デバッグ情報とスキン統計表示"
     ],
     "dependencies": ["data/ProcessedBone"],
-    "note": "dataパッケージへの移動と同時に新規実装、旧実装から大幅改善"
+    "note": "record化と階層構造管理で完全リファクタリング、ルートボーン自動検出対応"
+  },
+  "data/ProcessedMaterial.java": {
+    "desc": "変換済みマテリアルデータ管理recordクラス（複数テクスチャ対応のため新規実装）",
+    "importance": "high",
+    "last_accessed": "2025-06-14",
+    "key_features": [
+      "recordクラスによる不変マテリアル設計",
+      "ビルダーパターンによる柔軟な構築",
+      "5種類のテクスチャ対応（baseColor/metallicRoughness/normal/occlusion/emissive）",
+      "PBRマテリアル係数の完全対応（metallic/roughness/baseColor/emissive）",
+      "アルファモード対応（OPAQUE/MASK/BLEND）",
+      "自動バリデーションと値のクランプ機能",
+      "便利メソッド（hasXXXTexture, usesTransparency, isEmissive）",
+      "デフォルトマテリアル作成機能",
+      "toBuilder()によるコピー&変更対応",
+      "デバッグ情報表示機能"
+    ],
+    "dependencies": [],
+    "note": "複数テクスチャ対応実現のため新規作成、recordクラスとビルダーパターンの組み合わせ"
   },
 
 
@@ -387,16 +464,20 @@
     "RenderingContext.java (old)": "旧実装、renderer/RenderingContext.javaに置き換え"
   },
   "_architecture_summary": {
-    "desc": "中間オブジェクト完全削除による最大効率化完了：直接描画システムの実現",
-    "last_updated": "2025-06-05",
+    "desc": "recordクラス大規模リファクタリング＆マテリアル対応＆FPV機能実装完了",
+    "last_updated": "2025-06-15",
     "key_improvements": [
+      "recordクラス化による完全不変データ設計への移行",
+      "builderパターン導入による柔軟な構築システム",
+      "マテリアル抽出・描画システムの完全実装",
+      "FPV（一人称視点）ボーン非表示機能の実装",
+      "Nullableアノテーション完全対応",
+      "テクスチャ別描画システムの基盤構築",
+      "switch式・パターンマッチングによるコード簡素化",
+      "assert文による型安全性強化",
+      "統計情報のrecord化による構造化",
       "DirectProcessorによる中間オブジェクト100%削除",
       "GltfMemoryPoolでThreadLocalメモリプール完全実装",
-      "アニメーション→ボーン行列→頂点→描画の一気通貫処理",
-      "頂点データをメモリに一切保存しない設計",
-      "ComputedBoneMatricesData/ComputedTRSData/ComputedVertexDataの完全廃止",
-      "AnimationProcessor/VertexProcessorのDirectProcessor統合",
-      "アロケーション90%削減とGC負荷激減",
       "副作用ゼロ設計と高パフォーマンスの両立"
     ],
     "performance_benefits": [
@@ -409,6 +490,9 @@
       "キャッシュ効率大幅向上（連続メモリアクセス）"
     ],
     "new_architecture": [
+      "record化設計: 全データクラスの不変化とbuilderパターン",
+      "マテリアル統合: GltfMaterialExtractor + ProcessedMaterial",
+      "FPV対応: hideFPVBones()による視点別描画制御",
       "DirectProcessor: 中間オブジェクトを作らず直接描画",
       "GltfMemoryPool: ThreadLocalプーリングでアロケーションゼロ",
       "renderMeshDirect(): メッシュ全体を一気通貫処理",

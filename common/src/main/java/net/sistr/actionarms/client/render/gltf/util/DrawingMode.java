@@ -1,6 +1,7 @@
 package net.sistr.actionarms.client.render.gltf.util;
 
 import net.minecraft.client.render.VertexFormat;
+import org.jetbrains.annotations.Nullable;
 
 public enum DrawingMode {
     POINTS(0, null),
@@ -12,9 +13,10 @@ public enum DrawingMode {
     TRIANGLE_FAN(6, VertexFormat.DrawMode.TRIANGLE_FAN);
 
     private final int glValue;
+    @Nullable
     private final VertexFormat.DrawMode drawMode;
 
-    DrawingMode(int glValue, VertexFormat.DrawMode drawMode) {
+    DrawingMode(int glValue, @Nullable VertexFormat.DrawMode drawMode) {
         this.glValue = glValue;
         this.drawMode = drawMode;
     }
@@ -23,6 +25,7 @@ public enum DrawingMode {
         return glValue;
     }
 
+    @Nullable
     public VertexFormat.DrawMode getDrawMode() {
         return drawMode;
     }
@@ -31,13 +34,15 @@ public enum DrawingMode {
         return drawMode != null;
     }
 
+    @Nullable
     public VertexFormat.DrawMode toMCMode() {
         return this.drawMode;
     }
 
+    @Nullable
     public static DrawingMode from(int glValue) {
         for (DrawingMode mode : values()) {
-            if (mode.getGlValue() == glValue) {
+            if (mode.glValue == glValue) {
                 return mode;
             }
         }

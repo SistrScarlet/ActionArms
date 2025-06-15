@@ -5,6 +5,7 @@ import net.sistr.actionarms.ActionArms;
 import net.sistr.actionarms.client.render.gltf.data.ProcessedAnimation;
 import net.sistr.actionarms.client.render.gltf.data.ProcessedChannel;
 import net.sistr.actionarms.client.render.gltf.data.ProcessedKeyframe;
+import org.jetbrains.annotations.Nullable;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
 
@@ -29,7 +30,7 @@ public class GltfAnimationExtractor {
             try {
                 ProcessedAnimation processedAnimation = extractSingleAnimation(animation, i);
                 processedAnimations.add(processedAnimation);
-            } catch (Exception e) {
+            } catch (RuntimeException e) {
                 ActionArms.LOGGER.error("Failed to process animation {}: {}", i, e.getMessage(), e);
             }
         }
@@ -38,7 +39,10 @@ public class GltfAnimationExtractor {
     }
 
     private ProcessedAnimation extractSingleAnimation(AnimationModel animation, int fallbackIndex) {
+        var builder = ProcessedAnimation.builder();
         String animationName = getAnimationName(animation, fallbackIndex);
+        builder.name(animationName);
+
         List<ProcessedChannel> channels = new ArrayList<>();
 
         List<AnimationModel.Channel> gltfChannels = animation.getChannels();
@@ -49,14 +53,20 @@ public class GltfAnimationExtractor {
                     if (processedChannel != null) {
                         channels.add(processedChannel);
                     }
-                } catch (Exception e) {
+                } catch (RuntimeException e) {
                     ActionArms.LOGGER.error("Failed to process channel in animation {}: {}",
                             animationName, e.getMessage());
                 }
             }
         }
+        if (channels.isEmpty()) {
+            ActionArms.LOGGER.warn("No channels extracted from animation: {}", animationName);
+            return builder.build();
+        }
 
-        return new ProcessedAnimation(animationName, channels);
+        builder.addChannels(channels);
+
+        return builder.build();
     }
 
     private String getAnimationName(AnimationModel animation, int fallbackIndex) {
@@ -65,6 +75,7 @@ public class GltfAnimationExtractor {
                 name.trim() : "Animation_" + fallbackIndex;
     }
 
+    @Nullable
     private ProcessedChannel extractChannel(AnimationModel.Channel gltfChannel) {
         // ターゲット情報の取得
         NodeModel targetNode = gltfChannel.getNodeModel();
@@ -92,7 +103,7 @@ public class GltfAnimationExtractor {
         return new ProcessedChannel(nodeName, targetPath, keyframes, interpolationMode);
     }
 
-    private String getNodeName(NodeModel node) {
+    private String getNodeName(@Nullable NodeModel node) {
         if (node == null) return "UnknownNode";
 
         String name = node.getName();
@@ -106,17 +117,11 @@ public class GltfAnimationExtractor {
             return ProcessedChannel.InterpolationMode.LINEAR; // デフォルト
         }
 
-        switch (interpolation) {
-            case STEP:
-                return ProcessedChannel.InterpolationMode.STEP;
-            case LINEAR:
-                return ProcessedChannel.InterpolationMode.LINEAR;
-            case CUBICSPLINE:
-                return ProcessedChannel.InterpolationMode.CUBICSPLINE;
-            default:
-                ActionArms.LOGGER.warn("Unknown interpolation mode: {}. Using LINEAR.", interpolation);
-                return ProcessedChannel.InterpolationMode.LINEAR;
-        }
+        return switch (interpolation) {
+            case STEP -> ProcessedChannel.InterpolationMode.STEP;
+            case LINEAR -> ProcessedChannel.InterpolationMode.LINEAR;
+            case CUBICSPLINE -> ProcessedChannel.InterpolationMode.CUBICSPLINE;
+        };
     }
 
     private List<ProcessedKeyframe> extractKeyframes(AnimationModel.Sampler sampler, String targetPath) {
@@ -148,6 +153,7 @@ public class GltfAnimationExtractor {
         return keyframes;
     }
 
+    @Nullable
     private Object extractValueFromAccessor(AccessorFloatData valueData, int index,
                                             String targetPath, ElementType elementType) {
 
@@ -155,7 +161,7 @@ public class GltfAnimationExtractor {
             case "translation":
             case "scale":
                 // Vector3f
-                if (VEC3.equals(elementType)) {
+                if (VEC3 == elementType) {
                     return new Vector3f(
                             valueData.get(index, 0),
                             valueData.get(index, 1),
@@ -166,7 +172,7 @@ public class GltfAnimationExtractor {
 
             case "rotation":
                 // Quaternionf
-                if (VEC4.equals(elementType)) {
+                if (VEC4 == elementType) {
                     return new Quaternionf(
                             valueData.get(index, 0),
                             valueData.get(index, 1),
@@ -178,7 +184,7 @@ public class GltfAnimationExtractor {
 
             case "weights":
                 // float配列（モーフウェイト）
-                if (SCALAR.equals(elementType)) {
+                if (SCALAR == elementType) {
                     return valueData.get(index, 0);
                 } else {
                     // 複数のウェイト

@@ -1,49 +1,94 @@
 package net.sistr.actionarms.client.render.gltf.data;
 
-public class ProcessedKeyframe {
-    private final float time;
-    private final Object value;
-    private final Object inTangent;  // キュービックスプライン用
-    private final Object outTangent; // キュービックスプライン用
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-    // 基本コンストラクタ（線形・ステップ補間用）
+/**
+ * 変換済みキーフレームデータ管理recordクラス（不変設計）
+ * アニメーションの時間とその時点での値を保持
+ */
+public record ProcessedKeyframe(
+        float time,
+        Object value,
+        @Nullable Object inTangent,   // キュービックスプライン用
+        @Nullable Object outTangent   // キュービックスプライン用
+) {
+
+    /**
+     * 基本コンストラクタ（線形・ステップ補間用）
+     */
     public ProcessedKeyframe(float time, Object value) {
-        this.time = time;
-        this.value = value;
-        this.inTangent = null;
-        this.outTangent = null;
+        this(time, value, null, null);
     }
 
-    // キュービックスプライン用コンストラクタ
-    public ProcessedKeyframe(float time, Object value, Object inTangent, Object outTangent) {
-        this.time = time;
-        this.value = value;
-        this.inTangent = inTangent;
-        this.outTangent = outTangent;
+    /**
+     * バリデーション付きコンストラクタ
+     */
+    public ProcessedKeyframe {
+        // 時間の妥当性チェック
+        if (time < 0) {
+            throw new IllegalArgumentException("Time cannot be negative: " + time);
+        }
+
+        // 値の妥当性チェック
+        if (value == null) {
+            throw new IllegalArgumentException("Value cannot be null");
+        }
     }
 
-    public float getTime() {
-        return time;
-    }
-
-    public Object getValue() {
-        return value;
-    }
-
-    public Object getInTangent() {
-        return inTangent;
-    }
-
-    public Object getOutTangent() {
-        return outTangent;
-    }
-
+    /**
+     * スプライン補間用のタンジェントを持っているかチェック
+     */
     public boolean hasSplineTangents() {
         return inTangent != null && outTangent != null;
     }
 
+    /**
+     * タンジェントのいずれかを持っているかチェック
+     */
+    public boolean hasTangents() {
+        return inTangent != null || outTangent != null;
+    }
+
+    /**
+     * 値の型を取得（デバッグ用）
+     */
+    public String getValueType() {
+        return value.getClass().getSimpleName();
+    }
+
+    /**
+     * タンジェントの型を取得（デバッグ用）
+     */
+    public String getTangentType() {
+        if (hasSplineTangents()) {
+            return inTangent.getClass().getSimpleName();
+        } else if (inTangent != null) {
+            return "In:" + inTangent.getClass().getSimpleName();
+        } else if (outTangent != null) {
+            return "Out:" + outTangent.getClass().getSimpleName();
+        }
+        return "None";
+    }
+
+    /**
+     * デバッグ用の詳細文字列を取得
+     */
+    public String getDebugInfo() {
+        StringBuilder sb = new StringBuilder(100);
+        sb.append(String.format("ProcessedKeyframe[time=%.3f, valueType=%s", time, getValueType()));
+
+        if (hasTangents()) {
+            sb.append(String.format(", tangents=%s", getTangentType()));
+        }
+
+        sb.append(String.format(", value=%s]", value.toString()));
+
+        return sb.toString();
+    }
+
     @Override
-    public String toString() {
-        return String.format("Keyframe[t=%.3f, value=%s]", time, value.toString());
+    public @NotNull String toString() {
+        return String.format("Keyframe[t=%.3f, %s]", time, getValueType());
     }
 }

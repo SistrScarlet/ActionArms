@@ -7,6 +7,7 @@ import de.javagl.jgltf.model.MeshPrimitiveModel;
 import net.sistr.actionarms.ActionArms;
 import net.sistr.actionarms.client.render.gltf.data.*;
 import net.sistr.actionarms.client.render.gltf.util.DrawingMode;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -24,7 +25,8 @@ public class GltfVertexExtractor {
         this.accessorCache = new AccessorDataCache();
     }
 
-    public List<ProcessedMesh> extractMeshes(MeshModel meshModel, ProcessedSkin associatedSkin) {
+    public List<ProcessedMesh> extractMeshes(Map<MaterialModel, ProcessedMaterial> materials,
+                                             @Nullable ProcessedSkin associatedSkin, MeshModel meshModel) {
         List<MeshPrimitiveModel> primitives = meshModel.getMeshPrimitiveModels();
         List<ProcessedMesh> processedMeshes = new ArrayList<>();
 
@@ -38,8 +40,7 @@ public class GltfVertexExtractor {
                 String meshName = primitives.size() > 1 ?
                         baseMeshName + "_Primitive_" + i : baseMeshName;
 
-                ProcessedMesh processedMesh = extractSinglePrimitive(
-                        primitive, meshName, associatedSkin, i);
+                ProcessedMesh processedMesh = extractSinglePrimitive(materials, associatedSkin, primitive, meshName, i);
 
                 processedMeshes.add(processedMesh);
 
@@ -59,30 +60,41 @@ public class GltfVertexExtractor {
                 name.trim() : "Mesh_" + System.identityHashCode(meshModel);
     }
 
-    private ProcessedMesh extractSinglePrimitive(MeshPrimitiveModel primitive,
-                                                 String meshName,
-                                                 ProcessedSkin associatedSkin,
-                                                 int primitiveIndex) {
+    private ProcessedMesh extractSinglePrimitive(Map<MaterialModel, ProcessedMaterial> materials,
+                                                 @Nullable ProcessedSkin associatedSkin,
+                                                 MeshPrimitiveModel primitive, String meshName, int primitiveIndex) {
+        var builder = ProcessedMesh.builder();
+        builder.name(meshName);
+        builder.primitiveIndex(primitiveIndex);
 
         // AccessorDataを使用してアクセサレベルでの頂点データ管理
         Map<String, AccessorData> attributeData = extractAttributeData(primitive, meshName, primitiveIndex);
+        builder.attributeData(attributeData);
 
         // インデックスデータの抽出
         AccessorData indexData = extractIndexData(primitive, meshName, primitiveIndex);
+        builder.indexData(indexData);
 
         // モーフターゲットの抽出
         List<MorphTarget> morphTargets = extractMorphTargets(primitive, primitiveIndex);
-
-        // マテリアルインデックスの取得
-        int materialIndex = getMaterialIndex(primitive);
+        builder.morphTargets(morphTargets);
 
         // 描画モードの取得
         DrawingMode drawingMode = getDrawingMode(primitive);
+        builder.drawingMode(drawingMode);
 
-        // ProcessedMeshの作成（新しい設計では頂点データは直接持たない）
-        return new ProcessedMesh(
-                meshName, attributeData, indexData, morphTargets,
-                associatedSkin, materialIndex, drawingMode, primitiveIndex);
+        // マテリアルの取得
+        var material = materials.get(primitive.getMaterialModel());
+        if (material != null) {
+            builder.material(material);
+        }
+
+        // スキンの設定
+        if (associatedSkin != null) {
+            builder.skin(associatedSkin);
+        }
+
+        return builder.build();
     }
 
     /**
@@ -261,11 +273,6 @@ public class GltfVertexExtractor {
         }
 
         return morphTargets;
-    }
-
-    private int getMaterialIndex(MeshPrimitiveModel primitive) {
-        MaterialModel material = primitive.getMaterialModel();
-        return material != null ? System.identityHashCode(material) : -1;
     }
 
     private DrawingMode getDrawingMode(MeshPrimitiveModel primitive) {

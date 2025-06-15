@@ -85,7 +85,7 @@ public enum AccessorDataType {
      * バイト単位での要素サイズを計算
      */
     public int getElementSizeInBytes() {
-        int typeSize = isFloatType() ? 4 : 4; // float=4bytes, int=4bytes
+        int typeSize = 4; // float=4bytes, int=4bytes
         return componentCount * typeSize;
     }
 }

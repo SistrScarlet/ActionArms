@@ -5,6 +5,7 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.sistr.actionarms.client.render.gltf.data.*;
 import net.sistr.actionarms.client.render.gltf.renderer.RenderingContext;
 import net.sistr.actionarms.client.render.gltf.util.GltfMemoryPool;
+import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
@@ -13,6 +14,7 @@ import org.joml.Vector4f;
 import java.util.ArrayDeque;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * 描画を行うプロセッサ
@@ -33,8 +35,8 @@ public class DirectProcessor {
         }
 
         // 作業用配列をメモリプールから借用
-        ProcessedSkin skin = mesh.getSkin();
-        int boneCount = skin != null ? skin.getBones().size() : 0;
+        ProcessedSkin skin = mesh.skin();
+        int boneCount = skin != null ? skin.bones().size() : 0;
 
         Matrix4f[] boneMatrices = null;
         float[] morphWeights = null;
@@ -75,8 +77,7 @@ public class DirectProcessor {
      */
     private void computeBoneMatricesDirect(RenderingContext context, ProcessedSkin skin,
                                            ProcessedGltfModel model, Matrix4f[] boneMatrices) {
-
-        var bones = skin.getBones();
+        var bones = skin.bones();
         int stride = 3 + 4 + 3; // translation + rotation + scale
 
         // アニメーションデータを一時配列に計算
@@ -86,6 +87,11 @@ public class DirectProcessor {
         try {
             // アニメーションデータ計算
             computeAnimationDataDirect(context, skin, model, animationData);
+
+            // fpvボーンの非表示化 (非FPV時)
+            if (!context.fpv()) {
+                hideFPVBones(context, skin, model, animationData);
+            }
 
             // ローカル変換行列を計算
             for (int i = 0; i < bones.size(); i++) {
@@ -118,7 +124,7 @@ public class DirectProcessor {
             computeWorldMatrices(skin, localMatrices, boneMatrices);
 
             // ボーン行列を計算
-            for (ProcessedBone bone : skin.getBones()) {
+            for (ProcessedBone bone : skin.bones()) {
                 // ボーン行列 = ワールド行列 * 逆バインド行列
                 boneMatrices[bone.index()].mul(bone.getInverseBindMatrix());
             }
@@ -136,10 +142,12 @@ public class DirectProcessor {
                                             ProcessedGltfModel model, float[] animationData) {
         // コンテキストのアニメーション名からアニメーションを取得
         var animations = Arrays.stream(context.animations())
-                .map(state -> new Animation(model.getAnimation(state.name()).orElse(null), state))
-                .filter(animation -> animation.animation != null)
+                .map(state -> model.getAnimation(state.name())
+                        .map(value -> new Animation(value, state)))
+                .filter(Optional::isPresent)
+                .map(Optional::get)
                 .toList();
-        var bones = skin.getBones();
+        var bones = skin.bones();
         for (int i = 0; i < bones.size(); i++) {
             var bone = bones.get(i);
 
@@ -163,8 +171,8 @@ public class DirectProcessor {
             animationData[offset + 9] = scale.z;
 
             for (Animation value : animations) {
-                var animation = value.animation;
-                var state = value.state;
+                var animation = value.animation();
+                var state = value.state();
                 if (animation == null || !animation.hasBone(bone.name())) {
                     continue;
                 }
@@ -204,12 +212,28 @@ public class DirectProcessor {
         }
     }
 
+    private void hideFPVBones(RenderingContext context, ProcessedSkin skin,
+                              ProcessedGltfModel model, float[] animationData) {
+        var bones = skin.bones();
+        for (int i = 0; i < bones.size(); i++) {
+            var bone = bones.get(i);
+            int stride = 3 + 4 + 3;
+            int offset = i * stride;
+
+            if (bone.name().startsWith("fpv_")) {
+                animationData[offset + 7] = 0.0f;
+                animationData[offset + 8] = 0.0f;
+                animationData[offset + 9] = 0.0f;
+            }
+        }
+    }
+
     /**
      * ワールド変換行列を計算（階層構造を考慮）
      */
     private void computeWorldMatrices(ProcessedSkin skin, Matrix4f[] localMatrices, Matrix4f[] worldMatrices) {
         // ルートボーンから開始
-        for (ProcessedBone rootBone : skin.getRootBones()) {
+        for (ProcessedBone rootBone : skin.rootBones()) {
             // ルートはワールド変換行列 = ローカル変換行列
             worldMatrices[rootBone.index()].set(localMatrices[rootBone.index()]);
 
@@ -222,6 +246,7 @@ public class DirectProcessor {
                 var current = stack.pop();
                 var parent = current.parent();
                 var currentLocal = localMatrices[current.index()];
+                assert parent != null;
                 var parentWorld = worldMatrices[parent.index()];
 
                 // ワールド行列 = 親のワールド行列 * ローカル行列
@@ -235,14 +260,15 @@ public class DirectProcessor {
         }
     }
 
-    private void renderVertexDirect(ProcessedMesh mesh, int vertexIndex, Matrix4f[] boneMatrices,
-                                    float[] morphWeights, MatrixStack matrixStack,
+    private void renderVertexDirect(ProcessedMesh mesh, int vertexIndex, Matrix4f @Nullable [] boneMatrices,
+                                    float @Nullable [] morphWeights, MatrixStack matrixStack,
                                     VertexConsumer vertexConsumer, RenderingContext context) {
 
         // 元データから直接読み取り（コピーなし）
         float[] basePositions = mesh.getPositions().getFloatDataReadOnly();
         float[] baseNormals = mesh.getNormals() != null ? mesh.getNormals().getFloatDataReadOnly() : null;
         float[] uvs = mesh.getUvsRaw();
+        assert uvs != null;
 
         int posIdx = vertexIndex * 3;
         int uvIdx = vertexIndex * 2;
@@ -308,7 +334,7 @@ public class DirectProcessor {
     private Vector3f applyMorphingToVertex(ProcessedMesh mesh, int vertexIndex, float[] morphWeights,
                                            float x, float y, float z) {
         Vector3f result = new Vector3f(x, y, z);
-        List<MorphTarget> morphTargets = mesh.getMorphTargets();
+        List<MorphTarget> morphTargets = mesh.morphTargets();
 
         for (int targetIndex = 0; targetIndex < morphTargets.size() && targetIndex < morphWeights.length; targetIndex++) {
             float weight = morphWeights[targetIndex];
@@ -317,6 +343,7 @@ public class DirectProcessor {
             MorphTarget target = morphTargets.get(targetIndex);
             if (target.hasPositionDeltas()) {
                 float[] deltas = target.getPositionDeltasRaw();
+                assert deltas != null;
                 int deltaIdx = vertexIndex * 3;
                 if (deltaIdx + 2 < deltas.length) {
                     result.x += deltas[deltaIdx] * weight;

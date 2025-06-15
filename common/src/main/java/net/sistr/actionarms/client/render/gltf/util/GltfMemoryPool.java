@@ -1,10 +1,12 @@
 package net.sistr.actionarms.client.render.gltf.util;
 
+import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Stack;
 
 /**
  * glTF描画用のThreadLocalメモリプール
@@ -39,7 +41,7 @@ public class GltfMemoryPool {
      *
      * @param array 使用済み配列
      */
-    public static void returnFloatArray(float[] array) {
+    public static void returnFloatArray(float @Nullable [] array) {
         if (array != null) {
             FLOAT_POOL.get().returnArray(array);
         }
@@ -60,7 +62,7 @@ public class GltfMemoryPool {
      *
      * @param array 使用済み配列
      */
-    public static void returnMatrixArray(Matrix4f[] array) {
+    public static void returnMatrixArray(@Nullable Matrix4f[] array) {
         if (array != null) {
             MATRIX_POOL.get().returnArray(array);
         }
@@ -81,7 +83,7 @@ public class GltfMemoryPool {
      *
      * @param array 使用済み配列
      */
-    public static void returnIntArray(int[] array) {
+    public static void returnIntArray(int @Nullable [] array) {
         if (array != null) {
             INT_POOL.get().returnArray(array);
         }
@@ -109,13 +111,13 @@ public class GltfMemoryPool {
 
     // float配列プール実装
     private static class FloatArrayPool {
-        private final Map<Integer, Stack<float[]>> pools = new HashMap<>();
-        private int borrowCount = 0;
-        private int returnCount = 0;
+        private final Map<Integer, Deque<float[]>> pools = new HashMap<>(10);
+        private int borrowCount;
+        private int returnCount;
 
         float[] borrow(int size) {
             borrowCount++;
-            Stack<float[]> pool = pools.computeIfAbsent(size, k -> new Stack<>());
+            Deque<float[]> pool = pools.computeIfAbsent(size, k -> new ArrayDeque<>());
             if (pool.isEmpty()) {
                 return new float[size];
             } else {
@@ -128,7 +130,7 @@ public class GltfMemoryPool {
 
         void returnArray(float[] array) {
             returnCount++;
-            Stack<float[]> pool = pools.computeIfAbsent(array.length, k -> new Stack<>());
+            Deque<float[]> pool = pools.computeIfAbsent(array.length, k -> new ArrayDeque<>());
             // プールサイズ制限（メモリリーク防止）
             if (pool.size() < 10) {
                 pool.push(array);
@@ -142,20 +144,20 @@ public class GltfMemoryPool {
         }
 
         ArrayPoolStats getStats() {
-            int totalPooled = pools.values().stream().mapToInt(Stack::size).sum();
+            int totalPooled = pools.values().stream().mapToInt(Deque::size).sum();
             return new ArrayPoolStats("float[]", borrowCount, returnCount, totalPooled);
         }
     }
 
     // Matrix4f配列プール実装
     private static class MatrixArrayPool {
-        private final Map<Integer, Stack<Matrix4f[]>> pools = new HashMap<>();
+        private final Map<Integer, ArrayDeque<Matrix4f[]>> pools = new HashMap<>(10);
         private int borrowCount = 0;
         private int returnCount = 0;
 
         Matrix4f[] borrow(int size) {
             borrowCount++;
-            Stack<Matrix4f[]> pool = pools.computeIfAbsent(size, k -> new Stack<>());
+            ArrayDeque<Matrix4f[]> pool = pools.computeIfAbsent(size, k -> new ArrayDeque<>(10));
             if (pool.isEmpty()) {
                 Matrix4f[] array = new Matrix4f[size];
                 // 新しいMatrix4fインスタンスで初期化
@@ -177,7 +179,7 @@ public class GltfMemoryPool {
 
         void returnArray(Matrix4f[] array) {
             returnCount++;
-            Stack<Matrix4f[]> pool = pools.computeIfAbsent(array.length, k -> new Stack<>());
+            Deque<Matrix4f[]> pool = pools.computeIfAbsent(array.length, k -> new ArrayDeque<>(10));
             // プールサイズ制限
             if (pool.size() < 5) { // Matrix4f配列は重いので少なめに制限
                 pool.push(array);
@@ -191,20 +193,20 @@ public class GltfMemoryPool {
         }
 
         ArrayPoolStats getStats() {
-            int totalPooled = pools.values().stream().mapToInt(Stack::size).sum();
+            int totalPooled = pools.values().stream().mapToInt(ArrayDeque::size).sum();
             return new ArrayPoolStats("Matrix4f[]", borrowCount, returnCount, totalPooled);
         }
     }
 
     // int配列プール実装
     private static class IntArrayPool {
-        private final Map<Integer, Stack<int[]>> pools = new HashMap<>();
+        private final Map<Integer, ArrayDeque<int[]>> pools = new HashMap<>();
         private int borrowCount = 0;
         private int returnCount = 0;
 
         int[] borrow(int size) {
             borrowCount++;
-            Stack<int[]> pool = pools.computeIfAbsent(size, k -> new Stack<>());
+            ArrayDeque<int[]> pool = pools.computeIfAbsent(size, k -> new ArrayDeque<>());
             if (pool.isEmpty()) {
                 return new int[size];
             } else {
@@ -217,7 +219,7 @@ public class GltfMemoryPool {
 
         void returnArray(int[] array) {
             returnCount++;
-            Stack<int[]> pool = pools.computeIfAbsent(array.length, k -> new Stack<>());
+            Deque<int[]> pool = pools.computeIfAbsent(array.length, k -> new ArrayDeque<>(10));
             // プールサイズ制限
             if (pool.size() < 10) {
                 pool.push(array);
@@ -231,7 +233,7 @@ public class GltfMemoryPool {
         }
 
         ArrayPoolStats getStats() {
-            int totalPooled = pools.values().stream().mapToInt(Stack::size).sum();
+            int totalPooled = pools.values().stream().mapToInt(ArrayDeque::size).sum();
             return new ArrayPoolStats("int[]", borrowCount, returnCount, totalPooled);
         }
     }
@@ -250,7 +252,11 @@ public class GltfMemoryPool {
 
         @Override
         public String toString() {
-            return String.format("GltfMemoryPool Stats:\n%s\n%s\n%s",
+            return String.format("""
+                            GltfMemoryPool Stats:
+                            %s
+                            %s
+                            %s""",
                     floatArrayStats, matrixArrayStats, intArrayStats);
         }
     }

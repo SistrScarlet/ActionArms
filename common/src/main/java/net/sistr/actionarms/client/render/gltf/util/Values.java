@@ -1,6 +1,7 @@
 package net.sistr.actionarms.client.render.gltf.util;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
@@ -31,7 +32,7 @@ public class Values {
         }
 
         // 配列からの変換
-        public static Position from(float[] array) {
+        public static Position from(float @Nullable [] array) {
             if (array == null || array.length < 3) {
                 throw new IllegalArgumentException("Array must have at least 3 elements");
             }
@@ -103,7 +104,7 @@ public class Values {
         }
 
         // 配列からの変換
-        public static Rotation from(float[] array) {
+        public static Rotation from(float @Nullable [] array) {
             if (array == null || array.length < 4) {
                 throw new IllegalArgumentException("Array must have at least 4 elements");
             }
@@ -141,7 +142,7 @@ public class Values {
         }
 
         // 配列からの変換
-        public static Scale from(float[] array) {
+        public static Scale from(float @Nullable [] array) {
             if (array == null || array.length < 3) {
                 throw new IllegalArgumentException("Array must have at least 3 elements");
             }
@@ -196,7 +197,7 @@ public class Values {
         }
 
         // 配列からの変換
-        public static RGBA from(float[] array) {
+        public static RGBA from(float @Nullable [] array) {
             if (array == null || array.length < 4) {
                 throw new IllegalArgumentException("Array must have at least 4 elements");
             }
@@ -262,7 +263,7 @@ public class Values {
         }
 
         // 配列からの変換
-        public static RGB from(float[] array) {
+        public static RGB from(float @Nullable [] array) {
             if (array == null || array.length < 3) {
                 throw new IllegalArgumentException("Array must have at least 3 elements");
             }
@@ -309,7 +310,7 @@ public class Values {
         }
 
         // 配列からの変換
-        public static Normal from(float[] array) {
+        public static Normal from(float @Nullable [] array) {
             if (array == null || array.length < 3) {
                 throw new IllegalArgumentException("Array must have at least 3 elements");
             }
@@ -386,7 +387,7 @@ public class Values {
 
         // 変換行列の作成
         public static Matrix4x4 createTranslation(Position pos) {
-            Matrix4f matrix = new Matrix4f().identity().translate(pos.x, pos.y, pos.z);
+            Matrix4f matrix = new Matrix4f().identity().translate(pos.x(), pos.y(), pos.z());
             return from(matrix);
         }
 
@@ -396,16 +397,16 @@ public class Values {
         }
 
         public static Matrix4x4 createScale(Scale scale) {
-            Matrix4f matrix = new Matrix4f().identity().scale(scale.x, scale.y, scale.z);
+            Matrix4f matrix = new Matrix4f().identity().scale(scale.x(), scale.y(), scale.z());
             return from(matrix);
         }
 
         // TRSから変換行列を作成
         public static Matrix4x4 createTransform(Position translation, Rotation rotation, Scale scale) {
             Matrix4f matrix = new Matrix4f().identity()
-                    .translate(translation.x, translation.y, translation.z)
+                    .translate(translation.x(), translation.y(), translation.z())
                     .rotate(rotation.toQuaternionf())
-                    .scale(scale.x, scale.y, scale.z);
+                    .scale(scale.x(), scale.y(), scale.z());
             return from(matrix);
         }
 
@@ -425,7 +426,13 @@ public class Values {
 
         @Override
         public @NotNull String toString() {
-            return String.format("Matrix4x4[\n  [%.3f, %.3f, %.3f, %.3f]\n  [%.3f, %.3f, %.3f, %.3f]\n  [%.3f, %.3f, %.3f, %.3f]\n  [%.3f, %.3f, %.3f, %.3f]\n]",
+            return String.format("""
+                            Matrix4x4[
+                              [%.3f, %.3f, %.3f, %.3f]
+                              [%.3f, %.3f, %.3f, %.3f]
+                              [%.3f, %.3f, %.3f, %.3f]
+                              [%.3f, %.3f, %.3f, %.3f]
+                            ]""",
                     data[0], data[1], data[2], data[3],
                     data[4], data[5], data[6], data[7],
                     data[8], data[9], data[10], data[11],

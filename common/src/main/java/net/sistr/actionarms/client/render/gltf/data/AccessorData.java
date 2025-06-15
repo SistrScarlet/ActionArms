@@ -1,5 +1,7 @@
 package net.sistr.actionarms.client.render.gltf.data;
 
+import org.jetbrains.annotations.Nullable;
+
 /**
  * glTFアクセサから抽出されたプリミティブ配列データを保持するクラス
  * 元のAccessorModelは保持せず、必要なデータのみを効率的に管理する
@@ -11,8 +13,8 @@ public class AccessorData {
     private final int elementCount;
 
     // データ本体（どちらか一方のみnull以外）
-    private final float[] floatData;
-    private final int[] intData;
+    private final float @Nullable [] floatData;
+    private final int @Nullable [] intData;
 
     // メタデータ
     private final boolean normalized;
@@ -22,8 +24,8 @@ public class AccessorData {
     /**
      * float型データ用コンストラクタ
      */
-    public AccessorData(String id, AccessorDataType dataType, int elementCount,
-                        float[] floatData, boolean normalized, AccessorSignature signature) {
+    public AccessorData(@Nullable String id, AccessorDataType dataType, int elementCount,
+                        float[] floatData, boolean normalized, @Nullable AccessorSignature signature) {
         this.id = id != null ? id : "AccessorData_" + System.identityHashCode(this);
         this.dataType = dataType;
         this.elementCount = elementCount;
@@ -39,8 +41,8 @@ public class AccessorData {
     /**
      * int型データ用コンストラクタ
      */
-    public AccessorData(String id, AccessorDataType dataType, int elementCount,
-                        int[] intData, boolean normalized, AccessorSignature signature) {
+    public AccessorData(@Nullable String id, AccessorDataType dataType, int elementCount,
+                        int[] intData, boolean normalized, @Nullable AccessorSignature signature) {
         this.id = id != null ? id : "AccessorData_" + System.identityHashCode(this);
         this.dataType = dataType;
         this.elementCount = elementCount;
@@ -207,6 +209,7 @@ public class AccessorData {
         return normalized;
     }
 
+    @Nullable
     public AccessorSignature getSignature() {
         return signature;
     }
@@ -220,6 +223,8 @@ public class AccessorData {
      * 注意: 返される配列は防御的コピーではないため、変更してはいけない
      */
     public float[] getFloatDataReadOnly() {
+        assert floatData != null;
+        //noinspection AssignmentOrReturnOfFieldWithMutableType
         return floatData;
     }
 
@@ -228,20 +233,22 @@ public class AccessorData {
      * 注意: 返される配列は防御的コピーではないため、変更してはいけない
      */
     public int[] getIntDataReadOnly() {
+        assert intData != null;
+        //noinspection AssignmentOrReturnOfFieldWithMutableType
         return intData;
     }
 
     /**
      * float配列の防御的コピーを取得
      */
-    public float[] copyFloatData() {
+    public float @Nullable [] copyFloatData() {
         return floatData != null ? floatData.clone() : null;
     }
 
     /**
      * int配列の防御的コピーを取得
      */
-    public int[] copyIntData() {
+    public int @Nullable [] copyIntData() {
         return intData != null ? intData.clone() : null;
     }
 

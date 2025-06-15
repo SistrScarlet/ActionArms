@@ -1,5 +1,7 @@
 package net.sistr.actionarms.client.render.gltf.renderer;
 
+import org.jetbrains.annotations.Nullable;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -11,6 +13,7 @@ public record RenderingContext(
         float tickDelta,
         int light,
         int overlay,
+        boolean fpv,
         AnimationState[] animations) {
 
     public static Builder builder() {
@@ -18,10 +21,11 @@ public record RenderingContext(
     }
 
     public static class Builder {
-        float tickDelta;
-        int light;
-        int overlay;
-        List<AnimationState> animations = new ArrayList<>();
+        private float tickDelta;
+        private int light;
+        private int overlay;
+        private boolean isFPV;
+        private final List<AnimationState> animations = new ArrayList<>();
 
         public Builder tickDelta(float tickDelta) {
             this.tickDelta = tickDelta;
@@ -38,13 +42,22 @@ public record RenderingContext(
             return this;
         }
 
-        public Builder addAnimationState(AnimationState state) {
-            this.animations.add(state);
+        public Builder fpv(boolean fpv) {
+            this.isFPV = fpv;
             return this;
         }
 
-        public Builder addAnimationState(List<AnimationState> states) {
-            this.animations.addAll(states);
+        public Builder addAnimationState(AnimationState state) {
+            if (state != null) {
+                this.animations.add(state);
+            }
+            return this;
+        }
+
+        public Builder addAnimationState(@Nullable List<AnimationState> states) {
+            if (states != null) {
+                this.animations.addAll(states);
+            }
             return this;
         }
 
@@ -53,6 +66,7 @@ public record RenderingContext(
                     tickDelta,
                     light,
                     overlay,
+                    isFPV,
                     animations.toArray(new AnimationState[0])
             );
         }

@@ -15,6 +15,7 @@ import java.util.*;
 public final class ProcessedBone {
     private final int index;
     private final String name;
+    @Nullable
     private final ProcessedBone parent;
     private final List<ProcessedBone> children;
     private final Values.Position translation;
@@ -25,10 +26,10 @@ public final class ProcessedBone {
     // hashCodeの循環参照を避けるためindex基準で計算
     private final int cachedHashCode;
 
-    public ProcessedBone(
+    private ProcessedBone(
             int index,
             String name,
-            ProcessedBone parent,
+            @Nullable ProcessedBone parent,
             List<ProcessedBone> children,
             Values.Position translation,
             Values.Rotation rotation,
@@ -36,16 +37,13 @@ public final class ProcessedBone {
             Values.Matrix4x4 inverseBindMatrix
     ) {
         this.index = index;
-        this.name = name != null ? name : "Bone_" + index;
+        this.name = name;
         this.parent = parent;
-        this.children = children != null ?
-                children :
-                new ArrayList<>();
-        this.translation = translation != null ? translation : Values.ZERO_POSITION;
-        this.rotation = rotation != null ? rotation : Values.IDENTITY_ROTATION;
-        this.scale = scale != null ? scale : Values.UNIT_SCALE;
-        this.inverseBindMatrix = inverseBindMatrix != null ?
-                inverseBindMatrix : Values.Matrix4x4.identity();
+        this.children = children;
+        this.translation = translation;
+        this.rotation = rotation;
+        this.scale = scale;
+        this.inverseBindMatrix = inverseBindMatrix;
 
         // indexベースのハッシュコード（循環参照を回避）
         this.cachedHashCode = Objects.hash(index, this.name);
@@ -60,7 +58,7 @@ public final class ProcessedBone {
         return name;
     }
 
-    public ProcessedBone parent() {
+    public @Nullable ProcessedBone parent() {
         return parent;
     }
 
@@ -123,7 +121,7 @@ public final class ProcessedBone {
      * 深度を取得
      */
     public int getDepth() {
-        Set<ProcessedBone> visited = new HashSet<>();
+        Set<ProcessedBone> visited = new HashSet<>(100);
         int depth = 0;
         ProcessedBone current = parent;
 
