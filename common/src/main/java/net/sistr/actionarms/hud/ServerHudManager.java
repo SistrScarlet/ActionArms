@@ -33,7 +33,7 @@ public class ServerHudManager {
             var gunComponent = IItemComponent.query(leverActionGunItem.getGunComponent(), mainStack, c -> c);
             var state = LeverActionHudState.of(gunComponent);
             var map = hudStateMap.computeIfAbsent(player.getUuid(), k -> new HashMap<>());
-            var uuid = UniqueComponent.get(mainStack);
+            var uuid = UniqueComponent.getOrSet(mainStack);
             var id = "lever_action@" + uuid;
             var hudState = map.get(id);
             if (hudState == null || !hudState.prevState.equals(state)) {

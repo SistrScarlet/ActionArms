@@ -4,7 +4,9 @@ import dev.architectury.registry.registries.DeferredRegister;
 import dev.architectury.registry.registries.RegistrySupplier;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.SpawnGroup;
+import net.minecraft.entity.damage.DamageType;
 import net.minecraft.item.Item;
+import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.Identifier;
@@ -32,7 +34,7 @@ public class Registration {
     public static final RegistrySupplier<Item> M1873 = ITEMS.register(
             "m1873",
             () -> new LeverActionGunItem(
-                    new Item.Settings().maxCount(1),
+                    new Item.Settings().maxDamage(256),
                     GunComponentTypes.M1873
             )
     );
@@ -55,4 +57,6 @@ public class Registration {
         return SOUND_EVENTS.register(id, () -> SoundEvent.of(new Identifier(ActionArms.MOD_ID, id)));
     }
 
+    public static final RegistryKey<DamageType> BULLET_DAMAGE_TYPE
+            = RegistryKey.of(RegistryKeys.DAMAGE_TYPE, new Identifier(ActionArms.MOD_ID, "bullet"));
 }

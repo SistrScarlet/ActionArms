@@ -8,18 +8,24 @@
     "note": "glTF描画システムとの連携により、カスタム3Dモデル描画が可能"
   },
   "LeverActionGunItem.java": {
-    "desc": "レバーアクション機構を持つ銃アイテム。サウンド再生と実際の弾薬管理システムを実装",
+    "desc": "レバーアクション機構を持つ銃アイテム。射撃システム、拡散角計算、リコイル機能を完全実装",
     "importance": "high",
-    "last_accessed": "2025-06-13",
+    "last_accessed": "2025-06-15",
     "key_features": [
       "GunItem継承",
       "レバーアクション機構",
-      "弾丸エンティティ生成処理",
+      "完全な射撃システム実装（fireBullet）",
+      "拡散角計算システム（エイム・移動状態対応）",
+      "3D直交座標系による精密な拡散ベクトル計算",
+      "リコイルシステム（RecoilPacket）",
+      "発砲煙パーティクルシステム",
+      "耐久度減少システム（非クリエイティブ）",
+      "エイム状態による精度変化",
+      "移動時の精度低下",
+      "calculateSpreadDirection静的メソッド",
       "サウンド再生システム（LeverActionPlaySoundContext）",
       "実際の弾薬管理（InventoryAmmoUtil）",
-      "クリエイティブモードでの無限弾薬",
-      "コンテキストパターンで処理分離",
-      "アニメーション同期"
+      "コンテキストパターンで処理分離"
     ],
     "parent": "GunItem",
     "dependencies": [
@@ -27,9 +33,11 @@
       "Registration.java",
       "InventoryAmmoUtil.java",
       "LeverActionPlaySoundContext.java",
-      "LeverActionGunComponent.java"
+      "LeverActionGunComponent.java",
+      "RecoilPacket.java",
+      "HasAimManager.java"
     ],
-    "note": "約170行に大幅拡張。サウンドと弾薬管理を統合した完全なレバーアクション銃システム"
+    "note": "約220行に大幅拡張。完全な射撃システムと物理的に正確な拡散角計算を実装。本格的な銃撃戦ゲーム級の機能"
   },
   "util/GlftModelItem.java": {
     "desc": "glTFモデルを使用するアイテム用のマーカーインターフェース",
@@ -84,18 +92,20 @@
     "note": "約220行に拡張。サウンド再生と実際の弾薬管理を統合した完全なレバーアクション銃システム"
   },
   "component/UniqueComponent.java": {
-    "desc": "アイテム個体を一意に識別するUUIDを管理するコンポーネント。アニメーション同期に不可欠",
+    "desc": "アイテム個体を一意に識別するUUIDを管理するコンポーネント。アニメーション同期と状態管理に不可欠",
     "importance": "high",
-    "last_accessed": "2025-06-08",
+    "last_accessed": "2025-06-15",
     "key_features": [
       "IItemComponent実装",
       "UUIDの自動生成と管理",
-      "get()静的メソッドで簡単アクセス",
-      "アイテム個体識別システムの基盤"
+      "getOrSet()静的メソッドで自動UUID作成",
+      "getUUID()によるOptional型での安全な取得",
+      "アイテム個体識別システムの基盤",
+      "アニメーションとHUD状態の関連付け"
     ],
     "parent": "IItemComponent",
-    "dependencies": ["ItemUniqueManager.java"],
-    "note": "アニメーション同期やマルチプレイヤー対応に不可欠"
+    "dependencies": ["ItemUniqueManager.java", "ItemAnimationManager.java", "ServerHudManager.java"],
+    "note": "getOrSet()メソッド追加でより便利に。アニメーション同期、HUD状態管理、マルチプレイヤー対応に不可欠"
   },
   "component/Cartridge.java": {
     "desc": "薬莢（カートリッジ）クラス。弾丸を包含し、発射可能状態を管理する銃の内部機構",
@@ -247,19 +257,22 @@
     "note": "旧MagazineType.javaを置き換え、よりシンプルで明確な設計"
   },
   "component/LeverActionGunDataType.java": {
-    "desc": "レバーアクション銃の基本データ定義。パラメータ順序を整理して可読性を向上",
+    "desc": "レバーアクション銃の基本データ定義。拡散角パラメータを追加して射撃精度システムを実装",
     "importance": "high",
-    "last_accessed": "2025-06-11",
+    "last_accessed": "2025-06-15",
     "key_features": [
       "record型による不変データ",
       "fireCoolLength/leverDownLength/leverUpLength設定",
       "cycleCoolLength/cycleCancelableLength設定",
       "reloadLength/reloadCoolLength/reloadCancelableLength設定",
       "reloadCount設定",
-      "パラメータ順序の整理（fire→cycle→reloadの時系列順）"
+      "baseSpreadAngle - 基本拡散角（度）",
+      "aimSpreadAngle - エイム時拡散角（度）",
+      "movementSpreadIncrease - 移動時拡散角増加（度）",
+      "パラメータ順序の整理（fire→cycle→reload→spread順）"
     ],
-    "dependencies": ["GunDataTypes.java"],
-    "note": "パラメータ順序を整理して可読性を大幅向上。時系列順に並べることで理解しやすくなった"
+    "dependencies": ["GunDataTypes.java", "LeverActionGunItem.java"],
+    "note": "拡散角パラメータ追加で射撃精度システムを実装。エイム・移動状態による精度変化を表現可能"
   },
   "component/registry/GunComponentTypes.java": {
     "desc": "銃コンポーネントの型定義レジストリ。具体的なコンポーネントインスタンスを定義",
@@ -335,5 +348,20 @@
     ],
     "dependencies": ["LeverActionGunComponent.java", "AAHudRenderer.java", "ServerHudManager.java"],
     "note": "約60行の実装。HUD表示システムの中核データ構造。record型による不変性とNBT対応により安全で効率的な状態管理を実現"
+  },
+  "../hud/BulletHitHudState.java": {
+    "desc": "弾丸ヒット状態を管理するHUDデータクラス。ヒット・キル判定を視覚的フィードバックで表現",
+    "importance": "medium",
+    "last_accessed": "2025-06-15",
+    "key_features": [
+      "record型による不変データ構造",
+      "boolean kill による判定管理",
+      "of()ファクトリーメソッド",
+      "NBT読み書き対応（write/of メソッド）",
+      "ClientHudManagerとの連携",
+      "AAHudRendererでの色分け表示（ヒット:緑/キル:赤）"
+    ],
+    "dependencies": ["ClientHudManager.java", "AAHudRenderer.java", "BulletEntity.java"],
+    "note": "約21行の簡潔な実装。弾丸ヒット時の視覚的フィードバックシステムを支えるデータ構造"
   }
 }

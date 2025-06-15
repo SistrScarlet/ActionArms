@@ -2,8 +2,11 @@ package net.sistr.actionarms.entity;
 
 import net.minecraft.entity.*;
 import net.minecraft.entity.boss.dragon.EnderDragonPart;
+import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.projectile.ProjectileUtil;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.particle.ParticleTypes;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.EntityHitResult;
@@ -13,8 +16,12 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.RaycastContext;
 import net.minecraft.world.World;
+import net.sistr.actionarms.hud.BulletHitHudState;
 import net.sistr.actionarms.item.component.BulletComponent;
 import net.sistr.actionarms.item.component.registry.GunComponentTypes;
+import net.sistr.actionarms.mixin.DamageSourcesAccessor;
+import net.sistr.actionarms.network.HudStatePacket;
+import net.sistr.actionarms.setup.Registration;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.UUID;
@@ -25,7 +32,7 @@ public class BulletEntity extends Entity implements Ownable {
     @Nullable
     private Entity owner;
     private BulletComponent bulletComponent = GunComponentTypes.MIDDLE_CALIBER.get();
-    private int decay = 10;
+    private int decay = 40;
 
     public BulletEntity(EntityType<? extends BulletEntity> type, World world) {
         super(type, world);
@@ -104,8 +111,13 @@ public class BulletEntity extends Entity implements Ownable {
             hit(hitResult);
         }
 
+        var currentPos = this.getPos();
+        var nextPos = currentPos.add(this.getVelocity());
+
+        showTrailParticle(start, end);
+
         // 移動処理
-        this.setPosition(this.getPos().add(this.getVelocity()));
+        this.setPosition(nextPos);
 
         // 次tickのために速度を更新
         updateVelocity();
@@ -161,7 +173,17 @@ public class BulletEntity extends Entity implements Ownable {
         var data = this.bulletComponent.getBulletDataType();
         float damage = isHeadshot(result) ? data.headshotDamage() : data.damage();
 
-        return hitTarget.damage(this.getDamageSources().indirectMagic(this, this), damage);
+        if (hitTarget.damage(createDamageSource(), damage)) {
+            var owner = getOwner();
+            if (owner instanceof ServerPlayerEntity player) {
+                boolean kill = !hitTarget.isAlive();
+                HudStatePacket.sendS2C(player, "bullet_hit", BulletHitHudState.of(kill).write());
+            }
+
+            return true;
+        }
+
+        return false;
     }
 
     // todo:各モブでのヘッドショット判定の確認
@@ -195,8 +217,28 @@ public class BulletEntity extends Entity implements Ownable {
         return false;
     }
 
+    private DamageSource createDamageSource() {
+        var damageSources = this.getDamageSources();
+        var registry = ((DamageSourcesAccessor)damageSources).getRegistry();
+        return new DamageSource(registry.entryOf(Registration.BULLET_DAMAGE_TYPE),
+                this, this.getOwner());
+    }
+
     private boolean blockHit(BlockHitResult result) {
         return true;
+    }
+
+    private void showTrailParticle(Vec3d start, Vec3d end) {
+        float particleDistance = 1;
+        var direction = end.subtract(start).normalize();
+        double totalDistance = start.distanceTo(end);
+
+        for (double distance = 0; distance < totalDistance; distance += particleDistance) {
+            var particlePos = start.add(direction.multiply(distance));
+            var velocity = this.getVelocity().multiply(0.5);
+            this.getWorld().addParticle(ParticleTypes.CRIT, particlePos.getX(), particlePos.getY(), particlePos.getZ(),
+                    velocity.getX(), velocity.getY(), velocity.getZ());
+        }
     }
 
     private void updateVelocity() {

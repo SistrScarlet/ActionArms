@@ -35,8 +35,8 @@ public class AimManager implements IAimManager {
         }
         // アイテムを切り替えたらエイム解除
         if (prevAimStack != null && prevAimStack != stack) {
-            var prevUuid = UniqueComponent.get(prevAimStack);
-            var uuid = UniqueComponent.get(stack);
+            var prevUuid = UniqueComponent.getOrSet(prevAimStack);
+            var uuid = UniqueComponent.getOrSet(stack);
             return prevUuid.equals(uuid);
         }
 

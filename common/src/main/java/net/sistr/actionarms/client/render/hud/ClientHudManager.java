@@ -10,10 +10,10 @@ import java.util.function.Function;
 
 public class ClientHudManager {
     public static final ClientHudManager INSTANCE = new ClientHudManager();
-    public final Map<String, AAHudRenderer.HudState> hudMap = new HashMap<>();
+    public final Map<String, HudState> hudMap = new HashMap<>();
 
     public void updateHud(String id, NbtCompound nbt) {
-        var hudState = hudMap.computeIfAbsent(id, AAHudRenderer.HudState::new);
+        var hudState = hudMap.computeIfAbsent(id, HudState::new);
         hudState.setNbt(nbt);
         var world = MinecraftClient.getInstance().world;
         long now = world == null ? 0 : world.getTime();
@@ -29,15 +29,13 @@ public class ClientHudManager {
         });
     }
 
-    public <T> Optional<T> getState(String leverAction, Function<NbtCompound, T> factory) {
-        var hudState = hudMap.get(leverAction);
+    public Optional<HudState> getRawState(String id) {
+        return Optional.ofNullable(hudMap.get(id));
+    }
+
+    public <T> Optional<T> getState(String id, Function<NbtCompound, T> factory) {
+        var hudState = hudMap.get(id);
         if (hudState == null) {
-            return Optional.empty();
-        }
-        long lastUpdateTime = hudState.getLastUpdateTime();
-        var world = MinecraftClient.getInstance().world;
-        long now = world == null ? lastUpdateTime : world.getTime();
-        if (now - lastUpdateTime > 20) {
             return Optional.empty();
         }
         return Optional.ofNullable(factory.apply(hudState.getNbt()));

@@ -33,7 +33,7 @@ public class ItemAnimationManager {
         if (stack == null) {
             return new HashMap<>();
         }
-        var uuid = UniqueComponent.get(stack);
+        var uuid = UniqueComponent.getOrSet(stack);
         return getItemStateMap(uuid);
     }
 

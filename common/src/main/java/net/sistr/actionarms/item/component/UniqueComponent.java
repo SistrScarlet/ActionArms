@@ -3,13 +3,22 @@ package net.sistr.actionarms.item.component;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 
+import java.util.Optional;
 import java.util.UUID;
 
 // todo:コンポーネント化する意味が薄い
 public class UniqueComponent implements IItemComponent {
     private UUID uniqueId;
 
-    public static UUID get(ItemStack stack) {
+    public static Optional<UUID> getUUID(ItemStack stack) {
+        if (stack.getNbt() == null) return Optional.empty();
+        var nbt = stack.getNbt();
+        if (!nbt.containsUuid("uniqueId")) return Optional.empty();
+        var uuid = nbt.getUuid("uniqueId");
+        return Optional.of(uuid);
+    }
+
+    public static UUID getOrSet(ItemStack stack) {
         // queryだと値がセットされない
         var nbt = stack.getOrCreateNbt();
         if (!nbt.containsUuid("uniqueId")) {

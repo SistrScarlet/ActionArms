@@ -2,6 +2,7 @@ package net.sistr.actionarms.entity.util;
 
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.item.ItemStack;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.sistr.actionarms.item.ItemUniqueManager;
 import net.sistr.actionarms.item.LeverActionGunItem;
 import net.sistr.actionarms.item.component.IItemComponent;
@@ -41,7 +42,7 @@ public class GunController {
 
     private void tickGunComponent(ItemStack stack, LeverActionGunItem leverAction, boolean isSelected) {
         IItemComponent.execute(leverAction.getGunComponent(), stack, gunComponent -> {
-            var uuid = UniqueComponent.get(stack);
+            var uuid = UniqueComponent.getOrSet(stack);
 
             var animationContext = leverAction.createAnimationContext(user.getWorld(), uuid);
             LeverActionPlaySoundContext playSoundContext = leverAction.createPlaySoundContext(user.getWorld(), user);
@@ -71,6 +72,10 @@ public class GunController {
                 if (gunComponent.canTrigger()) {
                     var fireStartContext = leverAction.createFireStartContext(user.getWorld(), user);
                     if (gunComponent.trigger(playSoundContext, animationContext, fireStartContext)) {
+                        if (user instanceof ServerPlayerEntity serverPlayer
+                                && !serverPlayer.isCreative()) {
+                            stack.damage(1, serverPlayer.getRandom(), serverPlayer);
+                        }
                         markDuty = true;
                     }
                 }

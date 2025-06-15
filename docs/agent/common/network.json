@@ -1,8 +1,8 @@
 {
   "Networking.java": {
-    "desc": "ネットワーク通信の管理クラス。アニメーション同期、キー入力同期、HUD状態同期を統合管理",
+    "desc": "ネットワーク通信の管理クラス。アニメーション同期、キー入力同期、HUD状態同期、リコイル同期を統合管理",
     "importance": "high",
-    "last_accessed": "2025-06-14",
+    "last_accessed": "2025-06-15",
     "key_features": [
       "Architecturyネットワーク使用",
       "クライアント・サーバー分離",
@@ -10,10 +10,11 @@
       "C2S/S2C通信登録メソッド",
       "KeyInputPacket.receiveC2S登録",
       "HudStatePacket.receiveS2C登録",
-      "AimPacket.receiveC2S登録"
+      "AimPacket.receiveC2S登録",
+      "RecoilPacket.receiveS2C登録"
     ],
-    "dependencies": ["ItemAnimationEventPacket.java", "KeyInputPacket.java", "HudStatePacket.java", "AimPacket.java"],
-    "note": "アニメーション同期に加えてキー入力同期、HUD状態同期、エイム状態同期処理を実装。マルチプレイヤーでの銃操作、HUD表示、エイム機能を完全対応"
+    "dependencies": ["ItemAnimationEventPacket.java", "KeyInputPacket.java", "HudStatePacket.java", "AimPacket.java", "RecoilPacket.java"],
+    "note": "アニメーション同期に加えてキー入力同期、HUD状態同期、エイム状態同期、リコイル処理を実装。マルチプレイヤーでの銃操作、HUD表示、エイム機能、リコイル体験を完全対応"
   },
   "KeyInputPacket.java": {
     "desc": "クライアントからサーバーへのキー入力状態同期パケット。リアルタイムな銃操作のマルチプレイヤー対応を実現",
@@ -79,5 +80,21 @@
     ],
     "dependencies": ["HasAimManager.java", "ClientAimManager.java"],
     "note": "約31行の実装。エイム機能のマルチプレイヤー対応を実現するネットワーク通信の中核"
+  },
+  "RecoilPacket.java": {
+    "desc": "リコイル効果をサーバーからクライアントに送信するパケット。射撃時の視点反動を実現",
+    "importance": "medium",
+    "last_accessed": "2025-06-15",
+    "key_features": [
+      "S2C（Server to Client）通信専用",
+      "sendS2C()メソッドでの個別プレイヤー送信",
+      "createS2CPacket()でのパケット作成",
+      "receiveS2C()でのクライアント側受信処理",
+      "プレイヤーピッチの-5度調整でリコイル再現",
+      "メインスレッドでの安全な処理",
+      "NetworkManager使用の効率的通信"
+    ],
+    "dependencies": ["LeverActionGunItem.java", "GunController.java"],
+    "note": "約29行の実装。銃の射撃時のリコイル体験をマルチプレイヤーで実現するネットワーク通信"
   }
 }

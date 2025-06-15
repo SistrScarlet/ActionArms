@@ -4,11 +4,15 @@
   "compatibilityLevel": "JAVA_17",
   "minVersion": "0.8",
   "client": [
+    "GameRendererInvoker",
     "MixinClientPlayerEntity",
     "MixinHeldItemRenderer",
+    "MixinInGameHud",
     "MixinItemRenderer"
   ],
   "mixins": [
+    "DamageSourcesAccessor",
+    "MixinItemStack",
     "MixinPlayerEntity",
     "MixinServerPlayerEntity"
   ],

@@ -13,6 +13,7 @@ public class AAConfig implements ConfigData {
     public Key key = new Key();
 
     public static class Key {
+        @ConfigEntry.Gui.Tooltip
         public boolean aimToggle = false;
     }
 }

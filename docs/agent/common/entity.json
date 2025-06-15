@@ -1,23 +1,26 @@
 {
   "BulletEntity.java": {
-    "desc": "弾丸エンティティクラス。物理演算、当たり判定、ダメージ処理を含む完全実装",
+    "desc": "弾丸エンティティクラス。パーティクル、カスタムダメージ、ヒット同期、物理演算を統合した完全実装",
     "importance": "high",
-    "last_accessed": "2025-06-10",
+    "last_accessed": "2025-06-15",
     "key_features": [
       "Entity継承とOwnable実装",
       "レイキャスト当たり判定システム",
       "エンティティ/ブロック衝突処理",
       "ヘッドショット判定システム",
+      "弾道軌跡パーティクル（CRITパーティクル）",
+      "カスタム弾丸ダメージタイプ作成",
+      "ヒット・キル判定とHUD同期",
+      "BulletHitHudStateでの結果フィードバック",
       "重力と空気抵抗の物理演算",
       "所有者追跡システム（UUID/Entity）",
       "BulletComponentとの連携",
-      "デカイタイマー（10tick後自動消去）",
+      "40tickでの自動消去タイマー",
       "マルチプレイヤー対応",
-      "EnderDragonPart特別対応",
-      "大型敵でのヘッドショット判定無効化"
+      "EnderDragonPart特別対応"
     ],
-    "dependencies": ["BulletComponent.java", "GunComponentTypes.java", "Registration.java"],
-    "note": "217行の完全実装。レイキャスト＋ProjectileUtil組み合わせで高精度な当たり判定を実現。ヘッドショット判定は敵のサイズに応じて動的に決定"
+    "dependencies": ["BulletComponent.java", "GunComponentTypes.java", "Registration.java", "BulletHitHudState.java", "HudStatePacket.java", "DamageSourcesAccessor.java"],
+    "note": "約260行に拡張。パーティクル、カスタムダメージ、ヒット同期を統合した本格的な射撃システム。HUDへのリアルタイムフィードバックも実装"
   },
   "util/InventoryAmmoUtil.java": {
     "desc": "インベントリから弾薬を管理するユーティリティクラス。弾薬検索・取得・消費機能を提供",
@@ -50,19 +53,20 @@
     "note": "純粋な状態管理クラス。クライアント・サーバー両方で使用される汎用システム。IKeyInputManager実装でインターフェース対応。実際はentity/utilディレクトリに配置"
   },
   "util/GunController.java": {
-    "desc": "プレイヤーの銃操作を統合制御するシステム。キー入力に応じた銃のトリガー・サイクル・リロード処理を自動化",
+    "desc": "プレイヤーの銃操作を統合制御するシステム。キー入力に応じた銃のトリガー・サイクル・リロード処理と耐久度管理を自動化",
     "importance": "high",
-    "last_accessed": "2025-06-11",
+    "last_accessed": "2025-06-15",
     "key_features": [
       "LivingEntity/KeyInputManager/アイテム取得の統合管理",
       "インベントリ全体の銃アイテム自動処理",
       "選択中アイテムでのキー操作処理",
       "非選択アイテムでもtick処理継続",
+      "発砲時の耐久度減少処理（非クリエイティブ）",
       "LeverActionGunItemとの完全連携",
       "サーバーサイド専用処理"
     ],
     "dependencies": ["LeverActionGunItem.java", "IKeyInputManager.java", "UniqueComponent.java"],
-    "note": "105行の実装。従来の右クリック操作をキーバインド操作に完全移行させる中核システム。IKeyInputManager対応で抽象化を向上。実際はentity/utilディレクトリに配置"
+    "note": "約110行に拡張。従来の右クリック操作をキーバインド操作に完全移行させる中核システム。耐久度管理も統合した総合銃器制御システム"
   },
   "util/HasKeyInputManager.java": {
     "desc": "KeyInputManagerアクセス用インターフェース。Mixinでプレイヤーエンティティに実装される",
@@ -106,14 +110,15 @@
   "util/HasAimManager.java": {
     "desc": "AimManagerアクセス用インターフェース。Mixinでプレイヤーエンティティに実装される",
     "importance": "medium",
-    "last_accessed": "2025-06-14",
+    "last_accessed": "2025-06-15",
     "key_features": [
       "actionArms$getAimManager()メソッド定義",
       "IAimManager型の返却",
+      "get()静的メソッドでOptional型安全アクセス",
       "Mixinパターンでの実装"
     ],
     "dependencies": ["IAimManager.java"],
-    "note": "Mixin設計の一部。プレイヤーエンティティにエイム管理機能を注入。実際はentity/utilディレクトリに配置"
+    "note": "get()静的メソッド追加でより便利に。Mixin設計の一部。プレイヤーエンティティにエイム管理機能を注入。実際はentity/utilディレクトリに配置"
   },
   "util/IAimManager.java": {
     "desc": "エイム管理システムのインターフェース。エイム状態の取得・設定メソッドを定義",

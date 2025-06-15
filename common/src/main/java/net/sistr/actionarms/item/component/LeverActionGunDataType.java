@@ -9,6 +9,9 @@ public record LeverActionGunDataType(
         float reloadLength,
         float reloadCoolLength,
         float reloadCancelableLength,
-        int reloadCount
+        int reloadCount,
+        float baseSpreadAngle,        // 基本拡散角（度）
+        float aimSpreadAngle,     // エイム時拡散角（度）
+        float movementSpreadIncrease // 移動時拡散角増加（度）
 ) {
 }

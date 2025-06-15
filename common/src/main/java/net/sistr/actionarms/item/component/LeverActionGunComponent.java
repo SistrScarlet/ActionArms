@@ -74,7 +74,7 @@ public class LeverActionGunComponent implements IItemComponent, FireTrigger, Cyc
             return true;
         }
         var bullet = this.chamber.shoot().orElseThrow();
-        fireContext.fire(bullet);
+        fireContext.fire(this, bullet);
         playSoundContext.playSound(LeverActionPlaySoundContext.Sound.FIRE);
         animationContext.setAnimation("fire", 0);
         this.hammerReady = false;

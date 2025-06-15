@@ -1,3 +1,7 @@
 {
-  "item.actionarms.m1873": "M1873"
+  "item.actionarms.m1873": "M1873",
+  "item.actionarms.middle_caliber_bullet": "中口径弾",
+
+  "text.autoconfig.actionarms.option.key.aim.toggle": "トグルエイム",
+  "text.autoconfig.actionarms.option.key.aim.toggle.tooltip": "トグルエイムを有効にします。"
 }

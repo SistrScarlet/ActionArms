@@ -1,17 +1,18 @@
 {
   "Registration.java": {
-    "desc": "MODのアイテム・エンティティ・サウンド登録処理を管理",
+    "desc": "MODのアイテム・エンティティ・サウンド・ダメージタイプ登録処理を管理",
     "importance": "high",
-    "last_accessed": "2025-06-10",
+    "last_accessed": "2025-06-15",
     "key_features": [
       "DeferredRegister使用（Item/EntityType/SoundEvent）",
       "アイテム登録システム",
       "サウンドイベント登録システム",
       "弾丸アイテム登録",
-      "M1873銃登録",
+      "M1873銃登録（耐久度256）",
       "BulletEntityエンティティタイプ登録",
       "エンティティ設定（サイズ・追跡距離）",
-      "銃サウンドイベント一式"
+      "銃サウンドイベント一式",
+      "BULLET_DAMAGE_TYPEカスタムダメージタイプ定義"
     ],
     "registered_items": {
       "MIDDLE_CALIBER_BULLET": {
@@ -24,7 +25,8 @@
         "id": "m1873",
         "type": "LeverActionGunItem",
         "componentSupplier": "GunComponentTypes.M1873",
-        "maxCount": 1
+        "maxDamage": 256,
+        "durability": "256発射分の耐久度"
       }
     },
     "registered_entities": {
@@ -55,12 +57,21 @@
         "variants": 4
       }
     },
+    "registered_damage_types": {
+      "BULLET_DAMAGE_TYPE": {
+        "id": "actionarms:bullet",
+        "exhaustion": 0.1,
+        "message_id": "bullet",
+        "scaling": "when_caused_by_living_non_player"
+      }
+    },
     "dependencies": [
       "LeverActionGunItem",
       "BulletItem",
       "BulletEntity",
-      "GunComponentTypes"
+      "GunComponentTypes",
+      "DamageSourcesAccessor"
     ],
-    "note": "アイテム・エンティティ・サウンドの一元管理。サウンドシステムと弾薬システム完全対応"
+    "note": "アイテム・エンティティ・サウンド・ダメージタイプの一元管理。M1873の耐久度システムとカスタム弾丸ダメージタイプを新たに実装"
   }
 }

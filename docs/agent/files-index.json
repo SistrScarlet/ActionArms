@@ -63,6 +63,39 @@
     "マルチプレイヤー対応のリアルタイムエイムシステム"
   ],
   "recent_major_changes": {
+    "2025-06-15-ultimate-shooting": {
+      "title": "射撃・エイム・HUDシステムの大幅機能拡張と本格的な銃撃戦システム完成",
+      "changes": [
+        "🔫 射撃システム完全実装 - 拡散角計算（エイム・移動状態対応）",
+        "リコイルシステム（S2C同期） - RecoilPacket.java新実装",
+        "弾道軌跡パーティクル（発砲煙・軌跡） - CRITパーティクル使用",
+        "射撃時耐久度減少システム - 非クリエイティブモード対応",
+        "3D直交座標系による精密な拡散ベクトル計算実装",
+        "🎯 エイム・HUDシステム強化 - カスタムクロスヘア（動的拡散角表示）",
+        "弾丸ヒット表示（ヒット:緑/キル:赤） - BulletHitHudState.java新実装",
+        "エイム中視点ブレ効果 - 円形範囲内ランダム移動と偏り補正",
+        "インベントリ開放時自動エイム解除 - ClientAimManager.java拡張",
+        "FOV計算とpixelsPerRadian変換で物理的に正確なクロスヘア",
+        "⚔️ ダメージシステム実装 - カスタム弾丸ダメージタイプ作成",
+        "ヘッドショット判定システム - 敵サイズ応動型",
+        "キル判定とHUD連携 - リアルタイムフィードバック",
+        "DamageSourcesAccessor.java - Registry<DamageType>アクセスMixin実装",
+        "🔧 システム基盤拡張 - Mixin拡充（GameRenderer, InGameHud, DamageSources）",
+        "HudState構造化・分離 - AAHudRenderer.HudStateから独立クラス化",
+        "GameRendererInvoker.java - FOV取得のためのMixin Invoker",
+        "MixinInGameHud.java - 銃アイテム時デフォルトクロスヘア無効化",
+        "MixinItemStack.java - 空NBT自動クリーンアップ機能",
+        "UniqueComponent改良 - getOrSet()メソッドとgetUUID()メソッド追加",
+        "🛠️ ゲーム統合 - M1873・中口径弾レシピ実装",
+        "advancement・言語ファイル整備 - 日英両対応",
+        "設定UI tooltip追加 - トグルエイム設定説明",
+        "glTFモデル更新 - m1873.glbマテリアル情報更新",
+        "LeverActionGunItem.java拡張 - fireBullet()/fireSpread()/calculateSpreadDirection()実装",
+        "BulletEntity.java拡張 - パーティクル、カスタムダメージ、ヒット同期統合",
+        "LeverActionGunDataType.java拡張 - 拡散角パラメータ3種追加",
+        "Registration.java拡張 - M1873耐久度256、BULLET_DAMAGE_TYPE追加"
+      ]
+    },
     "2025-06-15-ultimate": {
       "title": "glTFレンダリングシステム大規模リファクタリング＆マテリアル対応＆FPV機能実装完了",
       "changes": [

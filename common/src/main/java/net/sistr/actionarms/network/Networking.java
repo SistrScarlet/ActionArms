@@ -21,6 +21,7 @@ public class Networking {
     public static void initClient() {
         registerClientReceiver(ItemAnimationEventPacket.ID, ItemAnimationEventPacket::receiveS2C);
         registerClientReceiver(HudStatePacket.ID, HudStatePacket::receiveS2C);
+        registerClientReceiver(RecoilPacket.ID, RecoilPacket::receiveS2C);
     }
 
     private static void registerServerReceiver(Identifier id, NetworkManager.NetworkReceiver receiver) {

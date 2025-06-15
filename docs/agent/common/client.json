@@ -99,26 +99,28 @@
     "note": "現在は矢のテクスチャを使用、今後glTFモデルでの描画を検討"
   },
   "render/hud/AAHudRenderer.java": {
-    "desc": "銃の弾薬状況を視覚的に表示するHUDレンダラー。薬室とマガジンの装填状況をリアルタイム描画",
+    "desc": "銃の弾薬状況とカスタムクロスヘアを描画するHUDレンダラー。弾丸ヒット表示機能も統合",
     "importance": "high",
-    "last_accessed": "2025-06-13",
+    "last_accessed": "2025-06-15",
     "key_features": [
       "シングルトンパターンによる一元管理",
       "薬室とマガジンの弾薬状況を視覚化",
+      "カスタムクロスヘア描画（拡散角反映）",
+      "弾丸ヒット表示（ヒット:緑/キル:赤）",
+      "FOV計算とpixelsPerRadian変換",
+      "エイム時のクロスヘア非表示制御",
+      "GameRendererInvokerによるFOV取得",
+      "BulletHitHudStateとの連携",
       "縦並び（右下固定）表示システム",
-      "横並び（上部中央）表示システム（将来の設定切り替え用）",
-      "弾薬テクスチャと空テクスチャでの装填状況表示",
-      "LeverActionHudStateとの連携",
-      "UniqueComponentによる個別アイテム識別",
-      "HudStateクラスによる状態管理"
+      "LeverActionHudStateとの連携"
     ],
-    "dependencies": ["LeverActionHudState.java", "ClientHudManager.java", "UniqueComponent.java"],
-    "note": "約120行の実装。マルチプレイヤー対応のリアルタイム弾薬表示システム。将来的に表示方式の設定切り替え機能予定"
+    "dependencies": ["LeverActionHudState.java", "ClientHudManager.java", "UniqueComponent.java", "BulletHitHudState.java", "GameRendererInvoker.java", "HasAimManager.java"],
+    "note": "約150行に拡張。カスタムクロスヘアと弾丸ヒット表示を統合した総合HUDシステム"
   },
   "render/hud/ClientHudManager.java": {
     "desc": "クライアント側HUD状態管理システム。サーバーからの状態更新を受信・管理",
     "importance": "high",
-    "last_accessed": "2025-06-13",
+    "last_accessed": "2025-06-15",
     "key_features": [
       "シングルトンパターンによる一元管理",
       "Map<String, HudState>での状態管理",
@@ -126,26 +128,42 @@
       "updateHud()メソッドでのサーバー同期",
       "preTick()メソッドでの古い状態クリーンアップ",
       "getState()メソッドでの型安全な状態取得",
+      "getRawState()メソッドで生のHudState取得",
       "Function<NbtCompound, T>によるファクトリーパターン"
     ],
-    "dependencies": ["AAHudRenderer.java", "HudStatePacket.java"],
-    "note": "約40行の実装。効率的なHUD状態管理とタイムアウト機能でメモリリークを防止"
+    "dependencies": ["AAHudRenderer.java", "HudStatePacket.java", "HudState.java"],
+    "note": "約40行の実装。効率的なHUD状態管理とタイムアウト機能でメモリリークを防止。HudState分離で構造化向上"
+  },
+  "render/hud/HudState.java": {
+    "desc": "HUD状態データを管理するクラス。HUD情報のNBT管理と更新時刻を追跡",
+    "importance": "medium",
+    "last_accessed": "2025-06-15",
+    "key_features": [
+      "String id による状態ID管理",
+      "NbtCompound によるデータ保存",
+      "long lastUpdateTime による更新時刻追跡",
+      "getter/setterによる安全なアクセス",
+      "ClientHudManagerとの連携"
+    ],
+    "dependencies": ["ClientHudManager.java"],
+    "note": "約33行の実装。AAHudRenderer.HudStateから分離・構造化。HUD状態の基本データ構造"
   },
   "key/ClientAimManager.java": {
-    "desc": "クライアント側エイム管理システム。キー入力に基づくエイム状態制御とサーバー同期",
+    "desc": "クライアント側エイム管理システム。視点ブレ効果と自動エイム解除機能を実装",
     "importance": "high",
-    "last_accessed": "2025-06-14",
+    "last_accessed": "2025-06-15",
     "key_features": [
       "シングルトンパターンによる一元管理",
       "トグルエイム・プッシュエイム両対応",
-      "KeyInputManagerとの連携によるキー監視",
-      "HasAimManagerとの連携によるエイム状態制御",
-      "AimPacketによるリアルタイムサーバー同期",
-      "ActionArms.getConfig().key.aimToggle設定対応",
-      "preTick()でのキー状態チェック"
+      "エイム中の視点ブレ効果実装",
+      "円形範囲内でのランダムな視点移動",
+      "偏り補正による自然な視点ブレ",
+      "インベントリ開放時の自動エイム解除",
+      "AimPacketによる効率的な同期（状態変化時のみ）",
+      "ActionArms.getConfig().key.aimToggle設定対応"
     ],
     "dependencies": ["HasAimManager.java", "ClientKeyInputManager.java", "AimPacket.java", "ActionArms.java"],
-    "note": "約40行の実装。エイム機能のクライアント側制御システム。トグル・プッシュ両方のエイム動作に対応"
+    "note": "約84行に拡張。視点ブレ効果と自動エイム解除でよりリアルなエイム体験を実現"
   },
   "mixin/MixinClientPlayerEntity.java": {
     "desc": "ClientPlayerEntityにKeyInputManager機能を注入するMixin。クライアント・サーバー判定機能",
@@ -161,5 +179,57 @@
     ],
     "dependencies": ["ClientKeyInputManager.java", "HasKeyInputManager.java", "KeyInputManager.java"],
     "note": "約24行の実装。クライアント側プレイヤーエンティティにキー管理機能を注入。actionarms-common.mixins.jsonに登録済み"
+  },
+  "mixin/DamageSourcesAccessor.java": {
+    "desc": "DamageSourcesクラスのプライベートフィールドにアクセスするMixin Accessor",
+    "importance": "medium",
+    "last_accessed": "2025-06-15",
+    "key_features": [
+      "@AccessorによるRegistry<DamageType>アクセス",
+      "getRegistry()メソッド提供",
+      "カスタムダメージタイプ作成支援",
+      "BulletEntityでの弾丸ダメージ処理連携"
+    ],
+    "dependencies": ["BulletEntity.java", "Registration.java"],
+    "note": "約13行の実装。カスタム弾丸ダメージタイプ作成のためのMixin Accessor"
+  },
+  "mixin/GameRendererInvoker.java": {
+    "desc": "GameRendererクラスのプライベートメソッドにアクセスするMixin Invoker",
+    "importance": "medium",
+    "last_accessed": "2025-06-15",
+    "key_features": [
+      "@InvokerによるgetFov()メソッドアクセス",
+      "invokeGetFov()メソッド提供",
+      "FOV計算とクロスヘア拡散角変換",
+      "AAHudRendererでのクロスヘア描画連携"
+    ],
+    "dependencies": ["AAHudRenderer.java"],
+    "note": "約12行の実装。カスタムクロスヘア描画のためのFOV取得Mixin Invoker"
+  },
+  "mixin/MixinInGameHud.java": {
+    "desc": "InGameHudのクロスヘア描画を制御するMixin。銃アイテム時のデフォルトクロスヘア無効化",
+    "importance": "medium",
+    "last_accessed": "2025-06-15",
+    "key_features": [
+      "renderCrosshair()メソッドへのInject",
+      "LeverActionGunItem判定",
+      "デフォルトクロスヘアの無効化",
+      "カスタムクロスヘアとの競合回避"
+    ],
+    "dependencies": ["LeverActionGunItem.java", "AAHudRenderer.java"],
+    "note": "約31行の実装。銃アイテム使用時のクロスヘア描画制御でカスタムUI体験を実現"
+  },
+  "mixin/MixinItemStack.java": {
+    "desc": "ItemStackのcanCombine判定を改善するMixin。空NBTの自動クリーンアップ機能",
+    "importance": "low",
+    "last_accessed": "2025-06-15",
+    "key_features": [
+      "canCombine()メソッドへのInject",
+      "空NbtCompoundの自動null化",
+      "UniqueComponentとの競合回避",
+      "アイテムスタック統合の改善"
+    ],
+    "dependencies": ["UniqueComponent.java"],
+    "note": "約22行の実装。UniqueComponentによる空NBT問題を解決する品質改善Mixin"
   }
 }
