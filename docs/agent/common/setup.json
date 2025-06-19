@@ -2,7 +2,7 @@
   "Registration.java": {
     "desc": "MODのアイテム・エンティティ・サウンド・ダメージタイプ登録処理を管理",
     "importance": "high",
-    "last_accessed": "2025-06-15",
+    "last_accessed": "2025-06-19",
     "key_features": [
       "DeferredRegister使用（Item/EntityType/SoundEvent）",
       "アイテム登録システム",
@@ -15,10 +15,10 @@
       "BULLET_DAMAGE_TYPEカスタムダメージタイプ定義"
     ],
     "registered_items": {
-      "MIDDLE_CALIBER_BULLET": {
-        "id": "middle_caliber_bullet",
+      "MEDIUM_CALIBER_BULLET": {
+        "id": "medium_caliber_bullet",
         "type": "BulletItem",
-        "componentSupplier": "GunComponentTypes.MIDDLE_CALIBER",
+        "componentSupplier": "GunComponentTypes.MEDIUM_CALIBER",
         "maxCount": 64
       },
       "M1873": {
@@ -72,6 +72,6 @@
       "GunComponentTypes",
       "DamageSourcesAccessor"
     ],
-    "note": "アイテム・エンティティ・サウンド・ダメージタイプの一元管理。M1873の耐久度システムとカスタム弾丸ダメージタイプを新たに実装"
+    "note": "アイテム・エンティティ・サウンド・ダメージタイプの一元管理。M1873の耐久度システムとカスタム弾丸ダメージタイプを新たに実装。middle_caliber_bulletからmedium_caliber_bulletに名称統一済み"
   }
 }

@@ -1,6 +1,6 @@
 {
   "description": "ActionArms MOD - 銃の機構と操作の心地よさを重視したMinecraft用銃MOD（副作用ゼロレンダリングシステム完全実装済み）",
-  "last_updated": "2025-06-15",
+  "last_updated": "2025-06-19",
   "structure": {
     "common/": {
       "description": "プラットフォーム共通コード",
@@ -63,6 +63,30 @@
     "マルチプレイヤー対応のリアルタイムエイムシステム"
   ],
   "recent_major_changes": {
+    "2025-06-19-entity-record": {
+      "title": "エンティティ記録システム・レンダリング・データタイプ・ファイル名統一を実装",
+      "changes": [
+        "🎯 エンティティ記録システム実装 - EntityRecordManager.java新実装",
+        "HasEntityRecordManager.java - エンティティ記録機能のインターフェース設計",
+        "MixinPlayerEntityRenderer.java - プレイヤーレンダリング処理への拡張対応",
+        "MixinServerWorld.java - サーバーワールドのエンティティ処理拡張",
+        "ServerWorldInvoker.java - ワールド内部メソッドアクセス用Mixin Invoker",
+        "🔧 レンダリングシステム最適化 - GltfRenderLayer/GltfRenderer/RenderingContextの改善",
+        "HudState/AAHudRenderer - HUD描画システムの更なる最適化と構造改善",
+        "BulletEntityRenderer.java - 弾丸エンティティレンダリングの最適化",
+        "🔤 ファイル名統一 - middle_caliber_bullet → medium_caliber_bulletに完全統一",
+        "テクスチャファイル名統一 - middle_caliber_bullet.png → medium_caliber_bullet.png",
+        "レシピ・advancement・言語ファイルの統一対応",
+        "⚔️ プロジェクタイルダメージタイプ設定 - is_projectile.jsonタグ追加",
+        "minecraft/tags/damage_type/is_projectile.json - 弾丸ダメージをプロジェクタイルとして認識",
+        "🏗️ 依存関係軽量化 - compileOnlyへの変更でビルド時間短縮",
+        "build.gradle - 依存関係設定の最適化",
+        "Mixin設定拡張 - actionarms-common.mixins.jsonに新Mixinクラス追加",
+        "🎨 テクスチャリソース追加 - test/bullet.pngテクスチャ追加",
+        "test/texture.png更新 - テクスチャリソースの改善",
+        "m1873.glbモデル更新 - glTFモデルデータの最新化"
+      ]
+    },
     "2025-06-15-ultimate-shooting": {
       "title": "射撃・エイム・HUDシステムの大幅機能拡張と本格的な銃撃戦システム完成",
       "changes": [

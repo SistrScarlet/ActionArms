@@ -148,6 +148,31 @@
     "dependencies": ["KeyInputManager.java"],
     "note": "約17行のインターフェース。キー入力システムの抽象化で柔軟性を向上。ClientPlayerEntityでの特別処理を可能にする"
   },
+  "util/EntityRecordManager.java": {
+    "desc": "エンティティの状態記録・管理システム。エンティティの履歴追跡と状態管理を提供",
+    "importance": "high",
+    "last_accessed": "2025-06-19",
+    "key_features": [
+      "エンティティ記録システムの実装",
+      "状態履歴の追跡・管理",
+      "効率的なエンティティ状態記録",
+      "サーバーサイド中心の設計"
+    ],
+    "dependencies": ["HasEntityRecordManager.java"],
+    "note": "新規実装。エンティティの状態を記録・管理する基盤システム。約53行の実装"
+  },
+  "util/HasEntityRecordManager.java": {
+    "desc": "EntityRecordManagerアクセス用インターフェース。Mixinでエンティティに実装される",
+    "importance": "medium",
+    "last_accessed": "2025-06-19",
+    "key_features": [
+      "actionArms$getEntityRecordManager()メソッド定義",
+      "Mixinパターンでの実装",
+      "エンティティ記録機能の注入"
+    ],
+    "dependencies": ["EntityRecordManager.java"],
+    "note": "新規実装。エンティティにエンティティ記録管理機能を注入。約6行のシンプルなインターフェース"
+  },
   "mixin/MixinPlayerEntity.java": {
     "desc": "PlayerEntityにAimManager機能を注入するMixin。全プレイヤーエンティティにエイム機能を追加",
     "importance": "high",
@@ -162,5 +187,44 @@
     ],
     "dependencies": ["AimManager.java", "HasAimManager.java", "IAimManager.java"],
     "note": "約27行の実装。全プレイヤーエンティティにエイム機能を注入。actionarms-common.mixins.jsonに登録済み"
+  },
+  "mixin/MixinPlayerEntityRenderer.java": {
+    "desc": "PlayerEntityRendererの描画処理を拡張するMixin。プレイヤーレンダリングのカスタマイズを提供",
+    "importance": "medium",
+    "last_accessed": "2025-06-19",
+    "key_features": [
+      "PlayerEntityRendererをターゲットとしたMixin",
+      "プレイヤー描画処理の拡張",
+      "レンダリングカスタマイズ機能",
+      "クライアントサイド描画対応"
+    ],
+    "dependencies": [],
+    "note": "新規実装。プレイヤーエンティティの描画処理を拡張。約38行の実装"
+  },
+  "mixin/MixinServerWorld.java": {
+    "desc": "ServerWorldクラスのエンティティ処理を拡張するMixin。サーバーワールドでのエンティティ管理強化",
+    "importance": "medium",
+    "last_accessed": "2025-06-19",
+    "key_features": [
+      "ServerWorldをターゲットとしたMixin",
+      "エンティティ処理の拡張",
+      "サーバーサイドワールド管理",
+      "エンティティ記録システム連携"
+    ],
+    "dependencies": ["ServerWorldInvoker.java"],
+    "note": "新規実装。サーバーワールドでのエンティティ処理を拡張。約37行の実装"
+  },
+  "mixin/ServerWorldInvoker.java": {
+    "desc": "ServerWorldの内部メソッドにアクセスするためのMixin Invoker。プライベートメソッドの呼び出しを可能にする",
+    "importance": "low",
+    "last_accessed": "2025-06-19",
+    "key_features": [
+      "ServerWorldの内部メソッドアクセス",
+      "@Invokerアノテーションの使用",
+      "プライベートメソッド呼び出し",
+      "Mixin Invokerパターン"
+    ],
+    "dependencies": [],
+    "note": "新規実装。ServerWorldの内部メソッドにアクセスするためのヘルパー。約15行の実装"
   }
 }
