@@ -1,12 +1,17 @@
 package net.sistr.actionarms.item;
 
+import net.minecraft.client.item.TooltipContext;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.ToolMaterials;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
+import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.random.Random;
 import net.minecraft.world.World;
@@ -18,6 +23,7 @@ import net.sistr.actionarms.item.component.*;
 import net.sistr.actionarms.item.component.registry.GunComponentTypes;
 import net.sistr.actionarms.network.RecoilPacket;
 import net.sistr.actionarms.setup.Registration;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,6 +37,49 @@ public class LeverActionGunItem extends GunItem {
     public LeverActionGunItem(Settings settings, Supplier<LeverActionGunComponent> gunComponentSupplier) {
         super(settings);
         this.gunComponentSupplier = gunComponentSupplier;
+    }
+
+    // Item継承メソッド
+
+    @Override
+    public boolean canRepair(ItemStack stack, ItemStack ingredient) {
+        return ToolMaterials.IRON.getRepairIngredient().test(ingredient) || super.canRepair(stack, ingredient);
+    }
+
+    @Override
+    public int getEnchantability() {
+        return ToolMaterials.IRON.getEnchantability();
+    }
+
+    @Override
+    public void appendTooltip(ItemStack stack, @Nullable World world, List<Text> tooltip, TooltipContext context) {
+        var gunComponent = IItemComponent.query(getGunComponent(), stack, c -> c);
+        // 適合弾薬
+        tooltip.add(Text.translatable("item.actionarms.gun.loadable_ammo"));
+        tooltip.add(Text.translatable("item.actionarms.gun.loadable_ammo.list",
+                Text.translatable("item.actionarms.medium_caliber_bullet")).formatted(Formatting.GRAY));
+
+        // チャンバー状態
+        if (gunComponent.getChamber().canShoot()) {
+            tooltip.add(Text.translatable("item.actionarms.gun.chamber.loaded").formatted(Formatting.YELLOW));
+        } else if (!gunComponent.getChamber().isEmpty()) {
+            tooltip.add(Text.translatable("item.actionarms.gun.chamber.empty_caliber").formatted(Formatting.YELLOW));
+        } else {
+            tooltip.add(Text.translatable("item.actionarms.gun.chamber.empty").formatted(Formatting.GRAY));
+        }
+
+        // マガジン情報
+        var magazine = gunComponent.getMagazine();
+        int currentAmmo = magazine.getBullets().size();
+        int maxAmmo = magazine.getMaxCapacity();
+        tooltip.add(Text.translatable("item.actionarms.gun.magazine.ammo", currentAmmo, maxAmmo)
+                .formatted(currentAmmo > 0 ? Formatting.WHITE : Formatting.GRAY));
+
+
+        // デバッグ表示時
+        if (context.isAdvanced()) {
+            // デバッグ情報をツールチップに追加する
+        }
     }
 
     // 処理
@@ -80,8 +129,11 @@ public class LeverActionGunItem extends GunItem {
             currentSpread = gunData.aimSpreadAngle();
         }
 
+        boolean isUserFly = user instanceof PlayerEntity player && player.getAbilities().flying;
+
         // 移動状態による拡散増加
-        boolean isMoving = user.getVelocity().horizontalLengthSquared() > 0.01;
+        boolean isMoving = user.getVelocity().horizontalLengthSquared() > 0.01
+                || (!user.isOnGround() && isUserFly);
         if (isMoving) {
             currentSpread += gunData.movementSpreadIncrease();
         }
@@ -204,7 +256,7 @@ public class LeverActionGunItem extends GunItem {
             // そうでないなら無限
             List<BulletComponent> bullets = new ArrayList<>(count);
             for (int i = 0; i < count; i++) {
-                bullets.add(GunComponentTypes.MIDDLE_CALIBER.get());
+                bullets.add(GunComponentTypes.MEDIUM_CALIBER_BULLET.get());
             }
             return bullets;
         }

@@ -13,12 +13,12 @@ public record LeverActionHudState(MagazineContents magazineContents,
 
     public static LeverActionHudState of(LeverActionGunComponent component) {
         var list = component.getMagazine().getBullets().stream()
-                .map(bulletComponent -> "middle_caliber")
+                .map(bulletComponent -> "medium_caliber_bullet")
                 .toList();
         var chamberState = new ChamberState(false, null);
         if (component.getChamber().isInCartridge()) {
             if (component.getChamber().getCartridge().get().getBullet().isPresent()) {
-                chamberState = new ChamberState(true, "middle_caliber");
+                chamberState = new ChamberState(true, "medium_caliber_bullet");
             } else {
                 chamberState = new ChamberState(true, null);
             }

@@ -15,8 +15,6 @@ public class LeverActionGunComponent implements IItemComponent, FireTrigger, Cyc
     private float fireCoolTime;
     private float cycleCoolTime;
     private float reloadCoolTime;
-    private float cycleCancelableTime;
-    private float reloadCancelableTime;
 
     public LeverActionGunComponent(LeverActionGunDataType gunType, MagazineComponent magazine) {
         this.gunType = gunType;
@@ -79,6 +77,10 @@ public class LeverActionGunComponent implements IItemComponent, FireTrigger, Cyc
         animationContext.setAnimation("fire", 0);
         this.hammerReady = false;
         this.fireCoolTime = this.gunType.fireCoolLength();
+        if (this.cycling) {
+            this.cycling = false;
+            this.cycleTime = 0;
+        }
         return true;
     }
 
@@ -86,14 +88,16 @@ public class LeverActionGunComponent implements IItemComponent, FireTrigger, Cyc
     public boolean canTrigger() {
         return this.hammerReady
                 && !this.leverDown
+                && (!this.cycling || this.cycleTime <= this.gunType.cycleCancelableLength())
+                && (!this.reloading || this.reloadTime <= this.gunType.reloadCancelableLength())
                 && this.fireCoolTime == 0
-                && this.cycleCoolTime == 0;
+                && this.cycleCoolTime == 0
+                && this.reloadCoolTime == 0;
     }
 
     // CyclingLeverインターフェース実装
     private void cycleTick(LeverActionPlaySoundContext playSoundContext, CycleTickContext context, float timeDelta) {
         this.cycleTime = Math.max(0, this.cycleTime - timeDelta);
-        this.cycleCancelableTime = Math.max(0, this.cycleCancelableTime - timeDelta);
         // サイクルが節目を迎えたとき
         if (this.cycleTime == 0) {
             if (this.leverDown) {
@@ -124,7 +128,11 @@ public class LeverActionGunComponent implements IItemComponent, FireTrigger, Cyc
         if (!canCycle()) {
             return false;
         }
-        animationContext.setAnimation("cycle", this.leverDown ? this.gunType.leverDownLength() : 0);
+        if (this.chamber.isInCartridge()) {
+            animationContext.setAnimation("cycle", this.leverDown ? this.gunType.leverDownLength() : 0);
+        } else {
+            animationContext.setAnimation("cycle_empty", this.leverDown ? this.gunType.leverDownLength() : 0);
+        }
         playSoundContext.playSound(LeverActionPlaySoundContext.Sound.CYCLE);
         this.cycling = true;
         this.reloading = false;
@@ -133,7 +141,6 @@ public class LeverActionGunComponent implements IItemComponent, FireTrigger, Cyc
         } else {
             this.cycleTime = this.gunType.leverDownLength();
         }
-        this.cycleCancelableTime = this.gunType.cycleCancelableLength();
         return true;
     }
 
@@ -143,8 +150,7 @@ public class LeverActionGunComponent implements IItemComponent, FireTrigger, Cyc
                 && this.cycleCoolTime == 0
                 && this.reloadCoolTime == 0
                 && this.fireCoolTime == 0
-                && (!this.reloading || this.reloadCancelableTime > 0)
-                && (this.chamber.isInCartridge() || this.magazine.hasBullet());
+                && (!this.reloading || this.reloadTime <= this.gunType.reloadCancelableLength());
     }
 
     @Override
@@ -167,7 +173,6 @@ public class LeverActionGunComponent implements IItemComponent, FireTrigger, Cyc
     // Reloadableインターフェース実装
     private void reloadTick(LeverActionPlaySoundContext playSoundContext, ReloadTickContext context, float timeDelta) {
         this.reloadTime = Math.max(0, this.reloadTime - timeDelta);
-        this.reloadCancelableTime = Math.max(0, this.reloadCancelableTime - timeDelta);
         if (this.reloadTime == 0) {
             this.reloading = false;
             this.reloadCoolTime = this.gunType.reloadCoolLength();
@@ -202,15 +207,17 @@ public class LeverActionGunComponent implements IItemComponent, FireTrigger, Cyc
         this.reloading = true;
         this.cycling = false;
         this.reloadTime = this.gunType.reloadLength();
-        this.reloadCancelableTime = this.gunType.reloadCancelableLength();
         return true;
     }
 
     @Override
     public boolean canReload(ReloadStartContext context) {
         return !this.reloading
+                && this.cycleCoolTime == 0
                 && this.reloadCoolTime == 0
-                && (!this.cycling || this.cycleCancelableTime > 0)
+                && this.fireCoolTime == 0
+                // リロードはサイクルをキャンセルできない
+                && !this.cycling
                 && this.magazine.canAddBullet()
                 && context.hasBullet(this.magazine.getMagazineType().allowBullet());
     }
@@ -238,8 +245,6 @@ public class LeverActionGunComponent implements IItemComponent, FireTrigger, Cyc
         this.cycleTime = nbt.getFloat("cycleTime");
         this.reloadCoolTime = nbt.getFloat("reloadCoolTime");
         this.fireCoolTime = nbt.getFloat("fireCoolTime");
-        this.cycleCancelableTime = nbt.getFloat("cycleCancelableTime");
-        this.reloadCancelableTime = nbt.getFloat("reloadCancelableTime");
         this.cycleCoolTime = nbt.getFloat("cycleCoolTime");
         this.reloadTime = nbt.getFloat("reloadTime");
         this.chamber.read(nbt.getCompound("chamber"));
@@ -255,8 +260,6 @@ public class LeverActionGunComponent implements IItemComponent, FireTrigger, Cyc
         nbt.putFloat("cycleTime", this.cycleTime);
         nbt.putFloat("reloadCoolTime", this.reloadCoolTime);
         nbt.putFloat("fireCoolTime", this.fireCoolTime);
-        nbt.putFloat("cycleCancelableTime", this.cycleCancelableTime);
-        nbt.putFloat("reloadCancelableTime", this.reloadCancelableTime);
         nbt.putFloat("cycleCoolTime", this.cycleCoolTime);
         nbt.putFloat("reloadTime", this.reloadTime);
         var chamberNbt = new NbtCompound();
@@ -343,21 +346,5 @@ public class LeverActionGunComponent implements IItemComponent, FireTrigger, Cyc
 
     public void setReloadCoolTime(float reloadCoolTime) {
         this.reloadCoolTime = reloadCoolTime;
-    }
-
-    public float getCycleCancelableTime() {
-        return cycleCancelableTime;
-    }
-
-    public void setCycleCancelableTime(float cycleCancelableTime) {
-        this.cycleCancelableTime = cycleCancelableTime;
-    }
-
-    public float getReloadCancelableTime() {
-        return reloadCancelableTime;
-    }
-
-    public void setReloadCancelableTime(float reloadCancelableTime) {
-        this.reloadCancelableTime = reloadCancelableTime;
     }
 }

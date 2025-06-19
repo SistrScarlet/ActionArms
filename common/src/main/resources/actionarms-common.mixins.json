@@ -8,13 +8,16 @@
     "MixinClientPlayerEntity",
     "MixinHeldItemRenderer",
     "MixinInGameHud",
-    "MixinItemRenderer"
+    "MixinItemRenderer",
+    "MixinPlayerEntityRenderer"
   ],
   "mixins": [
     "DamageSourcesAccessor",
     "MixinItemStack",
     "MixinPlayerEntity",
-    "MixinServerPlayerEntity"
+    "MixinServerPlayerEntity",
+    "MixinServerWorld",
+    "ServerWorldInvoker"
   ],
   "injectors": {
     "defaultRequire": 1

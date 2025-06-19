@@ -1,7 +1,14 @@
 {
   "item.actionarms.m1873": "M1873",
-  "item.actionarms.middle_caliber_bullet": "中口径弾",
+  "item.actionarms.medium_caliber_bullet": "Medium Caliber Bullet",
 
-  "text.autoconfig.actionarms.option.key.aim.toggle": "トグルエイム",
-  "text.autoconfig.actionarms.option.key.aim.toggle.tooltip": "トグルエイムを有効にします。"
+  "item.actionarms.gun.loadable_ammo": "Loadable Ammo",
+  "item.actionarms.gun.loadable_ammo.list": " * %s",
+  "item.actionarms.gun.chamber.loaded": "Chamber: Loaded",
+  "item.actionarms.gun.chamber.empty_caliber": "Chamber: Empty Caliber",
+  "item.actionarms.gun.chamber.empty": "Chamber: Empty",
+  "item.actionarms.gun.magazine.ammo": "Magazine: %s / %s",
+
+  "text.autoconfig.actionarms.option.key.aimToggle": "トグルエイム",
+  "text.autoconfig.actionarms.option.key.aimToggle.@tooltip": "トグルエイムを有効にします。"
 }

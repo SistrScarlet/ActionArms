@@ -13,9 +13,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.ModifyArgs;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.invoke.arg.Args;
 
 @Mixin(HeldItemRenderer.class)
 public class MixinHeldItemRenderer {
@@ -42,7 +40,7 @@ public class MixinHeldItemRenderer {
             }
             equipProgress = 0;
             //matrices.translate(i * 0.56f, -0.52f + equipProgress * -0.6f, -0.72f);
-            matrices.translate(x * 0.56f, y * -0.52f, -0.72f);
+            matrices.translate(x * 0.56f, y * -(0.52f - 0.2f), -0.72f);
         }
     }
 
@@ -50,15 +48,6 @@ public class MixinHeldItemRenderer {
     private void onApplySwingOffset(MatrixStack matrices, Arm arm, float swingProgress, CallbackInfo ci) {
         if (actionArms$isHoldingGltfItem(arm)) {
             ci.cancel();
-        }
-    }
-
-    @ModifyArgs(method = "renderItem(FLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider$Immediate;Lnet/minecraft/client/network/ClientPlayerEntity;I)V",
-            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/item/HeldItemRenderer;renderFirstPersonItem(Lnet/minecraft/client/network/AbstractClientPlayerEntity;FFLnet/minecraft/util/Hand;FLnet/minecraft/item/ItemStack;FLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;I)V"))
-    private void modifySwingProgressArg(Args args) {
-        Hand hand = args.get(3);
-        if (actionArms$isHoldingGltfItem(hand)) {
-            args.set(4, 0f);
         }
     }
 

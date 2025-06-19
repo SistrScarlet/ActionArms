@@ -33,7 +33,7 @@ public class Cartridge {
     public void read(NbtCompound nbt) {
         if (nbt.contains("bullet")) {
             var bulletNbt = nbt.getCompound("bullet");
-            this.bullet = GunComponentTypes.MIDDLE_CALIBER.get();
+            this.bullet = GunComponentTypes.MEDIUM_CALIBER_BULLET.get();
             this.bullet.read(bulletNbt);
         }
     }

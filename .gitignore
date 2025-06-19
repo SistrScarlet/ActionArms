@@ -19,3 +19,5 @@ classes/
 *.launch
 /common/src/main/resources/assets/actionarms/sounds/item/gun/
 /fabric/mods_runtime/
+/.architectury-transformer/
+/scripts/

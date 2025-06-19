@@ -1,6 +1,0 @@
-{
-  "parent": "minecraft:item/generated",
-  "textures": {
-    "layer0": "actionarms:item/bullet/middle_caliber_bullet"
-  }
-}

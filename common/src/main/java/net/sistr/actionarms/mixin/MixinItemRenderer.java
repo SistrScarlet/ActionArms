@@ -3,7 +3,6 @@ package net.sistr.actionarms.mixin;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.item.ItemRenderer;
-import net.minecraft.client.render.model.BakedModel;
 import net.minecraft.client.render.model.json.ModelTransformationMode;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.LivingEntity;
@@ -78,6 +77,7 @@ public class MixinItemRenderer {
                     .overlay(overlay)
                     .addAnimationState(animationStates)
                     .fpv(isFPV)
+                    .entity(entity)
                     .build();
 
             // レンダラーの取得または作成
@@ -145,27 +145,6 @@ public class MixinItemRenderer {
                             id, state.seconds() + secondDelta, false));
                 });
         return states;
-    }
-
-    /**
-     * 通常描画（インベントリ、ドロップ等）
-     */
-    @Inject(
-            method = "renderItem(Lnet/minecraft/item/ItemStack;Lnet/minecraft/client/render/model/json/ModelTransformationMode;ZLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;IILnet/minecraft/client/render/model/BakedModel;)V",
-            at = @At("HEAD"),
-            cancellable = true
-    )
-    private void onRenderItemStandalone(
-            ItemStack stack,
-            ModelTransformationMode renderMode,
-            boolean leftHanded,
-            MatrixStack matrices,
-            VertexConsumerProvider vertexConsumers,
-            int light,
-            int overlay,
-            BakedModel model,
-            CallbackInfo ci) {
-        // 一旦何もしない
     }
 
     /**

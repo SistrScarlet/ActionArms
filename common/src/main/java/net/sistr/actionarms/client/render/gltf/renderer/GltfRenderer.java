@@ -1,5 +1,6 @@
 package net.sistr.actionarms.client.render.gltf.renderer;
 
+import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.render.VertexConsumerProvider;
@@ -44,7 +45,7 @@ public class GltfRenderer {
                               VertexConsumerProvider vertexConsumerProvider,
                               RenderingContext context) {
         for (ProcessedMesh mesh : model.meshes()) {
-            RenderLayer renderLayer = getRenderLayer(mesh, context);
+            RenderLayer renderLayer = getRenderLayer(context, mesh);
             VertexConsumer vertexConsumer = vertexConsumerProvider.getBuffer(renderLayer);
 
             // DirectProcessorで中間オブジェクトなしで直接描画
@@ -55,7 +56,7 @@ public class GltfRenderer {
     /**
      * レンダーレイヤーの決定
      */
-    private RenderLayer getRenderLayer(ProcessedMesh mesh, RenderingContext context) {
+    private RenderLayer getRenderLayer(RenderingContext context, ProcessedMesh mesh) {
         // 現在はデフォルトテクスチャを使用
         if (mesh.drawingMode() == DrawingMode.TRIANGLES) {
             var material = mesh.getMaterial();
@@ -63,7 +64,14 @@ public class GltfRenderer {
             if ("texture.png".equals(texture)) {
                 return GltfRenderLayer.getEntityCutoutTriangle(new Identifier(ActionArms.MOD_ID,
                         "textures/test/texture.png"));
+            } if ("bullet.png".equals(texture)) {
+                return GltfRenderLayer.getEntityCutoutTriangle(new Identifier(ActionArms.MOD_ID,
+                        "textures/test/bullet.png"));
             } else if ("skin_alex.png".equals(texture)) {
+                if (context.entity() != null && context.entity() instanceof AbstractClientPlayerEntity player) {
+                    var skinTexture = player.getSkinTexture();
+                    return GltfRenderLayer.getEntityTranslucentTriangle(skinTexture, true);
+                }
                 return GltfRenderLayer.getEntityTranslucentTriangle(new Identifier(ActionArms.MOD_ID,
                         "textures/test/skin_alex.png"), true);
             }

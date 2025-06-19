@@ -18,7 +18,7 @@ public class KeyRegisterCallbackImpl {
 
             @Override
             public boolean conflicts(IKeyConflictContext iKeyConflictContext) {
-                return false;
+                return true;
             }
         });
     }

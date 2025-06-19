@@ -19,7 +19,6 @@ public class ActionArms {
     private static ConfigHolder<AAConfig> CONFIG_HOLDER;
 
     public static void init() {
-        Registration.init();
         Networking.init();
         TickEvent.SERVER_LEVEL_POST.register(world -> {
             if (world.isClient) return;
@@ -33,6 +32,8 @@ public class ActionArms {
     }
 
     public static void preInit() {
+        Registration.init();
+
         AutoConfig.register(AAConfig.class, Toml4jConfigSerializer::new);
         CONFIG_HOLDER = AutoConfig.getConfigHolder(AAConfig.class);
     }

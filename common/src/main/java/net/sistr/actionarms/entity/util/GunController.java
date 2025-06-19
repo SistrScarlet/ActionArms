@@ -33,7 +33,7 @@ public class GunController {
         var stacks = itemsSupplier.get();
         for (ItemStack stack : stacks) {
             if (!(stack.getItem() instanceof LeverActionGunItem leverAction)) {
-                return;
+                continue;
             }
             ItemUniqueManager.INSTANCE.uniqueCheck(user.getWorld(), stack);
             tickGunComponent(stack, leverAction, stack == main);
@@ -68,7 +68,7 @@ public class GunController {
             }
 
             // FIREキー（射撃操作）
-            if (keyInputManager.isTurnPress(KeyInputManager.Key.FIRE)) {
+            if (keyInputManager.isTurnPressWithin(KeyInputManager.Key.FIRE, 2)) {
                 if (gunComponent.canTrigger()) {
                     var fireStartContext = leverAction.createFireStartContext(user.getWorld(), user);
                     if (gunComponent.trigger(playSoundContext, animationContext, fireStartContext)) {
@@ -76,27 +76,30 @@ public class GunController {
                                 && !serverPlayer.isCreative()) {
                             stack.damage(1, serverPlayer.getRandom(), serverPlayer);
                         }
+                        keyInputManager.killTurnPressWithin(KeyInputManager.Key.FIRE, 2);
                         markDuty = true;
                     }
                 }
             }
 
             // COCKキー（サイクル操作）
-            if (keyInputManager.isTurnPress(KeyInputManager.Key.COCK)) {
+            if (keyInputManager.isTurnPressWithin(KeyInputManager.Key.COCK, 4)) {
                 if (gunComponent.canCycle()) {
                     if (gunComponent.cycle(playSoundContext, animationContext)) {
+                        keyInputManager.killTurnPressWithin(KeyInputManager.Key.COCK, 4);
                         markDuty = true;
                     }
                 }
             }
 
             // RELOADキー（リロード操作）
-            if (keyInputManager.isTurnPress(KeyInputManager.Key.RELOAD)) {
+            if (keyInputManager.isTurnPressWithin(KeyInputManager.Key.RELOAD ,2)) {
                 var isAiming = user instanceof HasAimManager hasAimManager
                         && hasAimManager.actionArms$getAimManager().isAiming();
                 Reloadable.ReloadStartContext reloadContext = leverAction.createReloadStartContext(user);
                 if (!isAiming && gunComponent.canReload(reloadContext)) {
                     if (gunComponent.reload(playSoundContext, animationContext, reloadContext)) {
+                        keyInputManager.killTurnPressWithin(KeyInputManager.Key.RELOAD, 2);
                         markDuty = true;
                     }
                 }

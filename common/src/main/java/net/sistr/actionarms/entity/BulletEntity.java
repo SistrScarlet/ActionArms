@@ -3,7 +3,6 @@ package net.sistr.actionarms.entity;
 import net.minecraft.entity.*;
 import net.minecraft.entity.boss.dragon.EnderDragonPart;
 import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.entity.projectile.ProjectileUtil;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -16,6 +15,8 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.RaycastContext;
 import net.minecraft.world.World;
+import net.sistr.actionarms.entity.util.EntityRecordManager;
+import net.sistr.actionarms.entity.util.HasEntityRecordManager;
 import net.sistr.actionarms.hud.BulletHitHudState;
 import net.sistr.actionarms.item.component.BulletComponent;
 import net.sistr.actionarms.item.component.registry.GunComponentTypes;
@@ -25,13 +26,14 @@ import net.sistr.actionarms.setup.Registration;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.UUID;
+import java.util.function.Predicate;
 
 public class BulletEntity extends Entity implements Ownable {
     @Nullable
     private UUID ownerId;
     @Nullable
     private Entity owner;
-    private BulletComponent bulletComponent = GunComponentTypes.MIDDLE_CALIBER.get();
+    private BulletComponent bulletComponent = GunComponentTypes.MEDIUM_CALIBER_BULLET.get();
     private int decay = 40;
 
     public BulletEntity(EntityType<? extends BulletEntity> type, World world) {
@@ -127,13 +129,75 @@ public class BulletEntity extends Entity implements Ownable {
         // 最初にブロックとの当たり判定をチェックする
         var bResult = this.getWorld().raycast(new RaycastContext(start, end, RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, this));
         if (bResult.getType() != HitResult.Type.MISS) {
-            start = bResult.getPos();
+            end = bResult.getPos();
         }
-        var eResult = ProjectileUtil.getEntityCollision(this.getWorld(), this, start, end,
-                this.getBoundingBox().stretch(this.getVelocity()).expand(1.0),
+        var eResult = getEntityCollision(this.getWorld(), this, start, end,
+                this.getBoundingBox().stretch(this.getVelocity()).expand(4.0),
                 this::canHit,
-                0.0f);
+                0.01f);
         return eResult != null ? eResult : bResult;
+    }
+
+    // EntityRecordベースの連続衝突判定
+    private static @Nullable ExtendEntityHitResult getEntityCollision(World world, Entity projectile, Vec3d start, Vec3d end,
+                                                                      Box hittableBox, Predicate<Entity> predicate, float size) {
+        if (!(world instanceof ServerWorld)) {
+            return null;
+        }
+        double nearestTime = Double.MAX_VALUE;
+        Entity nearestEntity = null;
+        for (Entity entity : world.getOtherEntities(projectile, hittableBox, predicate)) {
+            // ターゲットのボックスと速度を取得する
+            // HasEntityRecordManagerはServerWorldだけが実装しているため注意
+            var entityRecordManager = ((HasEntityRecordManager) world).actionArms$getEntityRecordManager();
+
+            // 過去の状態を取得して、クライアント/サーバーラグを補償する
+            EntityRecordManager.EntityRecord oldRecord;
+            EntityRecordManager.EntityRecord newRecord;
+
+            var olderTick = entityRecordManager.getRecord(entity.getUuid(), 5);
+            var oldTick = entityRecordManager.getRecord(entity.getUuid(), 4);
+
+            if (olderTick.isPresent() && oldTick.isPresent()) {
+                // 理想的なケース：5tick前と4tick前のデータが両方存在
+                oldRecord = olderTick.get();
+                newRecord = oldTick.get();
+            } else if (oldTick.isPresent()) {
+                // 5tick前のデータがない場合：4tick前 → 現在の速度を計算
+                oldRecord = oldTick.get();
+                newRecord = new EntityRecordManager.EntityRecord(
+                        entity.getUuid(),
+                        entity.getPos(),
+                        entity.getBoundingBox(),
+                        entity.getEyePos()
+                );
+            } else {
+                // どちらもない場合：速度は0として扱う
+                oldRecord = new EntityRecordManager.EntityRecord(
+                        entity.getUuid(),
+                        entity.getPos(),
+                        entity.getBoundingBox(),
+                        entity.getEyePos()
+                );
+                newRecord = oldRecord;
+            }
+
+            var entityVelocity = newRecord.pos().subtract(oldRecord.pos());
+            var entityBox = oldRecord.boundingBox();
+            var result = BulletEntity.CollisionDetector.detectCollision(start, size,
+                    end.subtract(start),
+                    entityBox, entityVelocity);
+            // ヒットして、なおかつ最も近いなら更新
+            if (result.isCollisionCurrentTick()
+                    && result.collisionTime() < nearestTime) {
+                nearestEntity = entity;
+                nearestTime = result.collisionTime();
+            }
+        }
+        if (nearestEntity == null) {
+            return null;
+        }
+        return new ExtendEntityHitResult(nearestEntity, nearestTime);
     }
 
     private boolean canHit(Entity entity) {
@@ -148,7 +212,7 @@ public class BulletEntity extends Entity implements Ownable {
     private void hit(HitResult result) {
         boolean hit = false;
         if (result.getType() == HitResult.Type.ENTITY) {
-            hit = entityHit((EntityHitResult) result);
+            hit = entityHit((ExtendEntityHitResult) result);
         } else if (result.getType() == HitResult.Type.BLOCK) {
             hit = blockHit((BlockHitResult) result);
         }
@@ -168,16 +232,21 @@ public class BulletEntity extends Entity implements Ownable {
         }
     }
 
-    private boolean entityHit(EntityHitResult result) {
+    private boolean entityHit(ExtendEntityHitResult result) {
         var hitTarget = result.getEntity();
         var data = this.bulletComponent.getBulletDataType();
-        float damage = isHeadshot(result) ? data.headshotDamage() : data.damage();
+        boolean isHeadshot = isHeadshot(result);
+        float damage = isHeadshot ? data.headshotDamage() : data.damage();
 
         if (hitTarget.damage(createDamageSource(), damage)) {
             var owner = getOwner();
             if (owner instanceof ServerPlayerEntity player) {
                 boolean kill = !hitTarget.isAlive();
-                HudStatePacket.sendS2C(player, "bullet_hit", BulletHitHudState.of(kill).write());
+                var state = BulletHitHudState.State.of(kill, isHeadshot);
+                HudStatePacket.sendS2C(player,
+                        "bullet_hit",
+                        BulletHitHudState.of(state).write()
+                );
             }
 
             return true;
@@ -186,10 +255,47 @@ public class BulletEntity extends Entity implements Ownable {
         return false;
     }
 
-    // todo:各モブでのヘッドショット判定の確認
-    private boolean isHeadshot(EntityHitResult result) {
+    private boolean isHeadshot(ExtendEntityHitResult result) {
         var hitTarget = result.getEntity();
-        var hitTargetBox = hitTarget.getBoundingBox();
+        if (!(this.getWorld() instanceof ServerWorld)) {
+            return false;
+        }
+
+        var entityRecordManager = ((HasEntityRecordManager) this.getWorld()).actionArms$getEntityRecordManager();
+        var olderTick = entityRecordManager.getRecord(hitTarget.getUuid(), 5);
+        var oldTick = entityRecordManager.getRecord(hitTarget.getUuid(), 4);
+
+        EntityRecordManager.EntityRecord record;
+        if (olderTick.isPresent() && oldTick.isPresent()) {
+            // Linear interpolation between older and old records using hitTime
+            double t = result.getHitTime();
+            var older = olderTick.get();
+            var old = oldTick.get();
+
+            var pos = older.pos().lerp(old.pos(), t);
+            var box = new Box(
+                    lerp(older.boundingBox().minX, old.boundingBox().minX, t),
+                    lerp(older.boundingBox().minY, old.boundingBox().minY, t),
+                    lerp(older.boundingBox().minZ, old.boundingBox().minZ, t),
+                    lerp(older.boundingBox().maxX, old.boundingBox().maxX, t),
+                    lerp(older.boundingBox().maxY, old.boundingBox().maxY, t),
+                    lerp(older.boundingBox().maxZ, old.boundingBox().maxZ, t)
+            );
+            var eyePos = older.eyePos().lerp(old.eyePos(), t);
+
+            record = new EntityRecordManager.EntityRecord(hitTarget.getUuid(), pos, box, eyePos);
+        } else if (oldTick.isPresent()) {
+            record = oldTick.get();
+        } else {
+            record = new EntityRecordManager.EntityRecord(
+                    hitTarget.getUuid(),
+                    hitTarget.getPos(),
+                    hitTarget.getBoundingBox(),
+                    hitTarget.getEyePos()
+            );
+        }
+
+        var hitTargetBox = record.boundingBox();
         double targetWidth = hitTargetBox.maxX - hitTargetBox.minX;
         double targetHeight = hitTargetBox.maxY - hitTargetBox.minY;
         // 身長1以下は全身ヘッドショット判定
@@ -206,7 +312,7 @@ public class BulletEntity extends Entity implements Ownable {
                 weakBoxSize = 1 + (weakBoxSize - 1) * 0.5;
             }
             weakBoxSize *= 0.8;
-            Vec3d eyePos = hitTarget.getEyePos();
+            Vec3d eyePos = record.eyePos();
             var weakBox = Box.of(eyePos, weakBoxSize, weakBoxSize, weakBoxSize);
             var start = this.getPos();
             var end = start.add(this.getVelocity().multiply(2));
@@ -219,7 +325,7 @@ public class BulletEntity extends Entity implements Ownable {
 
     private DamageSource createDamageSource() {
         var damageSources = this.getDamageSources();
-        var registry = ((DamageSourcesAccessor)damageSources).getRegistry();
+        var registry = ((DamageSourcesAccessor) damageSources).getRegistry();
         return new DamageSource(registry.entryOf(Registration.BULLET_DAMAGE_TYPE),
                 this, this.getOwner());
     }
@@ -248,6 +354,10 @@ public class BulletEntity extends Entity implements Ownable {
         this.setVelocity(velocity);
     }
 
+    @Override
+    public boolean isAttackable() {
+        return false;
+    }
 
     @Override
     public @Nullable Entity getOwner() {
@@ -259,5 +369,105 @@ public class BulletEntity extends Entity implements Ownable {
             return this.owner;
         }
         return null;
+    }
+
+    public record CollisionResult(boolean hasCollision, double collisionTime) {
+        public static final CollisionResult NONE = new CollisionResult(false, -1);
+
+        public boolean isCollisionCurrentTick() {
+            return hasCollision && collisionTime() <= 1;
+        }
+    }
+
+    private static double lerp(double start, double end, double t) {
+        return start + (end - start) * t;
+    }
+
+    public static class CollisionDetector {
+        private static final double EPSILON = 1.0e-9;
+
+        /**
+         * 球体とAABBの連続衝突検出
+         *
+         * @param sp          球体座標
+         * @param size        球体サイズ
+         * @param spVelocity  球体の速度
+         * @param box         AABB
+         * @param boxVelocity AABBの速度
+         * @return 衝突結果（衝突の有無と衝突時間）
+         */
+        public static CollisionResult detectCollision(Vec3d sp, double size, Vec3d spVelocity,
+                                                      Box box, Vec3d boxVelocity) {
+            // 相対速度を計算（球がAABBに対してどう動くかを計算）
+            Vec3d relVel = spVelocity.subtract(boxVelocity);
+
+
+            // 球の半径分だけAABBを拡張
+            box = box.expand(size);
+
+            // 各軸での衝突時間区間を計算
+            double[] xInterval = calculateAxisInterval(sp.x, relVel.getX(), box.minX, box.maxX);
+            double[] yInterval = calculateAxisInterval(sp.y, relVel.getY(), box.minY, box.maxY);
+            double[] zInterval = calculateAxisInterval(sp.z, relVel.getZ(), box.minZ, box.maxZ);
+
+            if (xInterval == null || yInterval == null || zInterval == null) {
+                return CollisionResult.NONE;
+            }
+
+            // 3軸の時間区間の交集合を計算
+            double tEnter = Math.max(Math.max(xInterval[0], yInterval[0]), zInterval[0]);
+            double tExit = Math.min(Math.min(xInterval[1], yInterval[1]), zInterval[1]);
+
+            // 交集合が存在し、かつ未来の時間であれば衝突
+            boolean hasCollision = tEnter <= tExit && tExit >= 0;
+            if (!hasCollision) return CollisionResult.NONE;
+
+            double collisionTime = Math.max(0, tEnter);
+
+            return new CollisionResult(true, collisionTime);
+        }
+
+        /**
+         * 1軸での衝突時間区間を計算
+         *
+         * @param pos 球の中心位置（該当軸）
+         * @param vel 相対速度（該当軸）
+         * @param min 拡張されたAABBの最小値
+         * @param max 拡張されたAABBの最大値
+         * @return 時間区間 [tEnter, tExit]、衝突しない場合はnull
+         */
+        private static double @Nullable [] calculateAxisInterval(double pos, double vel, double min, double max) {
+            // 既に範囲内にいる場合は常に衝突
+            if (min <= pos && pos <= max) {
+                return new double[]{0, Double.POSITIVE_INFINITY};
+            }
+            // 範囲外かつ速度0なら永続的に衝突しない
+            if (Math.abs(vel) < EPSILON) {
+                return null;
+            }
+
+            // 速度がある場合の時間計算
+            double t1 = (min - pos) / vel;
+            double t2 = (max - pos) / vel;
+
+            // 時間の順序を正しくする
+            double tEnter = Math.min(t1, t2);
+            double tExit = Math.max(t1, t2);
+
+            return new double[]{tEnter, tExit};
+        }
+    }
+
+    public static class ExtendEntityHitResult extends EntityHitResult {
+        private final double hitTime;
+
+        public ExtendEntityHitResult(Entity entity, double hitTime) {
+            super(entity);
+            this.hitTime = hitTime;
+        }
+
+        public double getHitTime() {
+            return hitTime;
+        }
     }
 }

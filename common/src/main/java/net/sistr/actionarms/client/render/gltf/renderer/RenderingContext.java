@@ -1,5 +1,6 @@
 package net.sistr.actionarms.client.render.gltf.renderer;
 
+import net.minecraft.entity.Entity;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -14,7 +15,8 @@ public record RenderingContext(
         int light,
         int overlay,
         boolean fpv,
-        AnimationState[] animations) {
+        AnimationState[] animations,
+        @Nullable Entity entity) {
 
     public static Builder builder() {
         return new Builder();
@@ -26,6 +28,7 @@ public record RenderingContext(
         private int overlay;
         private boolean isFPV;
         private final List<AnimationState> animations = new ArrayList<>();
+        @Nullable Entity entity;
 
         public Builder tickDelta(float tickDelta) {
             this.tickDelta = tickDelta;
@@ -61,13 +64,19 @@ public record RenderingContext(
             return this;
         }
 
+        public Builder entity(@Nullable Entity entity) {
+            this.entity = entity;
+            return this;
+        }
+
         public RenderingContext build() {
             return new RenderingContext(
                     tickDelta,
                     light,
                     overlay,
                     isFPV,
-                    animations.toArray(new AnimationState[0])
+                    animations.toArray(new AnimationState[0]),
+                    entity
             );
         }
     }

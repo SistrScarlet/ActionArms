@@ -6,6 +6,7 @@ import net.minecraft.entity.EntityType;
 import net.minecraft.entity.SpawnGroup;
 import net.minecraft.entity.damage.DamageType;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemGroups;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.sound.SoundEvent;
@@ -27,14 +28,19 @@ public class Registration {
         SOUND_EVENTS.register();
     }
 
-    public static final RegistrySupplier<BulletItem> MIDDLE_CALIBER_BULLET = ITEMS.register(
-            "middle_caliber_bullet", () -> new BulletItem(new Item.Settings(), GunComponentTypes.MIDDLE_CALIBER)
+    public static final RegistrySupplier<BulletItem> MEDIUM_CALIBER_BULLET = ITEMS.register(
+            "medium_caliber_bullet", () -> new BulletItem(
+                    new Item.Settings()
+                            .arch$tab(ItemGroups.COMBAT),
+                    GunComponentTypes.MEDIUM_CALIBER_BULLET)
     );
 
     public static final RegistrySupplier<Item> M1873 = ITEMS.register(
             "m1873",
             () -> new LeverActionGunItem(
-                    new Item.Settings().maxDamage(256),
+                    new Item.Settings()
+                            .maxDamage(256)
+                            .arch$tab(ItemGroups.COMBAT),
                     GunComponentTypes.M1873
             )
     );

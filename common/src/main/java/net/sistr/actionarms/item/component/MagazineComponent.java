@@ -151,7 +151,7 @@ public class MagazineComponent implements IItemComponent {
         var bulletList = nbt.getList("Bullets", 10);
         for (int i = 0; i < bulletList.size(); i++) {
             var bulletNbt = bulletList.getCompound(i);
-            var bullet = GunComponentTypes.MIDDLE_CALIBER.get();
+            var bullet = GunComponentTypes.MEDIUM_CALIBER_BULLET.get();
             bullet.read(bulletNbt);
             this.bullets.add(bullet);
         }

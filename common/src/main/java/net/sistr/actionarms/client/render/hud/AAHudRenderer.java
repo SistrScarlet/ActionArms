@@ -18,13 +18,16 @@ import java.util.Optional;
 
 public class AAHudRenderer {
     public static final AAHudRenderer INSTANCE = new AAHudRenderer();
-    private static final Identifier MIDDLE_CALIBER_BULLET
-            = new Identifier("actionarms", "textures/item/bullet/middle_caliber_bullet.png");
-    private static final Identifier MIDDLE_CALIBER_BULLET_FRAME
-            = new Identifier("actionarms", "textures/item/bullet/middle_caliber_bullet_frame.png");
+    private static final Identifier MEDIUM_CALIBER_BULLET
+            = new Identifier("actionarms", "textures/item/bullet/medium_caliber_bullet.png");
+    private static final Identifier MEDIUM_CALIBER_BULLET_FRAME
+            = new Identifier("actionarms", "textures/item/bullet/medium_caliber_bullet_frame.png");
 
     public void render(DrawContext drawContext, float tickDelta) {
         var client = MinecraftClient.getInstance();
+        if (client.gameRenderer.getCamera().isThirdPerson()) {
+            return;
+        }
         var player = client.player;
         if (player == null) {
             return;
@@ -67,9 +70,9 @@ public class AAHudRenderer {
         // 薬室描画（上部）
         Identifier chamber;
         if (loaded) {
-            chamber = MIDDLE_CALIBER_BULLET;
+            chamber = MEDIUM_CALIBER_BULLET;
         } else {
-            chamber = MIDDLE_CALIBER_BULLET_FRAME;
+            chamber = MEDIUM_CALIBER_BULLET_FRAME;
         }
 
         drawContext.drawTexture(chamber, baseX, baseY, 0, 0, size, size, size, size);
@@ -80,9 +83,9 @@ public class AAHudRenderer {
         for (int i = 0; i < maxMagazineBullets; i++) {
             Identifier texture;
             if (i < bullets.size()) {
-                texture = MIDDLE_CALIBER_BULLET;
+                texture = MEDIUM_CALIBER_BULLET;
             } else {
-                texture = MIDDLE_CALIBER_BULLET_FRAME;
+                texture = MEDIUM_CALIBER_BULLET_FRAME;
             }
             drawContext.drawTexture(texture, baseX, baseY + yOffset, 0, 0, size, size, size, size);
             yOffset += size;
@@ -137,7 +140,7 @@ public class AAHudRenderer {
         int color = bulletHitState
                 .filter(state -> state.getLastUpdateTime() < client.world.getTime())
                 .map(state -> BulletHitHudState.of(state.getNbt()))
-                .map(state -> state.kill() ? 0xFFFF0000 : 0xFF00FF00) // キル：赤, ヒット：緑
+                .map(state -> state.state().color())
                 .orElse(0xFFFFFFFF); // 何も無ければ白
 
 

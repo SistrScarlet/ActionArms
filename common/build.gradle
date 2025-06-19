@@ -25,8 +25,8 @@ dependencies {
 
     // jglTF for glTF model loading
     //noinspection VulnerableLibrariesLocal
-    implementation "de.javagl:jgltf-model:${rootProject.jgltf_version}"
-    implementation "de.javagl:jgltf-impl-v2:${rootProject.jgltf_version}"
+    compileOnly("de.javagl:jgltf-model:${rootProject.jgltf_version}")
+    compileOnly("de.javagl:jgltf-impl-v2:${rootProject.jgltf_version}")
 }
 
 publishing {
