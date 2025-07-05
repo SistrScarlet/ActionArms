@@ -1,4 +1,4 @@
-package net.sistr.actionarms.client.render.gltf;
+package net.sistr.actionarms.client.render.gltf.manager;
 
 import net.minecraft.item.ItemStack;
 import net.sistr.actionarms.item.component.UniqueComponent;

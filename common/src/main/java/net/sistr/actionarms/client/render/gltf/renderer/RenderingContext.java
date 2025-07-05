@@ -14,9 +14,10 @@ public record RenderingContext(
         float tickDelta,
         int light,
         int overlay,
-        boolean fpv,
         AnimationState[] animations,
-        @Nullable Entity entity) {
+        @Nullable Entity entity,
+        List<String> hideBones  // 隠蔽対象ボーン名のリスト
+) {
 
     public static Builder builder() {
         return new Builder();
@@ -26,9 +27,9 @@ public record RenderingContext(
         private float tickDelta;
         private int light;
         private int overlay;
-        private boolean isFPV;
         private final List<AnimationState> animations = new ArrayList<>();
         @Nullable Entity entity;
+        private final List<String> hideBones = new ArrayList<>();  // 隠蔽対象ボーン名のリスト
 
         public Builder tickDelta(float tickDelta) {
             this.tickDelta = tickDelta;
@@ -42,11 +43,6 @@ public record RenderingContext(
 
         public Builder overlay(int overlay) {
             this.overlay = overlay;
-            return this;
-        }
-
-        public Builder fpv(boolean fpv) {
-            this.isFPV = fpv;
             return this;
         }
 
@@ -69,14 +65,25 @@ public record RenderingContext(
             return this;
         }
 
+        public Builder hideBones(List<String> hideBones) {
+            this.hideBones.clear();
+            this.hideBones.addAll(hideBones);
+            return this;
+        }
+
+        public Builder addHideBones(List<String> hideBones) {
+            this.hideBones.addAll(hideBones);
+            return this;
+        }
+
         public RenderingContext build() {
             return new RenderingContext(
                     tickDelta,
                     light,
                     overlay,
-                    isFPV,
                     animations.toArray(new AnimationState[0]),
-                    entity
+                    entity,
+                    List.copyOf(hideBones)
             );
         }
     }

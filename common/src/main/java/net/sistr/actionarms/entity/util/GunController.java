@@ -93,7 +93,7 @@ public class GunController {
             }
 
             // RELOADキー（リロード操作）
-            if (keyInputManager.isTurnPressWithin(KeyInputManager.Key.RELOAD ,2)) {
+            if (keyInputManager.isTurnPressWithin(KeyInputManager.Key.RELOAD, 2)) {
                 var isAiming = user instanceof HasAimManager hasAimManager
                         && hasAimManager.actionArms$getAimManager().isAiming();
                 Reloadable.ReloadStartContext reloadContext = leverAction.createReloadStartContext(user);

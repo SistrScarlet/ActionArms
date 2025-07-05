@@ -1,9 +1,8 @@
-package net.sistr.actionarms.client.render.gltf.processor;
+package net.sistr.actionarms.client.render.gltf.renderer;
 
 import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.util.math.MatrixStack;
 import net.sistr.actionarms.client.render.gltf.data.*;
-import net.sistr.actionarms.client.render.gltf.renderer.RenderingContext;
 import net.sistr.actionarms.client.render.gltf.util.GltfMemoryPool;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
@@ -17,18 +16,16 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * 描画を行うプロセッサ
- * メモリプールを活用して効率的な描画を実現
+ * メッシュ描画を行うレンダラ
  */
-public class DirectProcessor {
+public class GltfMeshRenderer {
 
     /**
-     * メッシュを直接描画
-     * アニメーション計算→ボーン行列計算→頂点計算→描画を一気に実行
+     * メッシュを描画
      */
-    public void renderMeshDirect(ProcessedMesh mesh, RenderingContext context,
-                                 ProcessedGltfModel model, MatrixStack matrixStack,
-                                 VertexConsumer vertexConsumer) {
+    public void renderMesh(ProcessedMesh mesh, RenderingContext context,
+                           ProcessedGltfModel model, MatrixStack matrixStack,
+                           VertexConsumer vertexConsumer) {
 
         if (!mesh.hasPositions()) {
             return;
@@ -48,7 +45,7 @@ public class DirectProcessor {
         try {
             // ボーン行列を直接計算
             if (boneMatrices != null && context.animations().length > 0) {
-                computeBoneMatricesDirect(context, skin, model, boneMatrices);
+                computeBoneMatrices(context, skin, model, boneMatrices);
             }
 
             // TODO: モーフターゲット重み計算（現在は空配列）
@@ -60,7 +57,7 @@ public class DirectProcessor {
 
             int[] indices = mesh.getIndices();
             for (int vertexIndex : indices) {
-                renderVertexDirect(mesh, vertexIndex, boneMatrices, morphWeights,
+                renderVertex(mesh, vertexIndex, boneMatrices, morphWeights,
                         matrixStack, vertexConsumer, context);
             }
 
@@ -73,10 +70,10 @@ public class DirectProcessor {
     }
 
     /**
-     * ボーン行列を直接計算
+     * ボーン行列を計算
      */
-    private void computeBoneMatricesDirect(RenderingContext context, ProcessedSkin skin,
-                                           ProcessedGltfModel model, Matrix4f[] boneMatrices) {
+    private void computeBoneMatrices(RenderingContext context, ProcessedSkin skin,
+                                     ProcessedGltfModel model, Matrix4f[] boneMatrices) {
         var bones = skin.bones();
         int stride = 3 + 4 + 3; // translation + rotation + scale
 
@@ -86,12 +83,10 @@ public class DirectProcessor {
 
         try {
             // アニメーションデータ計算
-            computeAnimationDataDirect(context, skin, model, animationData);
+            computeAnimationData(context, skin, model, animationData);
 
-            // fpvボーンの非表示化 (非FPV時)
-            if (!context.fpv()) {
-                hideFPVBones(context, skin, model, animationData);
-            }
+            // hide_contextsによるボーン非表示化
+            applyHideBones(context, skin, animationData);
 
             // ローカル変換行列を計算
             for (int i = 0; i < bones.size(); i++) {
@@ -136,10 +131,10 @@ public class DirectProcessor {
     }
 
     /**
-     * アニメーションデータを直接計算
+     * アニメーションデータを計算
      */
-    private void computeAnimationDataDirect(RenderingContext context, ProcessedSkin skin,
-                                            ProcessedGltfModel model, float[] animationData) {
+    private void computeAnimationData(RenderingContext context, ProcessedSkin skin,
+                                      ProcessedGltfModel model, float[] animationData) {
         // コンテキストのアニメーション名からアニメーションを取得
         var animations = Arrays.stream(context.animations())
                 .map(state -> model.getAnimation(state.name())
@@ -212,18 +207,28 @@ public class DirectProcessor {
         }
     }
 
-    private void hideFPVBones(RenderingContext context, ProcessedSkin skin,
-                              ProcessedGltfModel model, float[] animationData) {
+    /**
+     * hide_contextsによるボーン非表示化
+     * RenderingContextのhiddenBonesリストに含まれるボーンを非表示にする
+     */
+    private void applyHideBones(RenderingContext context, ProcessedSkin skin, float[] animationData) {
+        if (context.hideBones().isEmpty()) {
+            return;
+        }
+
         var bones = skin.bones();
+        var hideBoneNames = context.hideBones();
+
         for (int i = 0; i < bones.size(); i++) {
             var bone = bones.get(i);
             int stride = 3 + 4 + 3;
             int offset = i * stride;
 
-            if (bone.name().startsWith("fpv_")) {
-                animationData[offset + 7] = 0.0f;
-                animationData[offset + 8] = 0.0f;
-                animationData[offset + 9] = 0.0f;
+            // hideBonesリストに含まれるボーンをゼロスケールで非表示化
+            if (hideBoneNames.contains(bone.name())) {
+                animationData[offset + 7] = 0.0f;  // scale x
+                animationData[offset + 8] = 0.0f;  // scale y
+                animationData[offset + 9] = 0.0f;  // scale z
             }
         }
     }
@@ -260,9 +265,9 @@ public class DirectProcessor {
         }
     }
 
-    private void renderVertexDirect(ProcessedMesh mesh, int vertexIndex, Matrix4f @Nullable [] boneMatrices,
-                                    float @Nullable [] morphWeights, MatrixStack matrixStack,
-                                    VertexConsumer vertexConsumer, RenderingContext context) {
+    private void renderVertex(ProcessedMesh mesh, int vertexIndex, Matrix4f @Nullable [] boneMatrices,
+                              float @Nullable [] morphWeights, MatrixStack matrixStack,
+                              VertexConsumer vertexConsumer, RenderingContext context) {
 
         // 元データから直接読み取り（コピーなし）
         float[] basePositions = mesh.getPositions().getFloatDataReadOnly();

@@ -15,7 +15,7 @@ public record BulletHitHudState(State state) {
 
     public NbtCompound write() {
         var nbt = new NbtCompound();
-        nbt.putByte("state", (byte)this.state.ordinal());
+        nbt.putByte("state", (byte) this.state.ordinal());
         return nbt;
     }
 

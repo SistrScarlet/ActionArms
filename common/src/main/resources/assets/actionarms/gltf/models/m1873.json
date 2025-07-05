@@ -1,0 +1,17 @@
+{
+  "model": "actionarms:models/gltf/gun/m1873.glb",
+  "scene_index": 0,
+  "hide_bone_keys": {
+    "fpv": ["right_hand_alex", "left_hand_alex"]
+  },
+  "texture_settings": {
+    "texture_map": {
+      "skin_alex.png": "actionarms:textures/test/skin_alex.png",
+      "texture.png": "actionarms:textures/test/texture.png",
+      "bullet.png": "actionarms:textures/test/bullet.png"
+    },
+    "dynamic_textures": {
+      "skin_alex.png": "player_skin"
+    }
+  }
+}

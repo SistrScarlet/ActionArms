@@ -80,13 +80,13 @@ public interface IItemComponent {
      * コンポーネントを更新します（常に保存されます）。
      *
      * @param component コンポーネント
-     * @param nbt         対象のItemStackのnbt
-     * @param function    更新処理
-     * @param <T>         コンポーネントの型
+     * @param nbt       対象のItemStackのnbt
+     * @param function  更新処理
+     * @param <T>       コンポーネントの型
      */
     private static <T extends IItemComponent> void update(T component,
-                                                  NbtCompound nbt,
-                                                  Consumer<T> function) {
+                                                          NbtCompound nbt,
+                                                          Consumer<T> function) {
         component.read(nbt);
         function.accept(component);
         component.write(nbt);

@@ -1,4 +1,4 @@
-package net.sistr.actionarms.client.render.gltf;
+package net.sistr.actionarms.client.render.gltf.manager;
 
 import com.google.common.collect.ImmutableMap;
 import de.javagl.jgltf.model.GltfModel;
@@ -10,14 +10,17 @@ import net.minecraft.util.profiler.Profiler;
 import net.sistr.actionarms.ActionArms;
 import net.sistr.actionarms.client.render.gltf.converter.GltfModelConverter;
 import net.sistr.actionarms.client.render.gltf.data.ProcessedGltfModel;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 
 public class GltfModelManager implements ResourceReloader, AutoCloseable {
     public static final GltfModelManager INSTANCE = new GltfModelManager();
+    @Nullable
     private Map<Identifier, ProcessedGltfModel> models;
 
     @Override
@@ -62,7 +65,14 @@ public class GltfModelManager implements ResourceReloader, AutoCloseable {
 
     }
 
-    public Map<Identifier, ProcessedGltfModel> getModels() {
+    public Optional<ProcessedGltfModel> getLoadedModel(Identifier identifier) {
+        if (models == null) {
+            throw new IllegalStateException("models is not initialized.");
+        }
+        return Optional.ofNullable(this.models.get(identifier));
+    }
+
+    public Map<Identifier, ProcessedGltfModel> getAllModels() {
         if (models == null) {
             throw new IllegalStateException("models is not initialized.");
         }

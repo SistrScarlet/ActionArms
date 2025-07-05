@@ -133,7 +133,7 @@ public class LeverActionGunItem extends GunItem {
 
         // 移動状態による拡散増加
         boolean isMoving = user.getVelocity().horizontalLengthSquared() > 0.01
-                || (!user.isOnGround() && isUserFly);
+                || (!user.isOnGround() && !isUserFly);
         if (isMoving) {
             currentSpread += gunData.movementSpreadIncrease();
         }

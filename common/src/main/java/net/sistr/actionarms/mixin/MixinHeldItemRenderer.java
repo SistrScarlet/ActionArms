@@ -5,7 +5,6 @@ import net.minecraft.client.render.item.HeldItemRenderer;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.Arm;
-import net.minecraft.util.Hand;
 import net.sistr.actionarms.entity.util.HasAimManager;
 import net.sistr.actionarms.item.util.GlftModelItem;
 import org.spongepowered.asm.mixin.Mixin;
@@ -49,15 +48,6 @@ public class MixinHeldItemRenderer {
         if (actionArms$isHoldingGltfItem(arm)) {
             ci.cancel();
         }
-    }
-
-    @Unique
-    private boolean actionArms$isHoldingGltfItem(Hand hand) {
-        var player = MinecraftClient.getInstance().player;
-        if (player == null) {
-            return false;
-        }
-        return actionArms$isHoldingGltfItem(hand == Hand.MAIN_HAND ? this.mainHand : this.offHand);
     }
 
     @Unique

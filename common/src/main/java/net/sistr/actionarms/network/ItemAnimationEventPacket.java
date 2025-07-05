@@ -7,7 +7,7 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Identifier;
 import net.minecraft.world.World;
 import net.sistr.actionarms.ActionArms;
-import net.sistr.actionarms.client.render.gltf.ItemAnimationManager;
+import net.sistr.actionarms.client.render.gltf.manager.ItemAnimationManager;
 
 import java.util.UUID;
 
