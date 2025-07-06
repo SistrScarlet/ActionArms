@@ -155,9 +155,8 @@ public class LeverActionGunComponent implements IItemComponent, FireTrigger, Cyc
 
     @Override
     public boolean shouldCycle() {
-        return canCycle()
-                && ((this.chamber.canShoot() && leverDown)
-                || (!this.chamber.canShoot() && this.magazine.hasBullet()));
+        return (this.chamber.canShoot() && (leverDown || !hammerReady))  // 撃てるが状態がおかしい時
+                || (!this.chamber.canShoot() && this.magazine.hasBullet());  // 撃てないが弾はあるとき
     }
 
     @Override
@@ -223,8 +222,8 @@ public class LeverActionGunComponent implements IItemComponent, FireTrigger, Cyc
     }
 
     @Override
-    public boolean shouldReload(ReloadStartContext context) {
-        return canReload(context) && !this.chamber.canShoot() && this.magazine.isEmpty();
+    public boolean shouldReload() {
+        return this.magazine.canAddBullet();
     }
 
     // 内部ヘルパーメソッド

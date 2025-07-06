@@ -9,7 +9,7 @@ public interface Reloadable {
 
     boolean canReload(ReloadStartContext context);
 
-    boolean shouldReload(ReloadStartContext context);
+    boolean shouldReload();
 
     interface ReloadStartContext {
         boolean hasBullet(Predicate<BulletComponent> predicate);

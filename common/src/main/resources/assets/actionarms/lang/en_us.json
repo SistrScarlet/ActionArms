@@ -9,6 +9,11 @@
   "item.actionarms.gun.chamber.empty": "Chamber: Empty",
   "item.actionarms.gun.magazine.ammo": "Magazine: %s / %s",
 
+  "text.autoconfig.actionarms.title": "ActionArms Config",
+
   "text.autoconfig.actionarms.option.key.aimToggle": "Toggle Aim",
-  "text.autoconfig.actionarms.option.key.aimToggle.@tooltip": "Enable Toggle Aim"
+  "text.autoconfig.actionarms.option.key.aimToggle.@Tooltip": "Enable Toggle Aim",
+
+  "text.autoconfig.actionarms.option.game.medium_caliber_bullet_damage": "Medium Bullet Damage",
+  "text.autoconfig.actionarms.option.game.medium_caliber_bullet_headshot_damage": "Medium Bullet HS Damage"
 }

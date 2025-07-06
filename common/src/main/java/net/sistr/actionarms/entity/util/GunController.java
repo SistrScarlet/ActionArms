@@ -1,16 +1,19 @@
 package net.sistr.actionarms.entity.util;
 
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.inventory.Inventory;
 import net.minecraft.item.ItemStack;
-import net.minecraft.server.network.ServerPlayerEntity;
 import net.sistr.actionarms.item.ItemUniqueManager;
 import net.sistr.actionarms.item.LeverActionGunItem;
 import net.sistr.actionarms.item.component.IItemComponent;
 import net.sistr.actionarms.item.component.LeverActionPlaySoundContext;
 import net.sistr.actionarms.item.component.Reloadable;
 import net.sistr.actionarms.item.component.UniqueComponent;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Supplier;
 
 public class GunController {
@@ -52,7 +55,7 @@ public class GunController {
             if (gunComponent.tick(
                     playSoundContext,
                     leverAction.createCycleTickContext(),
-                    leverAction.createReloadTickContext(user),
+                    leverAction.createReloadTickContext(user, getInventory().orElse(null)),
                     1f / 20f,
                     isSelected
             )) {
@@ -72,10 +75,7 @@ public class GunController {
                 if (gunComponent.canTrigger()) {
                     var fireStartContext = leverAction.createFireStartContext(user.getWorld(), user);
                     if (gunComponent.trigger(playSoundContext, animationContext, fireStartContext)) {
-                        if (user instanceof ServerPlayerEntity serverPlayer
-                                && !serverPlayer.isCreative()) {
-                            stack.damage(1, serverPlayer.getRandom(), serverPlayer);
-                        }
+                        stack.damage(1, user, p -> p.sendToolBreakStatus(user.getActiveHand()));
                         keyInputManager.killTurnPressWithin(KeyInputManager.Key.FIRE, 2);
                         markDuty = true;
                     }
@@ -111,5 +111,12 @@ public class GunController {
                 return IItemComponent.ComponentResult.NO_CHANGE;
             }
         });
+    }
+
+    protected Optional<Inventory> getInventory() {
+        if (this.user instanceof PlayerEntity) {
+            return Optional.of(((PlayerEntity) this.user).getInventory());
+        }
+        return Optional.empty();
     }
 }

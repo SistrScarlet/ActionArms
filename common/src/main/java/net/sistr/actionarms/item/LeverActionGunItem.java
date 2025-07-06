@@ -4,6 +4,7 @@ import net.minecraft.client.item.TooltipContext;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.inventory.Inventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ToolMaterials;
 import net.minecraft.particle.ParticleTypes;
@@ -20,12 +21,10 @@ import net.sistr.actionarms.entity.util.HasAimManager;
 import net.sistr.actionarms.entity.util.IAimManager;
 import net.sistr.actionarms.entity.util.InventoryAmmoUtil;
 import net.sistr.actionarms.item.component.*;
-import net.sistr.actionarms.item.component.registry.GunComponentTypes;
 import net.sistr.actionarms.network.RecoilPacket;
 import net.sistr.actionarms.setup.Registration;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.Predicate;
@@ -240,25 +239,19 @@ public class LeverActionGunItem extends GunItem {
 
     }
 
-    public Reloadable.ReloadTickContext createReloadTickContext(Entity user) {
-        return new LeverActionReloadTickContext(user);
+    public Reloadable.ReloadTickContext createReloadTickContext(Entity user, @Nullable Inventory inventory) {
+        return new LeverActionReloadTickContext(user, inventory);
     }
 
-
-    private record LeverActionReloadTickContext(Entity user) implements Reloadable.ReloadTickContext {
+    private record LeverActionReloadTickContext(Entity user,
+                                                @Nullable Inventory inventory) implements Reloadable.ReloadTickContext {
 
         @Override
         public List<BulletComponent> popBullets(Predicate<BulletComponent> predicate, int count) {
-            // プレイヤーかつクリエイティブでないならインベントリから弾を取り出す。
-            if (user instanceof PlayerEntity player && !player.isCreative()) {
-                return InventoryAmmoUtil.popBullets(player.getInventory(), predicate, count);
+            if (inventory == null) {
+                return List.of();
             }
-            // そうでないなら無限
-            List<BulletComponent> bullets = new ArrayList<>(count);
-            for (int i = 0; i < count; i++) {
-                bullets.add(GunComponentTypes.MEDIUM_CALIBER_BULLET.get());
-            }
-            return bullets;
+            return InventoryAmmoUtil.popBullets(inventory, predicate, count);
         }
 
         @Override
