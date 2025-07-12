@@ -15,8 +15,7 @@ import net.sistr.actionarms.config.AAConfig;
 
 @Mod(ActionArms.MOD_ID)
 public class ActionArmsForge {
-    public ActionArmsForge() {
-        @SuppressWarnings("removal") var context = FMLJavaModLoadingContext.get();
+    public ActionArmsForge(FMLJavaModLoadingContext context) {
         var eventBus = context.getModEventBus();
 
         EventBuses.registerModEventBus(ActionArms.MOD_ID, eventBus);
