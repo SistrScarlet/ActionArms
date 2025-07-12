@@ -7,7 +7,7 @@ public interface FireTrigger {
     boolean canTrigger();
 
     interface FireStartContext {
-        void fire(LeverActionGunComponent gun, BulletComponent bullet);
+        void fire(LeverActionGunComponent gun, BulletDataType bullet);
     }
 
 }

@@ -18,8 +18,9 @@ import net.minecraft.world.World;
 import net.sistr.actionarms.entity.util.EntityRecordManager;
 import net.sistr.actionarms.entity.util.HasEntityRecordManager;
 import net.sistr.actionarms.hud.BulletHitHudState;
-import net.sistr.actionarms.item.component.BulletComponent;
+import net.sistr.actionarms.item.component.BulletDataType;
 import net.sistr.actionarms.item.component.registry.GunComponentTypes;
+import net.sistr.actionarms.item.component.registry.GunDataTypes;
 import net.sistr.actionarms.mixin.DamageSourcesAccessor;
 import net.sistr.actionarms.network.HudStatePacket;
 import net.sistr.actionarms.setup.Registration;
@@ -33,7 +34,7 @@ public class BulletEntity extends Entity implements Ownable {
     private UUID ownerId;
     @Nullable
     private Entity owner;
-    private BulletComponent bulletComponent = GunComponentTypes.MEDIUM_CALIBER_BULLET.get();
+    private BulletDataType bulletType = GunDataTypes.MEDIUM_CALIBER_BULLET;
     private int decay = 40;
 
     public BulletEntity(EntityType<? extends BulletEntity> type, World world) {
@@ -41,7 +42,7 @@ public class BulletEntity extends Entity implements Ownable {
     }
 
     public static BulletEntity of(EntityType<? extends BulletEntity> type, World world,
-                                  @Nullable Entity owner, BulletComponent bulletComponent,
+                                  @Nullable Entity owner, BulletDataType bulletType,
                                   Vec3d fireFrom, Vec3d fireFor, float speed) {
         var bullet = new BulletEntity(type, world);
         bullet.setPosition(fireFrom.x, fireFrom.y, fireFrom.z);
@@ -60,7 +61,7 @@ public class BulletEntity extends Entity implements Ownable {
             bullet.owner = owner;
             bullet.ownerId = owner.getUuid();
         }
-        bullet.bulletComponent = bulletComponent;
+        bullet.bulletType = bulletType;
         return bullet;
     }
 
@@ -234,7 +235,7 @@ public class BulletEntity extends Entity implements Ownable {
 
     private boolean entityHit(ExtendEntityHitResult result) {
         var hitTarget = result.getEntity();
-        var data = this.bulletComponent.getBulletDataType();
+        var data = this.bulletType;
         boolean isHeadshot = isHeadshot(result);
         float damage = isHeadshot ? data.headshotDamage() : data.damage();
 

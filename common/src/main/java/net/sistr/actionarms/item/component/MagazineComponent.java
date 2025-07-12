@@ -3,19 +3,20 @@ package net.sistr.actionarms.item.component;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtList;
 import net.sistr.actionarms.item.component.registry.GunComponentTypes;
+import net.sistr.actionarms.item.component.registry.GunDataTypes;
 
 import java.util.*;
 
 public class MagazineComponent implements IItemComponent {
     private final MagazineDataType magazineDataType;
-    private final LinkedList<BulletComponent> bullets;
+    private final LinkedList<BulletDataType> bullets;
 
     public MagazineComponent(MagazineDataType magazineDataType) {
         this.magazineDataType = magazineDataType;
         this.bullets = new LinkedList<>();
     }
 
-    public boolean addFirstBullet(BulletComponent bullet) {
+    public boolean addFirstBullet(BulletDataType bullet) {
         if (bullets.size() < magazineDataType.capacity()
                 && this.magazineDataType.allowBullet().test(bullet)) {
             bullets.addFirst(bullet);
@@ -24,7 +25,7 @@ public class MagazineComponent implements IItemComponent {
         return false;
     }
 
-    public boolean addLastBullet(BulletComponent bullet) {
+    public boolean addLastBullet(BulletDataType bullet) {
         if (bullets.size() < magazineDataType.capacity()
                 && this.magazineDataType.allowBullet().test(bullet)) {
             bullets.addLast(bullet);
@@ -33,9 +34,9 @@ public class MagazineComponent implements IItemComponent {
         return false;
     }
 
-    public List<BulletComponent> addBullets(List<BulletComponent> bulletList, boolean reverse, boolean first) {
-        var compat = new ArrayList<BulletComponent>();
-        var incompat = new ArrayList<BulletComponent>();
+    public List<BulletDataType> addBullets(List<BulletDataType> bulletList, boolean reverse, boolean first) {
+        var compat = new ArrayList<BulletDataType>();
+        var incompat = new ArrayList<BulletDataType>();
         splitBullets(bulletList, compat, incompat);
         if (reverse) {
             compat = new ArrayList<>(compat);
@@ -52,16 +53,16 @@ public class MagazineComponent implements IItemComponent {
         return incompat;
     }
 
-    public List<BulletComponent> addFirstBullets(List<BulletComponent> bulletList, boolean reverse) {
+    public List<BulletDataType> addFirstBullets(List<BulletDataType> bulletList, boolean reverse) {
         return addBullets(bulletList, reverse, true);
     }
 
-    public List<BulletComponent> addLastBullets(List<BulletComponent> bulletList, boolean reverse) {
+    public List<BulletDataType> addLastBullets(List<BulletDataType> bulletList, boolean reverse) {
         return addBullets(bulletList, reverse, false);
     }
 
-    public void splitBullets(List<BulletComponent> bulletList, List<BulletComponent> compat, List<BulletComponent> incompat) {
-        for (BulletComponent bullet : bulletList) {
+    public void splitBullets(List<BulletDataType> bulletList, List<BulletDataType> compat, List<BulletDataType> incompat) {
+        for (BulletDataType bullet : bulletList) {
             if (this.magazineDataType.allowBullet().test(bullet)) {
                 compat.add(bullet);
             } else {
@@ -78,28 +79,28 @@ public class MagazineComponent implements IItemComponent {
         bullets.removeLast();
     }
 
-    public Optional<BulletComponent> popFirstBullet() {
+    public Optional<BulletDataType> popFirstBullet() {
         if (!bullets.isEmpty()) {
             return Optional.of(bullets.removeFirst());
         }
         return Optional.empty();
     }
 
-    public Optional<BulletComponent> popLastBullet() {
+    public Optional<BulletDataType> popLastBullet() {
         if (!bullets.isEmpty()) {
             return Optional.of(bullets.removeLast());
         }
         return Optional.empty();
     }
 
-    public Optional<BulletComponent> getFirstBullet() {
+    public Optional<BulletDataType> getFirstBullet() {
         if (!bullets.isEmpty()) {
             return Optional.of(bullets.getFirst());
         }
         return Optional.empty();
     }
 
-    public Optional<BulletComponent> getLastBullet() {
+    public Optional<BulletDataType> getLastBullet() {
         if (!bullets.isEmpty()) {
             return Optional.of(bullets.getLast());
         }
@@ -110,7 +111,7 @@ public class MagazineComponent implements IItemComponent {
         return bullets.size() < magazineDataType.capacity();
     }
 
-    public boolean canAddBullet(BulletComponent bullet) {
+    public boolean canAddBullet(BulletDataType bullet) {
         return this.magazineDataType.allowBullet().test(bullet);
     }
 
@@ -122,7 +123,7 @@ public class MagazineComponent implements IItemComponent {
         return bullets.size() >= magazineDataType.capacity();
     }
 
-    public List<BulletComponent> getBullets() {
+    public List<BulletDataType> getBullets() {
         return bullets;
     }
 
@@ -151,17 +152,14 @@ public class MagazineComponent implements IItemComponent {
         var bulletList = nbt.getList("Bullets", 10);
         for (int i = 0; i < bulletList.size(); i++) {
             var bulletNbt = bulletList.getCompound(i);
-            var bullet = GunComponentTypes.MEDIUM_CALIBER_BULLET.get();
-            bullet.read(bulletNbt);
-            this.bullets.add(bullet);
+            this.bullets.add(GunDataTypes.MEDIUM_CALIBER_BULLET);
         }
     }
 
     public void write(NbtCompound nbt) {
         var bulletList = new NbtList();
-        for (BulletComponent bullet : bullets) {
+        for (BulletDataType bullet : bullets) {
             var bulletNbt = new NbtCompound();
-            bullet.write(bulletNbt);
             bulletList.add(bulletNbt);
         }
         nbt.put("Bullets", bulletList);

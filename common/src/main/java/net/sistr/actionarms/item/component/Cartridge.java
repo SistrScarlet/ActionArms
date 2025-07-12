@@ -1,24 +1,24 @@
 package net.sistr.actionarms.item.component;
 
 import net.minecraft.nbt.NbtCompound;
-import net.sistr.actionarms.item.component.registry.GunComponentTypes;
+import net.sistr.actionarms.item.component.registry.GunDataTypes;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Optional;
 
 public class Cartridge {
     @Nullable
-    private BulletComponent bullet;
+    private BulletDataType bullet;
 
-    public Cartridge(@Nullable BulletComponent bullet) {
+    public Cartridge(@Nullable BulletDataType bullet) {
         this.bullet = bullet;
     }
 
-    public Optional<BulletComponent> getBullet() {
+    public Optional<BulletDataType> getBullet() {
         return Optional.ofNullable(bullet);
     }
 
-    public void setBullet(@Nullable BulletComponent bullet) {
+    public void setBullet(@Nullable BulletDataType bullet) {
         this.bullet = bullet;
     }
 
@@ -33,15 +33,13 @@ public class Cartridge {
     public void read(NbtCompound nbt) {
         if (nbt.contains("bullet")) {
             var bulletNbt = nbt.getCompound("bullet");
-            this.bullet = GunComponentTypes.MEDIUM_CALIBER_BULLET.get();
-            this.bullet.read(bulletNbt);
+            this.bullet = GunDataTypes.MEDIUM_CALIBER_BULLET;
         }
     }
 
     public void write(NbtCompound nbt) {
         if (this.bullet != null) {
             var bulletNbt = new NbtCompound();
-            this.bullet.write(bulletNbt);
             nbt.put("bullet", bulletNbt);
         }
     }

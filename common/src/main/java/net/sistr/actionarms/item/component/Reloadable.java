@@ -12,13 +12,13 @@ public interface Reloadable {
     boolean shouldReload();
 
     interface ReloadStartContext {
-        boolean hasBullet(Predicate<BulletComponent> predicate);
+        boolean hasBullet(Predicate<BulletDataType> predicate);
     }
 
     interface ReloadTickContext {
-        List<BulletComponent> popBullets(Predicate<BulletComponent> predicate, int count);
+        List<BulletDataType> popBullets(Predicate<BulletDataType> predicate, int count);
 
-        void returnBullets(List<BulletComponent> bullets);
+        void returnBullets(List<BulletDataType> bullets);
     }
 
 }

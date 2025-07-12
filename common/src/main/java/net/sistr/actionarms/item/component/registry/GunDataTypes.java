@@ -7,6 +7,7 @@ import net.sistr.actionarms.item.component.MagazineDataType;
 
 public class GunDataTypes {
     public static final BulletDataType MEDIUM_CALIBER_BULLET = new BulletDataType(
+            "medium_caliber_bullet",
             ActionArms.getConfig().game.medium_caliber_bullet_damage,
             ActionArms.getConfig().game.medium_caliber_bullet_headshot_damage
     );

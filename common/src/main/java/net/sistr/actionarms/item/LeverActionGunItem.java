@@ -84,7 +84,7 @@ public class LeverActionGunItem extends GunItem {
     // 処理
 
     public void fireBullet(ServerWorld world, LivingEntity user,
-                           LeverActionGunComponent gunComponent, BulletComponent bullet) {
+                           LeverActionGunComponent gunComponent, BulletDataType bullet) {
         // 射撃処理
         var fireDirection = user.getRotationVector();
         float fireSpread = fireSpread(user, gunComponent);
@@ -231,9 +231,9 @@ public class LeverActionGunItem extends GunItem {
 
     public Reloadable.ReloadStartContext createReloadStartContext(LivingEntity user) {
         if (!(user instanceof PlayerEntity)) {
-            return (Predicate<BulletComponent> predicate) -> true;
+            return (Predicate<BulletDataType> predicate) -> true;
         }
-        return (Predicate<BulletComponent> predicate) ->
+        return (Predicate<BulletDataType> predicate) ->
                 ((PlayerEntity) user).isCreative()
                         || InventoryAmmoUtil.hasBullet(((PlayerEntity) user).getInventory(), predicate);
 
@@ -247,7 +247,7 @@ public class LeverActionGunItem extends GunItem {
                                                 @Nullable Inventory inventory) implements Reloadable.ReloadTickContext {
 
         @Override
-        public List<BulletComponent> popBullets(Predicate<BulletComponent> predicate, int count) {
+        public List<BulletDataType> popBullets(Predicate<BulletDataType> predicate, int count) {
             if (inventory == null) {
                 return List.of();
             }
@@ -255,7 +255,7 @@ public class LeverActionGunItem extends GunItem {
         }
 
         @Override
-        public void returnBullets(List<BulletComponent> bullets) {
+        public void returnBullets(List<BulletDataType> bullets) {
             // todo 弾薬返還処理
         }
     }

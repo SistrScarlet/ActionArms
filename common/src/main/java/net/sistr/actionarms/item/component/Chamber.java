@@ -33,7 +33,7 @@ public class Chamber {
         return this.cartridge != null && this.cartridge.canShoot();
     }
 
-    public Optional<BulletComponent> shoot() {
+    public Optional<BulletDataType> shoot() {
         if (this.cartridge == null || this.cartridge.getBullet().isEmpty()) {
             return Optional.empty();
         }

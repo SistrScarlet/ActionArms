@@ -3,8 +3,7 @@ package net.sistr.actionarms.entity.util;
 import net.minecraft.inventory.Inventory;
 import net.minecraft.item.ItemStack;
 import net.sistr.actionarms.item.BulletItem;
-import net.sistr.actionarms.item.component.BulletComponent;
-import net.sistr.actionarms.item.component.IItemComponent;
+import net.sistr.actionarms.item.component.BulletDataType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,8 +12,8 @@ import java.util.function.Predicate;
 
 public class InventoryAmmoUtil {
 
-    public static List<BulletComponent> popBullets(Inventory inventory, Predicate<BulletComponent> predicate, int limit) {
-        var bullets = new ArrayList<BulletComponent>();
+    public static List<BulletDataType> popBullets(Inventory inventory, Predicate<BulletDataType> predicate, int limit) {
+        var bullets = new ArrayList<BulletDataType>();
         for (int i = 0; i < inventory.size(); i++) {
             var stack = inventory.getStack(i);
             int finalI = i;
@@ -24,7 +23,7 @@ public class InventoryAmmoUtil {
                         int remain = limit - bullets.size();
                         var stacks = inventory.removeStack(finalI, remain);
                         for (int j = 0; j < stacks.getCount(); j++) {
-                            bullets.add(bullet.copy());
+                            bullets.add(bullet);
                         }
                     });
             if (bullets.size() >= limit) {
@@ -34,8 +33,8 @@ public class InventoryAmmoUtil {
         return bullets;
     }
 
-    public static List<BulletComponent> getBullets(Inventory inventory, Predicate<BulletComponent> predicate) {
-        var bullets = new ArrayList<BulletComponent>();
+    public static List<BulletDataType> getBullets(Inventory inventory, Predicate<BulletDataType> predicate) {
+        var bullets = new ArrayList<BulletDataType>();
         for (int i = 0; i < inventory.size(); i++) {
             var stack = inventory.getStack(i);
             getBullet(stack)
@@ -45,7 +44,7 @@ public class InventoryAmmoUtil {
         return bullets;
     }
 
-    public static boolean hasBullet(Inventory inventory, Predicate<BulletComponent> predicate) {
+    public static boolean hasBullet(Inventory inventory, Predicate<BulletDataType> predicate) {
         for (int i = 0; i < inventory.size(); i++) {
             var stack = inventory.getStack(i);
             if (getBullet(stack)
@@ -57,11 +56,10 @@ public class InventoryAmmoUtil {
         return false;
     }
 
-    public static Optional<BulletComponent> getBullet(ItemStack stack) {
+    public static Optional<BulletDataType> getBullet(ItemStack stack) {
         if (stack.isEmpty() || !(stack.getItem() instanceof BulletItem bulletItem)) {
             return Optional.empty();
         }
-        var bulletComponent = IItemComponent.query(bulletItem.getComponentSupplier(), stack, c -> c);
-        return Optional.ofNullable(bulletComponent);
+        return Optional.ofNullable(bulletItem.getComponentSupplier().get());
     }
 }
