@@ -21,6 +21,10 @@ import net.sistr.actionarms.entity.util.HasAimManager;
 import net.sistr.actionarms.entity.util.IAimManager;
 import net.sistr.actionarms.entity.util.InventoryAmmoUtil;
 import net.sistr.actionarms.item.component.*;
+import net.sistr.actionarms.item.data.BulletData;
+import net.sistr.actionarms.item.data.LeverActionGunData;
+import net.sistr.actionarms.item.data.MagazineData;
+import net.sistr.actionarms.item.util.*;
 import net.sistr.actionarms.network.RecoilPacket;
 import net.sistr.actionarms.setup.Registration;
 import org.jetbrains.annotations.Nullable;
@@ -31,11 +35,15 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 public class LeverActionGunItem extends GunItem {
-    private final Supplier<LeverActionGunComponent> gunComponentSupplier;
+    private final LeverActionGunData gunData;
+    private final MagazineData magazineData;
 
-    public LeverActionGunItem(Settings settings, Supplier<LeverActionGunComponent> gunComponentSupplier) {
+    public LeverActionGunItem(Settings settings,
+                              LeverActionGunData gunData,
+                              MagazineData magazineData) {
         super(settings);
-        this.gunComponentSupplier = gunComponentSupplier;
+        this.gunData = gunData;
+        this.magazineData = magazineData;
     }
 
     // Item継承メソッド
@@ -52,7 +60,7 @@ public class LeverActionGunItem extends GunItem {
 
     @Override
     public void appendTooltip(ItemStack stack, @Nullable World world, List<Text> tooltip, TooltipContext context) {
-        var gunComponent = IItemComponent.query(getGunComponent(), stack, c -> c);
+        var gunComponent = IComponent.query(getGunComponent(), stack, c -> c);
         // 適合弾薬
         tooltip.add(Text.translatable("item.actionarms.gun.loadable_ammo"));
         tooltip.add(Text.translatable("item.actionarms.gun.loadable_ammo.list",
@@ -84,7 +92,7 @@ public class LeverActionGunItem extends GunItem {
     // 処理
 
     public void fireBullet(ServerWorld world, LivingEntity user,
-                           LeverActionGunComponent gunComponent, BulletDataType bullet) {
+                           LeverActionGunComponent gunComponent, BulletData bullet) {
         // 射撃処理
         var fireDirection = user.getRotationVector();
         float fireSpread = fireSpread(user, gunComponent);
@@ -114,7 +122,7 @@ public class LeverActionGunItem extends GunItem {
     }
 
     public float fireSpread(LivingEntity user, LeverActionGunComponent gunComponent) {
-        var gunData = gunComponent.getGunType();
+        var gunData = gunComponent.getGunData();
         float baseSpread = gunData.baseSpreadAngle();
 
         // エイム状態チェック（既存システム活用）
@@ -201,7 +209,7 @@ public class LeverActionGunItem extends GunItem {
     // getter
 
     public Supplier<LeverActionGunComponent> getGunComponent() {
-        return this.gunComponentSupplier;
+        return () -> new LeverActionGunComponent(this.gunData, this.magazineData);
     }
 
     // コンテキスト生成
@@ -231,9 +239,9 @@ public class LeverActionGunItem extends GunItem {
 
     public Reloadable.ReloadStartContext createReloadStartContext(LivingEntity user) {
         if (!(user instanceof PlayerEntity)) {
-            return (Predicate<BulletDataType> predicate) -> true;
+            return (Predicate<BulletData> predicate) -> true;
         }
-        return (Predicate<BulletDataType> predicate) ->
+        return (Predicate<BulletData> predicate) ->
                 ((PlayerEntity) user).isCreative()
                         || InventoryAmmoUtil.hasBullet(((PlayerEntity) user).getInventory(), predicate);
 
@@ -247,7 +255,7 @@ public class LeverActionGunItem extends GunItem {
                                                 @Nullable Inventory inventory) implements Reloadable.ReloadTickContext {
 
         @Override
-        public List<BulletDataType> popBullets(Predicate<BulletDataType> predicate, int count) {
+        public List<BulletData> popBullets(Predicate<BulletData> predicate, int count) {
             if (inventory == null) {
                 return List.of();
             }
@@ -255,8 +263,16 @@ public class LeverActionGunItem extends GunItem {
         }
 
         @Override
-        public void returnBullets(List<BulletDataType> bullets) {
+        public void returnBullets(List<BulletData> bullets) {
             // todo 弾薬返還処理
         }
+    }
+
+    public LeverActionGunData getGunData() {
+        return gunData;
+    }
+
+    public MagazineData getMagazineData() {
+        return magazineData;
     }
 }

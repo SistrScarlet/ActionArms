@@ -2,9 +2,9 @@ package net.sistr.actionarms.hud;
 
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
+import net.sistr.actionarms.item.ItemUniqueManager;
 import net.sistr.actionarms.item.LeverActionGunItem;
-import net.sistr.actionarms.item.component.IItemComponent;
-import net.sistr.actionarms.item.component.UniqueComponent;
+import net.sistr.actionarms.item.component.IComponent;
 import net.sistr.actionarms.network.HudStatePacket;
 
 import java.util.HashMap;
@@ -30,10 +30,10 @@ public class ServerHudManager {
         var mainStack = player.getMainHandStack();
 
         if (mainStack.getItem() instanceof LeverActionGunItem leverActionGunItem) {
-            var gunComponent = IItemComponent.query(leverActionGunItem.getGunComponent(), mainStack, c -> c);
+            var gunComponent = IComponent.query(leverActionGunItem.getGunComponent(), mainStack, c -> c);
             var state = LeverActionHudState.of(gunComponent);
             var map = hudStateMap.computeIfAbsent(player.getUuid(), k -> new HashMap<>());
-            var uuid = UniqueComponent.getOrSet(mainStack);
+            var uuid = ItemUniqueManager.INSTANCE.getOrSet(mainStack);
             var id = "lever_action@" + uuid;
             var hudState = map.get(id);
             if (hudState == null || !hudState.prevState.equals(state)) {

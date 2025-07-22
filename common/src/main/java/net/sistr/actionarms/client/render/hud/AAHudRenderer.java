@@ -9,9 +9,9 @@ import net.sistr.actionarms.entity.util.HasAimManager;
 import net.sistr.actionarms.entity.util.IAimManager;
 import net.sistr.actionarms.hud.BulletHitHudState;
 import net.sistr.actionarms.hud.LeverActionHudState;
+import net.sistr.actionarms.item.ItemUniqueManager;
 import net.sistr.actionarms.item.LeverActionGunItem;
 import net.sistr.actionarms.item.component.LeverActionGunComponent;
-import net.sistr.actionarms.item.component.UniqueComponent;
 import net.sistr.actionarms.mixin.GameRendererInvoker;
 
 import java.util.Optional;
@@ -35,7 +35,7 @@ public class AAHudRenderer {
         var textRenderer = client.textRenderer;
         var main = player.getMainHandStack();
         if (main.getItem() instanceof LeverActionGunItem leverAction) {
-            var uuid = UniqueComponent.getOrSet(main);
+            var uuid = ItemUniqueManager.INSTANCE.getOrSet(main);
             Optional<LeverActionHudState> optional
                     = ClientHudManager.INSTANCE.getState("lever_action@" + uuid, LeverActionHudState::of);
             optional.ifPresent(hudState ->

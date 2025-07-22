@@ -1,4 +1,4 @@
-package net.sistr.actionarms.item.component;
+package net.sistr.actionarms.item.util;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.sound.SoundCategory;

@@ -2,8 +2,8 @@ package net.sistr.actionarms.entity.util;
 
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
+import net.sistr.actionarms.item.ItemUniqueManager;
 import net.sistr.actionarms.item.LeverActionGunItem;
-import net.sistr.actionarms.item.component.UniqueComponent;
 import org.jetbrains.annotations.Nullable;
 
 public class AimManager implements IAimManager {
@@ -35,8 +35,8 @@ public class AimManager implements IAimManager {
         }
         // アイテムを切り替えたらエイム解除
         if (prevAimStack != null && prevAimStack != stack) {
-            var prevUuid = UniqueComponent.getOrSet(prevAimStack);
-            var uuid = UniqueComponent.getOrSet(stack);
+            var prevUuid = ItemUniqueManager.INSTANCE.getOrSet(prevAimStack);
+            var uuid = ItemUniqueManager.INSTANCE.getOrSet(stack);
             return prevUuid.equals(uuid);
         }
 

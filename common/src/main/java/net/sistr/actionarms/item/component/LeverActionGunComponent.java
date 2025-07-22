@@ -1,9 +1,12 @@
 package net.sistr.actionarms.item.component;
 
 import net.minecraft.nbt.NbtCompound;
+import net.sistr.actionarms.item.data.LeverActionGunData;
+import net.sistr.actionarms.item.data.MagazineData;
+import net.sistr.actionarms.item.util.*;
 
-public class LeverActionGunComponent implements IItemComponent, FireTrigger, CyclingLever, Reloadable {
-    private final LeverActionGunDataType gunType;
+public class LeverActionGunComponent implements IComponent, FireTrigger, CyclingLever, Reloadable {
+    private final LeverActionGunData gunData;
     private final Chamber chamber = new Chamber(null);
     private final MagazineComponent magazine;
     private boolean hammerReady;
@@ -16,9 +19,9 @@ public class LeverActionGunComponent implements IItemComponent, FireTrigger, Cyc
     private float cycleCoolTime;
     private float reloadCoolTime;
 
-    public LeverActionGunComponent(LeverActionGunDataType gunType, MagazineComponent magazine) {
-        this.gunType = gunType;
-        this.magazine = magazine;
+    public LeverActionGunComponent(LeverActionGunData gunData, MagazineData magazineData) {
+        this.gunData = gunData;
+        this.magazine = new MagazineComponent(magazineData);
     }
 
     // tick処理
@@ -76,7 +79,7 @@ public class LeverActionGunComponent implements IItemComponent, FireTrigger, Cyc
         playSoundContext.playSound(LeverActionPlaySoundContext.Sound.FIRE);
         animationContext.setAnimation("fire", 0);
         this.hammerReady = false;
-        this.fireCoolTime = this.gunType.fireCoolLength();
+        this.fireCoolTime = this.gunData.fireCoolLength();
         if (this.cycling) {
             this.cycling = false;
             this.cycleTime = 0;
@@ -88,8 +91,8 @@ public class LeverActionGunComponent implements IItemComponent, FireTrigger, Cyc
     public boolean canTrigger() {
         return this.hammerReady
                 && !this.leverDown
-                && (!this.cycling || this.cycleTime <= this.gunType.cycleCancelableLength())
-                && (!this.reloading || this.reloadTime <= this.gunType.reloadCancelableLength())
+                && (!this.cycling || this.cycleTime <= this.gunData.cycleCancelableLength())
+                && (!this.reloading || this.reloadTime <= this.gunData.reloadCancelableLength())
                 && this.fireCoolTime == 0
                 && this.cycleCoolTime == 0
                 && this.reloadCoolTime == 0;
@@ -104,7 +107,7 @@ public class LeverActionGunComponent implements IItemComponent, FireTrigger, Cyc
                 // サイクル終了処理
                 this.leverDown = false;
                 this.cycling = false;
-                this.cycleCoolTime = this.gunType.cycleCoolLength();
+                this.cycleCoolTime = this.gunData.cycleCoolLength();
                 this.hammerReady = true;
 
                 // チューブマガジンはFILO
@@ -115,7 +118,7 @@ public class LeverActionGunComponent implements IItemComponent, FireTrigger, Cyc
             } else {
                 // サイクル折り返し処理
                 this.leverDown = true;
-                this.cycleTime = this.gunType.leverDownLength();
+                this.cycleTime = this.gunData.leverDownLength();
                 this.hammerReady = false;
                 this.chamber.ejectCartridge()
                         .ifPresent(context::ejectCartridge);
@@ -129,17 +132,17 @@ public class LeverActionGunComponent implements IItemComponent, FireTrigger, Cyc
             return false;
         }
         if (this.chamber.isInCartridge()) {
-            animationContext.setAnimation("cycle", this.leverDown ? this.gunType.leverDownLength() : 0);
+            animationContext.setAnimation("cycle", this.leverDown ? this.gunData.leverDownLength() : 0);
         } else {
-            animationContext.setAnimation("cycle_empty", this.leverDown ? this.gunType.leverDownLength() : 0);
+            animationContext.setAnimation("cycle_empty", this.leverDown ? this.gunData.leverDownLength() : 0);
         }
         playSoundContext.playSound(LeverActionPlaySoundContext.Sound.CYCLE);
         this.cycling = true;
         this.reloading = false;
         if (this.leverDown) {
-            this.cycleTime = this.gunType.leverUpLength();
+            this.cycleTime = this.gunData.leverUpLength();
         } else {
-            this.cycleTime = this.gunType.leverDownLength();
+            this.cycleTime = this.gunData.leverDownLength();
         }
         return true;
     }
@@ -150,7 +153,7 @@ public class LeverActionGunComponent implements IItemComponent, FireTrigger, Cyc
                 && this.cycleCoolTime == 0
                 && this.reloadCoolTime == 0
                 && this.fireCoolTime == 0
-                && (!this.reloading || this.reloadTime <= this.gunType.reloadCancelableLength());
+                && (!this.reloading || this.reloadTime <= this.gunData.reloadCancelableLength());
     }
 
     @Override
@@ -174,11 +177,11 @@ public class LeverActionGunComponent implements IItemComponent, FireTrigger, Cyc
         this.reloadTime = Math.max(0, this.reloadTime - timeDelta);
         if (this.reloadTime == 0) {
             this.reloading = false;
-            this.reloadCoolTime = this.gunType.reloadCoolLength();
+            this.reloadCoolTime = this.gunData.reloadCoolLength();
             if (this.magazine.canAddBullet()) {
                 var bullets = context.popBullets(
                         this.magazine.getMagazineType().allowBullet(),
-                        this.gunType.reloadCount()
+                        this.gunData.reloadCount()
                 );
                 if (bullets.isEmpty()) {
                     return;
@@ -197,7 +200,7 @@ public class LeverActionGunComponent implements IItemComponent, FireTrigger, Cyc
         }
         int maxBullets = this.magazine.getMaxCapacity();
         int bullets = this.magazine.getBullets().size();
-        if (bullets + this.gunType.reloadCount() >= maxBullets) {
+        if (bullets + this.gunData.reloadCount() >= maxBullets) {
             animationContext.setAnimation("reload_end", 0);
         } else {
             animationContext.setAnimation("reload", 0);
@@ -205,7 +208,7 @@ public class LeverActionGunComponent implements IItemComponent, FireTrigger, Cyc
         playSoundContext.playSound(LeverActionPlaySoundContext.Sound.RELOAD);
         this.reloading = true;
         this.cycling = false;
-        this.reloadTime = this.gunType.reloadLength();
+        this.reloadTime = this.gunData.reloadLength();
         return true;
     }
 
@@ -271,8 +274,8 @@ public class LeverActionGunComponent implements IItemComponent, FireTrigger, Cyc
 
     // getter / setter
 
-    public LeverActionGunDataType getGunType() {
-        return gunType;
+    public LeverActionGunData getGunData() {
+        return gunData;
     }
 
     public Chamber getChamber() {

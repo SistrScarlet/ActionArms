@@ -1,7 +1,7 @@
 package net.sistr.actionarms.client.render.gltf.manager;
 
 import net.minecraft.item.ItemStack;
-import net.sistr.actionarms.item.component.UniqueComponent;
+import net.sistr.actionarms.item.ItemUniqueManager;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
@@ -33,7 +33,7 @@ public class ItemAnimationManager {
         if (stack == null) {
             return new HashMap<>();
         }
-        var uuid = UniqueComponent.getOrSet(stack);
+        var uuid = ItemUniqueManager.INSTANCE.getOrSet(stack);
         return getItemStateMap(uuid);
     }
 

@@ -7,27 +7,27 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-public interface IItemComponent {
+public interface IComponent {
 
     void read(NbtCompound nbt);
 
     void write(NbtCompound nbt);
 
-    static <T extends IItemComponent> void execute(Supplier<T> constructor,
-                                                   ItemStack stack,
-                                                   ExecuteFunction<T> function) {
+    static <T extends IComponent> void execute(Supplier<T> constructor,
+                                               ItemStack stack,
+                                               ExecuteFunction<T> function) {
         execute(constructor.get(), stack.getOrCreateNbt(), function);
     }
 
-    static <T extends IItemComponent> void execute(Supplier<T> constructor,
-                                                   NbtCompound nbt,
-                                                   ExecuteFunction<T> function) {
+    static <T extends IComponent> void execute(Supplier<T> constructor,
+                                               NbtCompound nbt,
+                                               ExecuteFunction<T> function) {
         execute(constructor.get(), nbt, function);
     }
 
-    private static <T extends IItemComponent> void execute(T component,
-                                                           NbtCompound nbt,
-                                                           ExecuteFunction<T> function) {
+    private static <T extends IComponent> void execute(T component,
+                                                       NbtCompound nbt,
+                                                       ExecuteFunction<T> function) {
         component.read(nbt);
         var result = function.execute(component);
         if (result == ComponentResult.MODIFIED) {
@@ -35,15 +35,15 @@ public interface IItemComponent {
         }
     }
 
-    static <T extends IItemComponent, R> R query(Supplier<T> constructor,
-                                                 ItemStack stack,
-                                                 Function<T, R> function) {
+    static <T extends IComponent, R> R query(Supplier<T> constructor,
+                                             ItemStack stack,
+                                             Function<T, R> function) {
         return query(constructor.get(), stack.getOrCreateNbt(), function);
     }
 
-    static <T extends IItemComponent, R> R query(Supplier<T> constructor,
-                                                 NbtCompound nbt,
-                                                 Function<T, R> function) {
+    static <T extends IComponent, R> R query(Supplier<T> constructor,
+                                             NbtCompound nbt,
+                                             Function<T, R> function) {
         return query(constructor.get(), nbt, function);
     }
 
@@ -57,22 +57,22 @@ public interface IItemComponent {
      * @param <R>       戻り値の型
      * @return 読み取った値
      */
-    private static <T extends IItemComponent, R> R query(T component,
-                                                         NbtCompound nbt,
-                                                         Function<T, R> function) {
+    private static <T extends IComponent, R> R query(T component,
+                                                     NbtCompound nbt,
+                                                     Function<T, R> function) {
         component.read(nbt);
         return function.apply(component);
     }
 
-    static <T extends IItemComponent> void update(Supplier<T> constructor,
-                                                  ItemStack stack,
-                                                  Consumer<T> function) {
+    static <T extends IComponent> void update(Supplier<T> constructor,
+                                              ItemStack stack,
+                                              Consumer<T> function) {
         update(constructor.get(), stack.getOrCreateNbt(), function);
     }
 
-    static <T extends IItemComponent> void update(Supplier<T> constructor,
-                                                  NbtCompound nbt,
-                                                  Consumer<T> function) {
+    static <T extends IComponent> void update(Supplier<T> constructor,
+                                              NbtCompound nbt,
+                                              Consumer<T> function) {
         update(constructor.get(), nbt, function);
     }
 
@@ -84,9 +84,9 @@ public interface IItemComponent {
      * @param function  更新処理
      * @param <T>       コンポーネントの型
      */
-    private static <T extends IItemComponent> void update(T component,
-                                                          NbtCompound nbt,
-                                                          Consumer<T> function) {
+    private static <T extends IComponent> void update(T component,
+                                                      NbtCompound nbt,
+                                                      Consumer<T> function) {
         component.read(nbt);
         function.accept(component);
         component.write(nbt);
@@ -107,7 +107,7 @@ public interface IItemComponent {
     }
 
     @FunctionalInterface
-    interface ExecuteFunction<T extends IItemComponent> {
+    interface ExecuteFunction<T extends IComponent> {
         /**
          * コンポーネントに対して操作を実行します。
          *

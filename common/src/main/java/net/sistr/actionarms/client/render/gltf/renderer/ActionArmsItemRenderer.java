@@ -14,7 +14,7 @@ import net.sistr.actionarms.client.render.gltf.manager.ItemAnimationManager;
 import net.sistr.actionarms.client.render.gltf.util.DrawingMode;
 import net.sistr.actionarms.entity.util.HasAimManager;
 import net.sistr.actionarms.item.LeverActionGunItem;
-import net.sistr.actionarms.item.component.IItemComponent;
+import net.sistr.actionarms.item.component.IComponent;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -79,7 +79,7 @@ public class ActionArmsItemRenderer extends GltfObjectRenderer<ItemStack> {
         float tickDelta = MinecraftClient.getInstance().getTickDelta();
 
         // ガンコンポーネントの取得
-        var gunComponent = IItemComponent.query(gunItem.getGunComponent(), stack, c -> c);
+        var gunComponent = IComponent.query(gunItem.getGunComponent(), stack, c -> c);
 
         // エイム状態の判定
         boolean isAiming = entity instanceof HasAimManager hasAim

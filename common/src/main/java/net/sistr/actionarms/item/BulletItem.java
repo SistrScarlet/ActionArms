@@ -1,20 +1,18 @@
 package net.sistr.actionarms.item;
 
 import net.minecraft.item.Item;
-import net.sistr.actionarms.item.component.BulletDataType;
-
-import java.util.function.Supplier;
+import net.sistr.actionarms.item.data.BulletData;
 
 public class BulletItem extends Item {
-    private final Supplier<BulletDataType> componentSupplier;
+    private final BulletData bulletData;
 
-    public BulletItem(Settings settings, Supplier<BulletDataType> componentSupplier) {
+    public BulletItem(Settings settings, BulletData bulletData) {
         super(settings);
-        this.componentSupplier = componentSupplier;
+        this.bulletData = bulletData;
     }
 
-    public Supplier<BulletDataType> getComponentSupplier() {
-        return this.componentSupplier;
+    public BulletData getBulletData() {
+        return bulletData;
     }
 
 }

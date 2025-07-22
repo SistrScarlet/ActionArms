@@ -1,4 +1,6 @@
-package net.sistr.actionarms.item.component;
+package net.sistr.actionarms.item.util;
+
+import net.sistr.actionarms.item.data.BulletData;
 
 import java.util.List;
 import java.util.function.Predicate;
@@ -12,13 +14,13 @@ public interface Reloadable {
     boolean shouldReload();
 
     interface ReloadStartContext {
-        boolean hasBullet(Predicate<BulletDataType> predicate);
+        boolean hasBullet(Predicate<BulletData> predicate);
     }
 
     interface ReloadTickContext {
-        List<BulletDataType> popBullets(Predicate<BulletDataType> predicate, int count);
+        List<BulletData> popBullets(Predicate<BulletData> predicate, int count);
 
-        void returnBullets(List<BulletDataType> bullets);
+        void returnBullets(List<BulletData> bullets);
     }
 
 }

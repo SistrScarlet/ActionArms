@@ -6,11 +6,9 @@ import net.minecraft.inventory.Inventory;
 import net.minecraft.item.ItemStack;
 import net.sistr.actionarms.item.ItemUniqueManager;
 import net.sistr.actionarms.item.LeverActionGunItem;
-import net.sistr.actionarms.item.component.IItemComponent;
-import net.sistr.actionarms.item.component.LeverActionPlaySoundContext;
-import net.sistr.actionarms.item.component.Reloadable;
-import net.sistr.actionarms.item.component.UniqueComponent;
-import org.jetbrains.annotations.Nullable;
+import net.sistr.actionarms.item.component.IComponent;
+import net.sistr.actionarms.item.util.LeverActionPlaySoundContext;
+import net.sistr.actionarms.item.util.Reloadable;
 
 import java.util.List;
 import java.util.Optional;
@@ -44,8 +42,8 @@ public class GunController {
     }
 
     private void tickGunComponent(ItemStack stack, LeverActionGunItem leverAction, boolean isSelected) {
-        IItemComponent.execute(leverAction.getGunComponent(), stack, gunComponent -> {
-            var uuid = UniqueComponent.getOrSet(stack);
+        IComponent.execute(leverAction.getGunComponent(), stack, gunComponent -> {
+            var uuid = ItemUniqueManager.INSTANCE.getOrSet(stack);
 
             var animationContext = leverAction.createAnimationContext(user.getWorld(), uuid);
             LeverActionPlaySoundContext playSoundContext = leverAction.createPlaySoundContext(user.getWorld(), user);
@@ -64,9 +62,9 @@ public class GunController {
 
             if (!isSelected) {
                 if (markDuty) {
-                    return IItemComponent.ComponentResult.MODIFIED;
+                    return IComponent.ComponentResult.MODIFIED;
                 } else {
-                    return IItemComponent.ComponentResult.NO_CHANGE;
+                    return IComponent.ComponentResult.NO_CHANGE;
                 }
             }
 
@@ -106,9 +104,9 @@ public class GunController {
             }
 
             if (markDuty) {
-                return IItemComponent.ComponentResult.MODIFIED;
+                return IComponent.ComponentResult.MODIFIED;
             } else {
-                return IItemComponent.ComponentResult.NO_CHANGE;
+                return IComponent.ComponentResult.NO_CHANGE;
             }
         });
     }

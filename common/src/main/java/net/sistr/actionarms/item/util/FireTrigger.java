@@ -1,4 +1,7 @@
-package net.sistr.actionarms.item.component;
+package net.sistr.actionarms.item.util;
+
+import net.sistr.actionarms.item.component.LeverActionGunComponent;
+import net.sistr.actionarms.item.data.BulletData;
 
 public interface FireTrigger {
 
@@ -7,7 +10,7 @@ public interface FireTrigger {
     boolean canTrigger();
 
     interface FireStartContext {
-        void fire(LeverActionGunComponent gun, BulletDataType bullet);
+        void fire(LeverActionGunComponent gun, BulletData bullet);
     }
 
 }

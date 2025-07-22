@@ -3,7 +3,7 @@ package net.sistr.actionarms.entity.util;
 import net.minecraft.inventory.Inventory;
 import net.minecraft.item.ItemStack;
 import net.sistr.actionarms.item.BulletItem;
-import net.sistr.actionarms.item.component.BulletDataType;
+import net.sistr.actionarms.item.data.BulletData;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,8 +12,8 @@ import java.util.function.Predicate;
 
 public class InventoryAmmoUtil {
 
-    public static List<BulletDataType> popBullets(Inventory inventory, Predicate<BulletDataType> predicate, int limit) {
-        var bullets = new ArrayList<BulletDataType>();
+    public static List<BulletData> popBullets(Inventory inventory, Predicate<BulletData> predicate, int limit) {
+        var bullets = new ArrayList<BulletData>();
         for (int i = 0; i < inventory.size(); i++) {
             var stack = inventory.getStack(i);
             int finalI = i;
@@ -33,8 +33,8 @@ public class InventoryAmmoUtil {
         return bullets;
     }
 
-    public static List<BulletDataType> getBullets(Inventory inventory, Predicate<BulletDataType> predicate) {
-        var bullets = new ArrayList<BulletDataType>();
+    public static List<BulletData> getBullets(Inventory inventory, Predicate<BulletData> predicate) {
+        var bullets = new ArrayList<BulletData>();
         for (int i = 0; i < inventory.size(); i++) {
             var stack = inventory.getStack(i);
             getBullet(stack)
@@ -44,7 +44,7 @@ public class InventoryAmmoUtil {
         return bullets;
     }
 
-    public static boolean hasBullet(Inventory inventory, Predicate<BulletDataType> predicate) {
+    public static boolean hasBullet(Inventory inventory, Predicate<BulletData> predicate) {
         for (int i = 0; i < inventory.size(); i++) {
             var stack = inventory.getStack(i);
             if (getBullet(stack)
@@ -56,10 +56,10 @@ public class InventoryAmmoUtil {
         return false;
     }
 
-    public static Optional<BulletDataType> getBullet(ItemStack stack) {
+    public static Optional<BulletData> getBullet(ItemStack stack) {
         if (stack.isEmpty() || !(stack.getItem() instanceof BulletItem bulletItem)) {
             return Optional.empty();
         }
-        return Optional.ofNullable(bulletItem.getComponentSupplier().get());
+        return Optional.ofNullable(bulletItem.getBulletData());
     }
 }

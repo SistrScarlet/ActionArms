@@ -15,8 +15,7 @@ import net.sistr.actionarms.ActionArms;
 import net.sistr.actionarms.entity.BulletEntity;
 import net.sistr.actionarms.item.BulletItem;
 import net.sistr.actionarms.item.LeverActionGunItem;
-import net.sistr.actionarms.item.component.registry.GunComponentTypes;
-import net.sistr.actionarms.item.component.registry.GunDataTypes;
+import net.sistr.actionarms.item.data.AADataRegistry;
 
 public class Registration {
     private static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ActionArms.MOD_ID, RegistryKeys.ITEM);
@@ -33,7 +32,7 @@ public class Registration {
             "medium_caliber_bullet", () -> new BulletItem(
                     new Item.Settings()
                             .arch$tab(ItemGroups.COMBAT),
-                    () -> GunDataTypes.MEDIUM_CALIBER_BULLET
+                    AADataRegistry.MEDIUM_CALIBER_BULLET
             )
     );
 
@@ -43,7 +42,8 @@ public class Registration {
                     new Item.Settings()
                             .maxDamage(256)
                             .arch$tab(ItemGroups.COMBAT),
-                    GunComponentTypes.M1873
+                    AADataRegistry.M1873,
+                    AADataRegistry.M1873_TUBE_MAGAZINE
             )
     );
 
