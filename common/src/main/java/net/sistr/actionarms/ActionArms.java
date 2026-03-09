@@ -38,10 +38,10 @@ public class ActionArms {
     }
 
     public static void preInit() {
-        Registration.init();
-
         AutoConfig.register(AAConfig.class, Toml4jConfigSerializer::new);
         CONFIG_HOLDER = AutoConfig.getConfigHolder(AAConfig.class);
+
+        Registration.init();
     }
 
     public static AAConfig getConfig() {

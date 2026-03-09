@@ -89,6 +89,10 @@ public class LeverActionGunComponent implements IComponent, FireTrigger, Cycling
             this.cycling = false;
             this.cycleTime = 0;
         }
+        if (this.reloading) {
+            this.reloading = false;
+            this.reloadTime = 0;
+        }
         return true;
     }
 
@@ -128,7 +132,7 @@ public class LeverActionGunComponent implements IComponent, FireTrigger, Cycling
             } else {
                 // サイクル折り返し処理
                 this.leverDown = true;
-                this.cycleTime = this.gunData.leverDownLength();
+                this.cycleTime = this.gunData.leverUpLength();
                 this.hammerReady = false;
                 this.chamber.ejectCartridge().ifPresent(context::ejectCartridge);
             }
@@ -247,12 +251,8 @@ public class LeverActionGunComponent implements IComponent, FireTrigger, Cycling
         return this.magazine.canAddBullet();
     }
 
-    // 内部ヘルパーメソッド
     private boolean canShoot() {
-        return this.hammerReady
-                && !this.leverDown
-                && this.fireCoolTime == 0
-                && this.chamber.canShoot();
+        return canTrigger() && this.chamber.canShoot();
     }
 
     // IItemComponentインターフェース実装（NBT永続化）

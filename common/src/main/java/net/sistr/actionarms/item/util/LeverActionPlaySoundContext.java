@@ -5,29 +5,29 @@ import net.minecraft.entity.Entity;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.world.World;
-import net.sistr.actionarms.setup.Registration;
 
 public interface LeverActionPlaySoundContext {
 
     void playSound(Sound sound);
 
     enum Sound {
-        CYCLE(Registration.RIFLE_COCK_SOUND, 0.5f, 1.0f),
-        RELOAD(Registration.RIFLE_LOAD_BULLET_SOUND, 0.5f, 1.0f),
-        FIRE(Registration.RIFLE_SHOT_SOUND, 2.0f, 1.0f),
-        DRY_FIRE(Registration.RIFLE_DRY_FIRE_SOUND, 0.5f, 1.0f);
-        private final Supplier<SoundEvent> soundEvent;
+        CYCLE(() -> SoundSuppliers.RIFLE_COCK, 0.5f, 1.0f),
+        RELOAD(() -> SoundSuppliers.RIFLE_LOAD_BULLET, 0.5f, 1.0f),
+        FIRE(() -> SoundSuppliers.RIFLE_SHOT, 2.0f, 1.0f),
+        DRY_FIRE(() -> SoundSuppliers.RIFLE_DRY_FIRE, 0.5f, 1.0f);
+
+        private final Supplier<Supplier<SoundEvent>> soundEventSupplier;
         private final float volume;
         private final float pitch;
 
-        Sound(Supplier<SoundEvent> soundEvent, float volume, float pitch) {
-            this.soundEvent = soundEvent;
+        Sound(Supplier<Supplier<SoundEvent>> soundEventSupplier, float volume, float pitch) {
+            this.soundEventSupplier = soundEventSupplier;
             this.volume = volume;
             this.pitch = pitch;
         }
 
         public Supplier<SoundEvent> getSoundEvent() {
-            return soundEvent;
+            return soundEventSupplier.get();
         }
 
         public float getVolume() {
@@ -44,10 +44,27 @@ public interface LeverActionPlaySoundContext {
                     user.getX(),
                     user.getY(),
                     user.getZ(),
-                    soundEvent.get(),
+                    getSoundEvent().get(),
                     category,
                     volume,
                     pitch);
         }
+    }
+
+    /**
+     * Registration への参照を別クラスに隔離し、Sound enum の初期化時に Registration がロードされることを防ぐ。テスト環境では Registration
+     * を初期化できないため必要。
+     */
+    final class SoundSuppliers {
+        private SoundSuppliers() {}
+
+        static final Supplier<SoundEvent> RIFLE_COCK =
+                net.sistr.actionarms.setup.Registration.RIFLE_COCK_SOUND;
+        static final Supplier<SoundEvent> RIFLE_LOAD_BULLET =
+                net.sistr.actionarms.setup.Registration.RIFLE_LOAD_BULLET_SOUND;
+        static final Supplier<SoundEvent> RIFLE_SHOT =
+                net.sistr.actionarms.setup.Registration.RIFLE_SHOT_SOUND;
+        static final Supplier<SoundEvent> RIFLE_DRY_FIRE =
+                net.sistr.actionarms.setup.Registration.RIFLE_DRY_FIRE_SOUND;
     }
 }
