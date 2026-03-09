@@ -5,14 +5,14 @@ import net.sistr.actionarms.item.data.BulletData;
 
 public interface FireTrigger {
 
-  boolean trigger(
-      LeverActionPlaySoundContext playSoundContext,
-      AnimationContext animationContext,
-      FireStartContext fireContext);
+    boolean trigger(
+            LeverActionPlaySoundContext playSoundContext,
+            AnimationContext animationContext,
+            FireStartContext fireContext);
 
-  boolean canTrigger();
+    boolean canTrigger();
 
-  interface FireStartContext {
-    void fire(LeverActionGunComponent gun, BulletData bullet);
-  }
+    interface FireStartContext {
+        void fire(LeverActionGunComponent gun, BulletData bullet);
+    }
 }

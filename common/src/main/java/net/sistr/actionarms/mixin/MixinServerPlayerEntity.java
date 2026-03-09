@@ -17,47 +17,47 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(ServerPlayerEntity.class)
 public abstract class MixinServerPlayerEntity extends PlayerEntity
-    implements HasKeyInputManager, HasGunController {
-  @Unique private final IKeyInputManager actionArms$keyInputManager = new KeyInputManager();
+        implements HasKeyInputManager, HasGunController {
+    @Unique private final IKeyInputManager actionArms$keyInputManager = new KeyInputManager();
 
-  @Unique
-  private final GunController actionArms$gunController =
-      new GunController(
-          (ServerPlayerEntity) (Object) this,
-          actionArms$keyInputManager,
-          this::actionArms$getItems);
+    @Unique
+    private final GunController actionArms$gunController =
+            new GunController(
+                    (ServerPlayerEntity) (Object) this,
+                    actionArms$keyInputManager,
+                    this::actionArms$getItems);
 
-  public MixinServerPlayerEntity(World world, BlockPos pos, float yaw, GameProfile gameProfile) {
-    super(world, pos, yaw, gameProfile);
-  }
-
-  @Override
-  public IKeyInputManager actionArms$getKeyInputManager() {
-    return this.actionArms$keyInputManager;
-  }
-
-  @Override
-  public GunController actionArms$getGunController() {
-    return this.actionArms$gunController;
-  }
-
-  @Inject(method = "tick", at = @At("HEAD"))
-  private void onTick(CallbackInfo ci) {
-    this.actionArms$gunController.tick();
-  }
-
-  @Unique
-  private List<ItemStack> actionArms$getItems() {
-    var items = new ArrayList<ItemStack>();
-
-    var inv = this.getInventory();
-    for (int i = 0; i < inv.size(); i++) {
-      var stack = inv.getStack(i);
-      if (stack.isEmpty()) {
-        continue;
-      }
-      items.add(stack);
+    public MixinServerPlayerEntity(World world, BlockPos pos, float yaw, GameProfile gameProfile) {
+        super(world, pos, yaw, gameProfile);
     }
-    return items;
-  }
+
+    @Override
+    public IKeyInputManager actionArms$getKeyInputManager() {
+        return this.actionArms$keyInputManager;
+    }
+
+    @Override
+    public GunController actionArms$getGunController() {
+        return this.actionArms$gunController;
+    }
+
+    @Inject(method = "tick", at = @At("HEAD"))
+    private void onTick(CallbackInfo ci) {
+        this.actionArms$gunController.tick();
+    }
+
+    @Unique
+    private List<ItemStack> actionArms$getItems() {
+        var items = new ArrayList<ItemStack>();
+
+        var inv = this.getInventory();
+        for (int i = 0; i < inv.size(); i++) {
+            var stack = inv.getStack(i);
+            if (stack.isEmpty()) {
+                continue;
+            }
+            items.add(stack);
+        }
+        return items;
+    }
 }

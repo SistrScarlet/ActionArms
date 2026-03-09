@@ -6,15 +6,15 @@ import net.sistr.actionarms.ActionArms;
 import net.sistr.actionarms.client.ActionArmsClient;
 
 public class ActionArmsFabric implements ModInitializer, ClientModInitializer {
-  @Override
-  public void onInitialize() {
-    ActionArms.preInit();
-    ActionArms.init();
-  }
+    @Override
+    public void onInitialize() {
+        ActionArms.preInit();
+        ActionArms.init();
+    }
 
-  @Override
-  public void onInitializeClient() {
-    ActionArmsClient.preInit();
-    ActionArmsClient.init();
-  }
+    @Override
+    public void onInitializeClient() {
+        ActionArmsClient.preInit();
+        ActionArmsClient.init();
+    }
 }

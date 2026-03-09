@@ -14,115 +14,120 @@ import net.sistr.actionarms.item.util.LeverActionPlaySoundContext;
 import net.sistr.actionarms.item.util.Reloadable;
 
 public class GunController {
-  private final LivingEntity user;
-  private final IKeyInputManager keyInputManager;
-  private final Supplier<List<ItemStack>> itemsSupplier;
+    private final LivingEntity user;
+    private final IKeyInputManager keyInputManager;
+    private final Supplier<List<ItemStack>> itemsSupplier;
 
-  public GunController(
-      LivingEntity user,
-      IKeyInputManager keyInputManager,
-      Supplier<List<ItemStack>> itemsSupplier) {
-    this.user = user;
-    this.keyInputManager = keyInputManager;
-    this.itemsSupplier = itemsSupplier;
-  }
-
-  public void tick() {
-    if (this.user.getWorld().isClient) {
-      return;
+    public GunController(
+            LivingEntity user,
+            IKeyInputManager keyInputManager,
+            Supplier<List<ItemStack>> itemsSupplier) {
+        this.user = user;
+        this.keyInputManager = keyInputManager;
+        this.itemsSupplier = itemsSupplier;
     }
-    var main = user.getMainHandStack();
 
-    var stacks = itemsSupplier.get();
-    for (ItemStack stack : stacks) {
-      if (!(stack.getItem() instanceof LeverActionGunItem leverAction)) {
-        continue;
-      }
-      ItemUniqueManager.INSTANCE.uniqueCheck(user.getWorld(), stack);
-      tickGunComponent(stack, leverAction, stack == main);
+    public void tick() {
+        if (this.user.getWorld().isClient) {
+            return;
+        }
+        var main = user.getMainHandStack();
+
+        var stacks = itemsSupplier.get();
+        for (ItemStack stack : stacks) {
+            if (!(stack.getItem() instanceof LeverActionGunItem leverAction)) {
+                continue;
+            }
+            ItemUniqueManager.INSTANCE.uniqueCheck(user.getWorld(), stack);
+            tickGunComponent(stack, leverAction, stack == main);
+        }
     }
-  }
 
-  private void tickGunComponent(
-      ItemStack stack, LeverActionGunItem leverAction, boolean isSelected) {
-    IComponent.execute(
-        leverAction.getGunComponent(),
-        stack,
-        gunComponent -> {
-          var uuid = ItemUniqueManager.INSTANCE.getOrSet(stack);
+    private void tickGunComponent(
+            ItemStack stack, LeverActionGunItem leverAction, boolean isSelected) {
+        IComponent.execute(
+                leverAction.getGunComponent(),
+                stack,
+                gunComponent -> {
+                    var uuid = ItemUniqueManager.INSTANCE.getOrSet(stack);
 
-          var animationContext = leverAction.createAnimationContext(user.getWorld(), uuid);
-          LeverActionPlaySoundContext playSoundContext =
-              leverAction.createPlaySoundContext(user.getWorld(), user);
+                    var animationContext =
+                            leverAction.createAnimationContext(user.getWorld(), uuid);
+                    LeverActionPlaySoundContext playSoundContext =
+                            leverAction.createPlaySoundContext(user.getWorld(), user);
 
-          boolean markDuty = false;
+                    boolean markDuty = false;
 
-          if (gunComponent.tick(
-              playSoundContext,
-              leverAction.createCycleTickContext(),
-              leverAction.createReloadTickContext(user, getInventory().orElse(null)),
-              1f / 20f,
-              isSelected)) {
-            markDuty = true;
-          }
+                    if (gunComponent.tick(
+                            playSoundContext,
+                            leverAction.createCycleTickContext(),
+                            leverAction.createReloadTickContext(user, getInventory().orElse(null)),
+                            1f / 20f,
+                            isSelected)) {
+                        markDuty = true;
+                    }
 
-          if (!isSelected) {
-            if (markDuty) {
-              return IComponent.ComponentResult.MODIFIED;
-            } else {
-              return IComponent.ComponentResult.NO_CHANGE;
-            }
-          }
+                    if (!isSelected) {
+                        if (markDuty) {
+                            return IComponent.ComponentResult.MODIFIED;
+                        } else {
+                            return IComponent.ComponentResult.NO_CHANGE;
+                        }
+                    }
 
-          // FIREキー（射撃操作）
-          if (keyInputManager.isTurnPressWithin(KeyInputManager.Key.FIRE, 2)) {
-            if (gunComponent.canTrigger()) {
-              var fireStartContext = leverAction.createFireStartContext(user.getWorld(), user);
-              if (gunComponent.trigger(playSoundContext, animationContext, fireStartContext)) {
-                stack.damage(1, user, p -> p.sendToolBreakStatus(user.getActiveHand()));
-                keyInputManager.killTurnPressWithin(KeyInputManager.Key.FIRE, 2);
-                markDuty = true;
-              }
-            }
-          }
+                    // FIREキー（射撃操作）
+                    if (keyInputManager.isTurnPressWithin(KeyInputManager.Key.FIRE, 2)) {
+                        if (gunComponent.canTrigger()) {
+                            var fireStartContext =
+                                    leverAction.createFireStartContext(user.getWorld(), user);
+                            if (gunComponent.trigger(
+                                    playSoundContext, animationContext, fireStartContext)) {
+                                stack.damage(
+                                        1, user, p -> p.sendToolBreakStatus(user.getActiveHand()));
+                                keyInputManager.killTurnPressWithin(KeyInputManager.Key.FIRE, 2);
+                                markDuty = true;
+                            }
+                        }
+                    }
 
-          // COCKキー（サイクル操作）
-          if (keyInputManager.isTurnPressWithin(KeyInputManager.Key.COCK, 4)) {
-            if (gunComponent.canCycle()) {
-              if (gunComponent.cycle(playSoundContext, animationContext)) {
-                keyInputManager.killTurnPressWithin(KeyInputManager.Key.COCK, 4);
-                markDuty = true;
-              }
-            }
-          }
+                    // COCKキー（サイクル操作）
+                    if (keyInputManager.isTurnPressWithin(KeyInputManager.Key.COCK, 4)) {
+                        if (gunComponent.canCycle()) {
+                            if (gunComponent.cycle(playSoundContext, animationContext)) {
+                                keyInputManager.killTurnPressWithin(KeyInputManager.Key.COCK, 4);
+                                markDuty = true;
+                            }
+                        }
+                    }
 
-          // RELOADキー（リロード操作）
-          if (keyInputManager.isTurnPressWithin(KeyInputManager.Key.RELOAD, 2)) {
-            var isAiming =
-                user instanceof HasAimManager hasAimManager
-                    && hasAimManager.actionArms$getAimManager().isAiming();
-            Reloadable.ReloadStartContext reloadContext =
-                leverAction.createReloadStartContext(user);
-            if (!isAiming && gunComponent.canReload(reloadContext)) {
-              if (gunComponent.reload(playSoundContext, animationContext, reloadContext)) {
-                keyInputManager.killTurnPressWithin(KeyInputManager.Key.RELOAD, 2);
-                markDuty = true;
-              }
-            }
-          }
+                    // RELOADキー（リロード操作）
+                    if (keyInputManager.isTurnPressWithin(KeyInputManager.Key.RELOAD, 2)) {
+                        var isAiming =
+                                user instanceof HasAimManager hasAimManager
+                                        && hasAimManager.actionArms$getAimManager().isAiming();
+                        Reloadable.ReloadStartContext reloadContext =
+                                leverAction.createReloadStartContext(user);
+                        if (!isAiming && gunComponent.canReload(reloadContext)) {
+                            if (gunComponent.reload(
+                                    playSoundContext, animationContext, reloadContext)) {
+                                keyInputManager.killTurnPressWithin(KeyInputManager.Key.RELOAD, 2);
+                                markDuty = true;
+                            }
+                        }
+                    }
 
-          if (markDuty) {
-            return IComponent.ComponentResult.MODIFIED;
-          } else {
-            return IComponent.ComponentResult.NO_CHANGE;
-          }
-        });
-  }
-
-  protected Optional<Inventory> getInventory() {
-    if (this.user instanceof PlayerEntity) {
-      return Optional.of(((PlayerEntity) this.user).getInventory());
+                    if (markDuty) {
+                        return IComponent.ComponentResult.MODIFIED;
+                    } else {
+                        return IComponent.ComponentResult.NO_CHANGE;
+                    }
+                });
     }
-    return Optional.empty();
-  }
+
+    protected Optional<Inventory> getInventory() {
+        if (this.user instanceof PlayerEntity) {
+            return Optional.of(((PlayerEntity) this.user).getInventory());
+        }
+        return Optional.empty();
+    }
 }

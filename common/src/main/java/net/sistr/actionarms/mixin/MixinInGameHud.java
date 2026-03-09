@@ -13,16 +13,16 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(InGameHud.class)
 public class MixinInGameHud {
 
-  @Shadow @Final private MinecraftClient client;
+    @Shadow @Final private MinecraftClient client;
 
-  @Inject(method = "renderCrosshair", at = @At("HEAD"), cancellable = true)
-  private void onRenderCrosshair(CallbackInfo ci) {
-    var player = this.client.player;
-    if (player == null) return;
+    @Inject(method = "renderCrosshair", at = @At("HEAD"), cancellable = true)
+    private void onRenderCrosshair(CallbackInfo ci) {
+        var player = this.client.player;
+        if (player == null) return;
 
-    var main = player.getMainHandStack();
-    if (main.getItem() instanceof LeverActionGunItem) {
-      ci.cancel();
+        var main = player.getMainHandStack();
+        if (main.getItem() instanceof LeverActionGunItem) {
+            ci.cancel();
+        }
     }
-  }
 }

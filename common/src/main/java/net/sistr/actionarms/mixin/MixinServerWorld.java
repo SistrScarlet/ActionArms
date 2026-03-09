@@ -15,23 +15,25 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(ServerWorld.class)
 public abstract class MixinServerWorld implements HasEntityRecordManager {
-  @Shadow @Final private EntityList entityList;
+    @Shadow @Final private EntityList entityList;
 
-  @Unique
-  private final EntityRecordManager actionArms$entityRecordManager = new EntityRecordManager();
+    @Unique
+    private final EntityRecordManager actionArms$entityRecordManager = new EntityRecordManager();
 
-  @Override
-  public EntityRecordManager actionArms$getEntityRecordManager() {
-    return actionArms$entityRecordManager;
-  }
+    @Override
+    public EntityRecordManager actionArms$getEntityRecordManager() {
+        return actionArms$entityRecordManager;
+    }
 
-  @Inject(
-      method = "tick",
-      at =
-          @At(
-              value = "INVOKE",
-              target = "Lnet/minecraft/world/EntityList;forEach(Ljava/util/function/Consumer;)V"))
-  private void onTickEntityListForeach(BooleanSupplier shouldKeepTicking, CallbackInfo ci) {
-    this.actionArms$entityRecordManager.preWorldTick((ServerWorld) (Object) this, this.entityList);
-  }
+    @Inject(
+            method = "tick",
+            at =
+                    @At(
+                            value = "INVOKE",
+                            target =
+                                    "Lnet/minecraft/world/EntityList;forEach(Ljava/util/function/Consumer;)V"))
+    private void onTickEntityListForeach(BooleanSupplier shouldKeepTicking, CallbackInfo ci) {
+        this.actionArms$entityRecordManager.preWorldTick(
+                (ServerWorld) (Object) this, this.entityList);
+    }
 }

@@ -8,6 +8,6 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 
 @Mixin(DamageSources.class)
 public interface DamageSourcesAccessor {
-  @Accessor
-  Registry<DamageType> getRegistry();
+    @Accessor
+    Registry<DamageType> getRegistry();
 }

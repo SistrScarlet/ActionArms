@@ -2,17 +2,17 @@ package net.sistr.actionarms.item.util;
 
 public interface CyclingLever {
 
-  boolean cycle(LeverActionPlaySoundContext playSoundContext, AnimationContext context);
+    boolean cycle(LeverActionPlaySoundContext playSoundContext, AnimationContext context);
 
-  boolean canCycle();
+    boolean canCycle();
 
-  boolean shouldCycle();
+    boolean shouldCycle();
 
-  boolean isHammerReady();
+    boolean isHammerReady();
 
-  boolean isLeverDown();
+    boolean isLeverDown();
 
-  interface CycleTickContext {
-    void ejectCartridge(Cartridge cartridge);
-  }
+    interface CycleTickContext {
+        void ejectCartridge(Cartridge cartridge);
+    }
 }

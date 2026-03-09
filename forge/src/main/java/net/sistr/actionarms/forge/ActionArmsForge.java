@@ -15,33 +15,34 @@ import net.sistr.actionarms.config.AAConfig;
 
 @Mod(ActionArms.MOD_ID)
 public class ActionArmsForge {
-  public ActionArmsForge(FMLJavaModLoadingContext context) {
-    var eventBus = context.getModEventBus();
+    public ActionArmsForge(FMLJavaModLoadingContext context) {
+        var eventBus = context.getModEventBus();
 
-    EventBuses.registerModEventBus(ActionArms.MOD_ID, eventBus);
+        EventBuses.registerModEventBus(ActionArms.MOD_ID, eventBus);
 
-    eventBus.addListener(this::modInit);
-    eventBus.addListener(this::clientInit);
+        eventBus.addListener(this::modInit);
+        eventBus.addListener(this::clientInit);
 
-    context.registerExtensionPoint(
-        ConfigScreenHandler.ConfigScreenFactory.class,
-        () ->
-            new ConfigScreenHandler.ConfigScreenFactory(
-                (client, parent) -> AutoConfig.getConfigScreen(AAConfig.class, parent).get()));
+        context.registerExtensionPoint(
+                ConfigScreenHandler.ConfigScreenFactory.class,
+                () ->
+                        new ConfigScreenHandler.ConfigScreenFactory(
+                                (client, parent) ->
+                                        AutoConfig.getConfigScreen(AAConfig.class, parent).get()));
 
-    ActionArms.preInit();
+        ActionArms.preInit();
 
-    // clientInitだと実行が遅い場合のクライアント処理
-    if (Platform.getEnv() == Dist.CLIENT) {
-      ActionArmsClient.preInit();
+        // clientInitだと実行が遅い場合のクライアント処理
+        if (Platform.getEnv() == Dist.CLIENT) {
+            ActionArmsClient.preInit();
+        }
     }
-  }
 
-  public void modInit(FMLCommonSetupEvent event) {
-    ActionArms.init();
-  }
+    public void modInit(FMLCommonSetupEvent event) {
+        ActionArms.init();
+    }
 
-  public void clientInit(FMLClientSetupEvent event) {
-    ActionArmsClient.init();
-  }
+    public void clientInit(FMLClientSetupEvent event) {
+        ActionArmsClient.init();
+    }
 }

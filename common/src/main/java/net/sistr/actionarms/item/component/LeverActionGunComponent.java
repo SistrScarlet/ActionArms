@@ -6,356 +6,365 @@ import net.sistr.actionarms.item.data.MagazineData;
 import net.sistr.actionarms.item.util.*;
 
 public class LeverActionGunComponent implements IComponent, FireTrigger, CyclingLever, Reloadable {
-  private final LeverActionGunData gunData;
-  private final Chamber chamber = new Chamber(null);
-  private final MagazineComponent magazine;
-  private boolean hammerReady;
-  private boolean leverDown;
-  private boolean cycling;
-  private boolean reloading;
-  private float cycleTime;
-  private float reloadTime;
-  private float fireCoolTime;
-  private float cycleCoolTime;
-  private float reloadCoolTime;
+    private final LeverActionGunData gunData;
+    private final Chamber chamber = new Chamber(null);
+    private final MagazineComponent magazine;
+    private boolean hammerReady;
+    private boolean leverDown;
+    private boolean cycling;
+    private boolean reloading;
+    private float cycleTime;
+    private float reloadTime;
+    private float fireCoolTime;
+    private float cycleCoolTime;
+    private float reloadCoolTime;
 
-  public LeverActionGunComponent(LeverActionGunData gunData, MagazineData magazineData) {
-    this.gunData = gunData;
-    this.magazine = new MagazineComponent(magazineData);
-  }
-
-  // tick処理
-  public boolean tick(
-      LeverActionPlaySoundContext playSoundContext,
-      CycleTickContext cycleContext,
-      ReloadTickContext reloadContext,
-      float timeDelta,
-      boolean active) {
-    boolean markDuty = false;
-
-    // 時間経過処理
-    if (this.fireCoolTime > 0) {
-      this.fireCoolTime = Math.max(0, this.fireCoolTime - timeDelta);
-      markDuty = true;
-    }
-    if (cycleCoolTime > 0) {
-      this.cycleCoolTime = Math.max(0, this.cycleCoolTime - timeDelta);
-      markDuty = true;
-    }
-    if (reloadCoolTime > 0) {
-      this.reloadCoolTime = Math.max(0, this.reloadCoolTime - timeDelta);
-      markDuty = true;
+    public LeverActionGunComponent(LeverActionGunData gunData, MagazineData magazineData) {
+        this.gunData = gunData;
+        this.magazine = new MagazineComponent(magazineData);
     }
 
-    // アクティブ時処理
-    if (active) {
-      // サイクル処理
-      if (this.cycling) {
-        cycleTick(playSoundContext, cycleContext, timeDelta);
-        markDuty = true;
-      }
+    // tick処理
+    public boolean tick(
+            LeverActionPlaySoundContext playSoundContext,
+            CycleTickContext cycleContext,
+            ReloadTickContext reloadContext,
+            float timeDelta,
+            boolean active) {
+        boolean markDuty = false;
 
-      // リロード処理
-      if (this.reloading) {
-        reloadTick(playSoundContext, reloadContext, timeDelta);
-        markDuty = true;
-      }
-    }
-    return markDuty;
-  }
-
-  // FireTriggerインターフェース実装
-  @Override
-  public boolean trigger(
-      LeverActionPlaySoundContext playSoundContext,
-      AnimationContext animationContext,
-      FireStartContext fireContext) {
-    if (!canTrigger()) {
-      return false;
-    }
-    if (!canShoot()) {
-      playSoundContext.playSound(LeverActionPlaySoundContext.Sound.DRY_FIRE);
-      animationContext.setAnimation("dry_fire", 0);
-      this.hammerReady = false;
-      return true;
-    }
-    var bullet = this.chamber.shoot().orElseThrow();
-    fireContext.fire(this, bullet);
-    playSoundContext.playSound(LeverActionPlaySoundContext.Sound.FIRE);
-    animationContext.setAnimation("fire", 0);
-    this.hammerReady = false;
-    this.fireCoolTime = this.gunData.fireCoolLength();
-    if (this.cycling) {
-      this.cycling = false;
-      this.cycleTime = 0;
-    }
-    return true;
-  }
-
-  @Override
-  public boolean canTrigger() {
-    return this.hammerReady
-        && !this.leverDown
-        && (!this.cycling || this.cycleTime <= this.gunData.cycleCancelableLength())
-        && (!this.reloading || this.reloadTime <= this.gunData.reloadCancelableLength())
-        && this.fireCoolTime == 0
-        && this.cycleCoolTime == 0
-        && this.reloadCoolTime == 0;
-  }
-
-  // CyclingLeverインターフェース実装
-  private void cycleTick(
-      LeverActionPlaySoundContext playSoundContext, CycleTickContext context, float timeDelta) {
-    this.cycleTime = Math.max(0, this.cycleTime - timeDelta);
-    // サイクルが節目を迎えたとき
-    if (this.cycleTime == 0) {
-      if (this.leverDown) {
-        // サイクル終了処理
-        this.leverDown = false;
-        this.cycling = false;
-        this.cycleCoolTime = this.gunData.cycleCoolLength();
-        this.hammerReady = true;
-
-        // チューブマガジンはFILO
-        this.magazine
-            .popFirstBullet()
-            .ifPresent(
-                bullet -> {
-                  this.chamber.setCartridge(new Cartridge(bullet));
-                });
-      } else {
-        // サイクル折り返し処理
-        this.leverDown = true;
-        this.cycleTime = this.gunData.leverDownLength();
-        this.hammerReady = false;
-        this.chamber.ejectCartridge().ifPresent(context::ejectCartridge);
-      }
-    }
-  }
-
-  @Override
-  public boolean cycle(
-      LeverActionPlaySoundContext playSoundContext, AnimationContext animationContext) {
-    if (!canCycle()) {
-      return false;
-    }
-    if (this.chamber.isInCartridge()) {
-      animationContext.setAnimation("cycle", this.leverDown ? this.gunData.leverDownLength() : 0);
-    } else {
-      animationContext.setAnimation(
-          "cycle_empty", this.leverDown ? this.gunData.leverDownLength() : 0);
-    }
-    playSoundContext.playSound(LeverActionPlaySoundContext.Sound.CYCLE);
-    this.cycling = true;
-    this.reloading = false;
-    if (this.leverDown) {
-      this.cycleTime = this.gunData.leverUpLength();
-    } else {
-      this.cycleTime = this.gunData.leverDownLength();
-    }
-    return true;
-  }
-
-  @Override
-  public boolean canCycle() {
-    return !this.cycling
-        && this.cycleCoolTime == 0
-        && this.reloadCoolTime == 0
-        && this.fireCoolTime == 0
-        && (!this.reloading || this.reloadTime <= this.gunData.reloadCancelableLength());
-  }
-
-  @Override
-  public boolean shouldCycle() {
-    return (this.chamber.canShoot() && (leverDown || !hammerReady)) // 撃てるが状態がおかしい時
-        || (!this.chamber.canShoot() && this.magazine.hasBullet()); // 撃てないが弾はあるとき
-  }
-
-  @Override
-  public boolean isHammerReady() {
-    return this.hammerReady;
-  }
-
-  @Override
-  public boolean isLeverDown() {
-    return this.leverDown;
-  }
-
-  // Reloadableインターフェース実装
-  private void reloadTick(
-      LeverActionPlaySoundContext playSoundContext, ReloadTickContext context, float timeDelta) {
-    this.reloadTime = Math.max(0, this.reloadTime - timeDelta);
-    if (this.reloadTime == 0) {
-      this.reloading = false;
-      this.reloadCoolTime = this.gunData.reloadCoolLength();
-      if (this.magazine.canAddBullet()) {
-        var bullets =
-            context.popBullets(
-                this.magazine.getMagazineType().allowBullet(), this.gunData.reloadCount());
-        if (bullets.isEmpty()) {
-          return;
+        // 時間経過処理
+        if (this.fireCoolTime > 0) {
+            this.fireCoolTime = Math.max(0, this.fireCoolTime - timeDelta);
+            markDuty = true;
         }
-        // チューブマガジンはFILO
-        var nonLoaded = this.magazine.addFirstBullets(bullets, true);
-        context.returnBullets(nonLoaded);
-      }
+        if (cycleCoolTime > 0) {
+            this.cycleCoolTime = Math.max(0, this.cycleCoolTime - timeDelta);
+            markDuty = true;
+        }
+        if (reloadCoolTime > 0) {
+            this.reloadCoolTime = Math.max(0, this.reloadCoolTime - timeDelta);
+            markDuty = true;
+        }
+
+        // アクティブ時処理
+        if (active) {
+            // サイクル処理
+            if (this.cycling) {
+                cycleTick(playSoundContext, cycleContext, timeDelta);
+                markDuty = true;
+            }
+
+            // リロード処理
+            if (this.reloading) {
+                reloadTick(playSoundContext, reloadContext, timeDelta);
+                markDuty = true;
+            }
+        }
+        return markDuty;
     }
-  }
 
-  @Override
-  public boolean reload(
-      LeverActionPlaySoundContext playSoundContext,
-      AnimationContext animationContext,
-      ReloadStartContext context) {
-    if (!canReload(context)) {
-      return false;
+    // FireTriggerインターフェース実装
+    @Override
+    public boolean trigger(
+            LeverActionPlaySoundContext playSoundContext,
+            AnimationContext animationContext,
+            FireStartContext fireContext) {
+        if (!canTrigger()) {
+            return false;
+        }
+        if (!canShoot()) {
+            playSoundContext.playSound(LeverActionPlaySoundContext.Sound.DRY_FIRE);
+            animationContext.setAnimation("dry_fire", 0);
+            this.hammerReady = false;
+            return true;
+        }
+        var bullet = this.chamber.shoot().orElseThrow();
+        fireContext.fire(this, bullet);
+        playSoundContext.playSound(LeverActionPlaySoundContext.Sound.FIRE);
+        animationContext.setAnimation("fire", 0);
+        this.hammerReady = false;
+        this.fireCoolTime = this.gunData.fireCoolLength();
+        if (this.cycling) {
+            this.cycling = false;
+            this.cycleTime = 0;
+        }
+        return true;
     }
-    int maxBullets = this.magazine.getMaxCapacity();
-    int bullets = this.magazine.getBullets().size();
-    if (bullets + this.gunData.reloadCount() >= maxBullets) {
-      animationContext.setAnimation("reload_end", 0);
-    } else {
-      animationContext.setAnimation("reload", 0);
+
+    @Override
+    public boolean canTrigger() {
+        return this.hammerReady
+                && !this.leverDown
+                && (!this.cycling || this.cycleTime <= this.gunData.cycleCancelableLength())
+                && (!this.reloading || this.reloadTime <= this.gunData.reloadCancelableLength())
+                && this.fireCoolTime == 0
+                && this.cycleCoolTime == 0
+                && this.reloadCoolTime == 0;
     }
-    playSoundContext.playSound(LeverActionPlaySoundContext.Sound.RELOAD);
-    this.reloading = true;
-    this.cycling = false;
-    this.reloadTime = this.gunData.reloadLength();
-    return true;
-  }
 
-  @Override
-  public boolean canReload(ReloadStartContext context) {
-    return !this.reloading
-        && this.cycleCoolTime == 0
-        && this.reloadCoolTime == 0
-        && this.fireCoolTime == 0
-        // リロードはサイクルをキャンセルできない
-        && !this.cycling
-        && this.magazine.canAddBullet()
-        && context.hasBullet(this.magazine.getMagazineType().allowBullet());
-  }
+    // CyclingLeverインターフェース実装
+    private void cycleTick(
+            LeverActionPlaySoundContext playSoundContext,
+            CycleTickContext context,
+            float timeDelta) {
+        this.cycleTime = Math.max(0, this.cycleTime - timeDelta);
+        // サイクルが節目を迎えたとき
+        if (this.cycleTime == 0) {
+            if (this.leverDown) {
+                // サイクル終了処理
+                this.leverDown = false;
+                this.cycling = false;
+                this.cycleCoolTime = this.gunData.cycleCoolLength();
+                this.hammerReady = true;
 
-  @Override
-  public boolean shouldReload() {
-    return this.magazine.canAddBullet();
-  }
+                // チューブマガジンはFILO
+                this.magazine
+                        .popFirstBullet()
+                        .ifPresent(
+                                bullet -> {
+                                    this.chamber.setCartridge(new Cartridge(bullet));
+                                });
+            } else {
+                // サイクル折り返し処理
+                this.leverDown = true;
+                this.cycleTime = this.gunData.leverDownLength();
+                this.hammerReady = false;
+                this.chamber.ejectCartridge().ifPresent(context::ejectCartridge);
+            }
+        }
+    }
 
-  // 内部ヘルパーメソッド
-  private boolean canShoot() {
-    return this.hammerReady && !this.leverDown && this.fireCoolTime == 0 && this.chamber.canShoot();
-  }
+    @Override
+    public boolean cycle(
+            LeverActionPlaySoundContext playSoundContext, AnimationContext animationContext) {
+        if (!canCycle()) {
+            return false;
+        }
+        if (this.chamber.isInCartridge()) {
+            animationContext.setAnimation(
+                    "cycle", this.leverDown ? this.gunData.leverDownLength() : 0);
+        } else {
+            animationContext.setAnimation(
+                    "cycle_empty", this.leverDown ? this.gunData.leverDownLength() : 0);
+        }
+        playSoundContext.playSound(LeverActionPlaySoundContext.Sound.CYCLE);
+        this.cycling = true;
+        this.reloading = false;
+        if (this.leverDown) {
+            this.cycleTime = this.gunData.leverUpLength();
+        } else {
+            this.cycleTime = this.gunData.leverDownLength();
+        }
+        return true;
+    }
 
-  // IItemComponentインターフェース実装（NBT永続化）
-  @Override
-  public void read(NbtCompound nbt) {
-    this.cycling = nbt.getBoolean("cycling");
-    this.reloading = nbt.getBoolean("reloading");
-    this.hammerReady = nbt.getBoolean("hammerReady");
-    this.leverDown = nbt.getBoolean("leverDown");
-    this.cycleTime = nbt.getFloat("cycleTime");
-    this.reloadCoolTime = nbt.getFloat("reloadCoolTime");
-    this.fireCoolTime = nbt.getFloat("fireCoolTime");
-    this.cycleCoolTime = nbt.getFloat("cycleCoolTime");
-    this.reloadTime = nbt.getFloat("reloadTime");
-    this.chamber.read(nbt.getCompound("chamber"));
-    this.magazine.read(nbt.getCompound("magazine"));
-  }
+    @Override
+    public boolean canCycle() {
+        return !this.cycling
+                && this.cycleCoolTime == 0
+                && this.reloadCoolTime == 0
+                && this.fireCoolTime == 0
+                && (!this.reloading || this.reloadTime <= this.gunData.reloadCancelableLength());
+    }
 
-  @Override
-  public void write(NbtCompound nbt) {
-    nbt.putBoolean("cycling", this.cycling);
-    nbt.putBoolean("reloading", this.reloading);
-    nbt.putBoolean("hammerReady", this.hammerReady);
-    nbt.putBoolean("leverDown", this.leverDown);
-    nbt.putFloat("cycleTime", this.cycleTime);
-    nbt.putFloat("reloadCoolTime", this.reloadCoolTime);
-    nbt.putFloat("fireCoolTime", this.fireCoolTime);
-    nbt.putFloat("cycleCoolTime", this.cycleCoolTime);
-    nbt.putFloat("reloadTime", this.reloadTime);
-    var chamberNbt = new NbtCompound();
-    this.chamber.write(chamberNbt);
-    nbt.put("chamber", chamberNbt);
-    var magazineNbt = new NbtCompound();
-    this.magazine.write(magazineNbt);
-    nbt.put("magazine", magazineNbt);
-  }
+    @Override
+    public boolean shouldCycle() {
+        return (this.chamber.canShoot() && (leverDown || !hammerReady)) // 撃てるが状態がおかしい時
+                || (!this.chamber.canShoot() && this.magazine.hasBullet()); // 撃てないが弾はあるとき
+    }
 
-  // getter / setter
+    @Override
+    public boolean isHammerReady() {
+        return this.hammerReady;
+    }
 
-  public LeverActionGunData getGunData() {
-    return gunData;
-  }
+    @Override
+    public boolean isLeverDown() {
+        return this.leverDown;
+    }
 
-  public Chamber getChamber() {
-    return chamber;
-  }
+    // Reloadableインターフェース実装
+    private void reloadTick(
+            LeverActionPlaySoundContext playSoundContext,
+            ReloadTickContext context,
+            float timeDelta) {
+        this.reloadTime = Math.max(0, this.reloadTime - timeDelta);
+        if (this.reloadTime == 0) {
+            this.reloading = false;
+            this.reloadCoolTime = this.gunData.reloadCoolLength();
+            if (this.magazine.canAddBullet()) {
+                var bullets =
+                        context.popBullets(
+                                this.magazine.getMagazineType().allowBullet(),
+                                this.gunData.reloadCount());
+                if (bullets.isEmpty()) {
+                    return;
+                }
+                // チューブマガジンはFILO
+                var nonLoaded = this.magazine.addFirstBullets(bullets, true);
+                context.returnBullets(nonLoaded);
+            }
+        }
+    }
 
-  public MagazineComponent getMagazine() {
-    return magazine;
-  }
+    @Override
+    public boolean reload(
+            LeverActionPlaySoundContext playSoundContext,
+            AnimationContext animationContext,
+            ReloadStartContext context) {
+        if (!canReload(context)) {
+            return false;
+        }
+        int maxBullets = this.magazine.getMaxCapacity();
+        int bullets = this.magazine.getBullets().size();
+        if (bullets + this.gunData.reloadCount() >= maxBullets) {
+            animationContext.setAnimation("reload_end", 0);
+        } else {
+            animationContext.setAnimation("reload", 0);
+        }
+        playSoundContext.playSound(LeverActionPlaySoundContext.Sound.RELOAD);
+        this.reloading = true;
+        this.cycling = false;
+        this.reloadTime = this.gunData.reloadLength();
+        return true;
+    }
 
-  public void setHammerReady(boolean hammerReady) {
-    this.hammerReady = hammerReady;
-  }
+    @Override
+    public boolean canReload(ReloadStartContext context) {
+        return !this.reloading
+                && this.cycleCoolTime == 0
+                && this.reloadCoolTime == 0
+                && this.fireCoolTime == 0
+                // リロードはサイクルをキャンセルできない
+                && !this.cycling
+                && this.magazine.canAddBullet()
+                && context.hasBullet(this.magazine.getMagazineType().allowBullet());
+    }
 
-  public void setLeverDown(boolean leverDown) {
-    this.leverDown = leverDown;
-  }
+    @Override
+    public boolean shouldReload() {
+        return this.magazine.canAddBullet();
+    }
 
-  public boolean isCycling() {
-    return cycling;
-  }
+    // 内部ヘルパーメソッド
+    private boolean canShoot() {
+        return this.hammerReady
+                && !this.leverDown
+                && this.fireCoolTime == 0
+                && this.chamber.canShoot();
+    }
 
-  public void setCycling(boolean cycling) {
-    this.cycling = cycling;
-  }
+    // IItemComponentインターフェース実装（NBT永続化）
+    @Override
+    public void read(NbtCompound nbt) {
+        this.cycling = nbt.getBoolean("cycling");
+        this.reloading = nbt.getBoolean("reloading");
+        this.hammerReady = nbt.getBoolean("hammerReady");
+        this.leverDown = nbt.getBoolean("leverDown");
+        this.cycleTime = nbt.getFloat("cycleTime");
+        this.reloadCoolTime = nbt.getFloat("reloadCoolTime");
+        this.fireCoolTime = nbt.getFloat("fireCoolTime");
+        this.cycleCoolTime = nbt.getFloat("cycleCoolTime");
+        this.reloadTime = nbt.getFloat("reloadTime");
+        this.chamber.read(nbt.getCompound("chamber"));
+        this.magazine.read(nbt.getCompound("magazine"));
+    }
 
-  public boolean isReloading() {
-    return reloading;
-  }
+    @Override
+    public void write(NbtCompound nbt) {
+        nbt.putBoolean("cycling", this.cycling);
+        nbt.putBoolean("reloading", this.reloading);
+        nbt.putBoolean("hammerReady", this.hammerReady);
+        nbt.putBoolean("leverDown", this.leverDown);
+        nbt.putFloat("cycleTime", this.cycleTime);
+        nbt.putFloat("reloadCoolTime", this.reloadCoolTime);
+        nbt.putFloat("fireCoolTime", this.fireCoolTime);
+        nbt.putFloat("cycleCoolTime", this.cycleCoolTime);
+        nbt.putFloat("reloadTime", this.reloadTime);
+        var chamberNbt = new NbtCompound();
+        this.chamber.write(chamberNbt);
+        nbt.put("chamber", chamberNbt);
+        var magazineNbt = new NbtCompound();
+        this.magazine.write(magazineNbt);
+        nbt.put("magazine", magazineNbt);
+    }
 
-  public void setReloading(boolean reloading) {
-    this.reloading = reloading;
-  }
+    // getter / setter
 
-  public float getCycleTime() {
-    return cycleTime;
-  }
+    public LeverActionGunData getGunData() {
+        return gunData;
+    }
 
-  public void setCycleTime(float cycleTime) {
-    this.cycleTime = cycleTime;
-  }
+    public Chamber getChamber() {
+        return chamber;
+    }
 
-  public float getReloadTime() {
-    return reloadTime;
-  }
+    public MagazineComponent getMagazine() {
+        return magazine;
+    }
 
-  public void setReloadTime(float reloadTime) {
-    this.reloadTime = reloadTime;
-  }
+    public void setHammerReady(boolean hammerReady) {
+        this.hammerReady = hammerReady;
+    }
 
-  public float getFireCoolTime() {
-    return fireCoolTime;
-  }
+    public void setLeverDown(boolean leverDown) {
+        this.leverDown = leverDown;
+    }
 
-  public void setFireCoolTime(float fireCoolTime) {
-    this.fireCoolTime = fireCoolTime;
-  }
+    public boolean isCycling() {
+        return cycling;
+    }
 
-  public float getCycleCoolTime() {
-    return cycleCoolTime;
-  }
+    public void setCycling(boolean cycling) {
+        this.cycling = cycling;
+    }
 
-  public void setCycleCoolTime(float cycleCoolTime) {
-    this.cycleCoolTime = cycleCoolTime;
-  }
+    public boolean isReloading() {
+        return reloading;
+    }
 
-  public float getReloadCoolTime() {
-    return reloadCoolTime;
-  }
+    public void setReloading(boolean reloading) {
+        this.reloading = reloading;
+    }
 
-  public void setReloadCoolTime(float reloadCoolTime) {
-    this.reloadCoolTime = reloadCoolTime;
-  }
+    public float getCycleTime() {
+        return cycleTime;
+    }
+
+    public void setCycleTime(float cycleTime) {
+        this.cycleTime = cycleTime;
+    }
+
+    public float getReloadTime() {
+        return reloadTime;
+    }
+
+    public void setReloadTime(float reloadTime) {
+        this.reloadTime = reloadTime;
+    }
+
+    public float getFireCoolTime() {
+        return fireCoolTime;
+    }
+
+    public void setFireCoolTime(float fireCoolTime) {
+        this.fireCoolTime = fireCoolTime;
+    }
+
+    public float getCycleCoolTime() {
+        return cycleCoolTime;
+    }
+
+    public void setCycleCoolTime(float cycleCoolTime) {
+        this.cycleCoolTime = cycleCoolTime;
+    }
+
+    public float getReloadCoolTime() {
+        return reloadCoolTime;
+    }
+
+    public void setReloadCoolTime(float reloadCoolTime) {
+        this.reloadCoolTime = reloadCoolTime;
+    }
 }

@@ -22,57 +22,56 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(ItemRenderer.class)
 public class MixinItemRenderer {
 
-  /** プレイヤーやモブが手に持った時の描画 新しいレンダラーレジストリシステムを使用 */
-  @Inject(
-      method =
-          "renderItem(Lnet/minecraft/entity/LivingEntity;Lnet/minecraft/item/ItemStack;Lnet/minecraft/client/render/model/json/ModelTransformationMode;ZLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;Lnet/minecraft/world/World;III)V",
-      at = @At("HEAD"),
-      cancellable = true)
-  private void onRenderItemWithEntity(
-      LivingEntity entity,
-      ItemStack stack,
-      ModelTransformationMode renderMode,
-      boolean leftHanded,
-      MatrixStack matrices,
-      VertexConsumerProvider vertexConsumers,
-      World world,
-      int light,
-      int overlay,
-      int seed,
-      CallbackInfo ci) {
-    // glTFモデルアイテムかチェック
-    if (!(stack.getItem() instanceof GlftModelItem)) {
-      return;
+    /** プレイヤーやモブが手に持った時の描画 新しいレンダラーレジストリシステムを使用 */
+    @Inject(
+            method =
+                    "renderItem(Lnet/minecraft/entity/LivingEntity;Lnet/minecraft/item/ItemStack;Lnet/minecraft/client/render/model/json/ModelTransformationMode;ZLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;Lnet/minecraft/world/World;III)V",
+            at = @At("HEAD"),
+            cancellable = true)
+    private void onRenderItemWithEntity(
+            LivingEntity entity,
+            ItemStack stack,
+            ModelTransformationMode renderMode,
+            boolean leftHanded,
+            MatrixStack matrices,
+            VertexConsumerProvider vertexConsumers,
+            World world,
+            int light,
+            int overlay,
+            int seed,
+            CallbackInfo ci) {
+        // glTFモデルアイテムかチェック
+        if (!(stack.getItem() instanceof GlftModelItem)) {
+            return;
+        }
+
+        var id = Registries.ITEM.getId(stack.getItem());
+
+        // レンダラーIDを取得してレンダラーを取得
+        Optional<GltfObjectRenderer<ItemStack>> renderer =
+                GltfObjectRendererRegistry.INSTANCE.getRenderer(id);
+
+        if (renderer.isPresent()) {
+            ci.cancel(); // 元の描画をキャンセル
+
+            matrices.push();
+            try {
+                renderer.get()
+                        .render(
+                                stack,
+                                renderMode,
+                                matrices,
+                                vertexConsumers,
+                                entity,
+                                world,
+                                light,
+                                overlay,
+                                MinecraftClient.getInstance().getTickDelta());
+            } catch (Exception e) {
+                ActionArms.LOGGER.error("Error during glTF item rendering: {}", e.getMessage(), e);
+            } finally {
+                matrices.pop();
+            }
+        }
     }
-
-    var id = Registries.ITEM.getId(stack.getItem());
-
-    // レンダラーIDを取得してレンダラーを取得
-    Optional<GltfObjectRenderer<ItemStack>> renderer =
-        GltfObjectRendererRegistry.INSTANCE.getRenderer(id);
-
-    if (renderer.isPresent()) {
-      ci.cancel(); // 元の描画をキャンセル
-
-      matrices.push();
-      try {
-        renderer
-            .get()
-            .render(
-                stack,
-                renderMode,
-                matrices,
-                vertexConsumers,
-                entity,
-                world,
-                light,
-                overlay,
-                MinecraftClient.getInstance().getTickDelta());
-      } catch (Exception e) {
-        ActionArms.LOGGER.error("Error during glTF item rendering: {}", e.getMessage(), e);
-      } finally {
-        matrices.pop();
-      }
-    }
-  }
 }

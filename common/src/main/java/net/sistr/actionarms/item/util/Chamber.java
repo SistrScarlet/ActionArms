@@ -6,62 +6,62 @@ import net.sistr.actionarms.item.data.BulletData;
 import org.jetbrains.annotations.Nullable;
 
 public class Chamber {
-  @Nullable private Cartridge cartridge;
+    @Nullable private Cartridge cartridge;
 
-  public Chamber(@Nullable Cartridge cartridge) {
-    this.cartridge = cartridge;
-  }
-
-  public Optional<Cartridge> getCartridge() {
-    return Optional.ofNullable(cartridge);
-  }
-
-  public void setCartridge(@Nullable Cartridge cartridge) {
-    this.cartridge = cartridge;
-  }
-
-  public boolean isInCartridge() {
-    return cartridge != null;
-  }
-
-  public boolean isEmpty() {
-    return cartridge == null;
-  }
-
-  public boolean canShoot() {
-    return this.cartridge != null && this.cartridge.canShoot();
-  }
-
-  public Optional<BulletData> shoot() {
-    if (this.cartridge == null || this.cartridge.getBullet().isEmpty()) {
-      return Optional.empty();
+    public Chamber(@Nullable Cartridge cartridge) {
+        this.cartridge = cartridge;
     }
-    var bullet = this.cartridge.getBullet().get();
-    this.cartridge.setBullet(null);
-    return Optional.of(bullet);
-  }
 
-  public Optional<Cartridge> ejectCartridge() {
-    if (this.cartridge == null) {
-      return Optional.empty();
+    public Optional<Cartridge> getCartridge() {
+        return Optional.ofNullable(cartridge);
     }
-    var result = Optional.of(this.cartridge);
-    this.cartridge = null;
-    return result;
-  }
 
-  public void read(NbtCompound nbt) {
-    if (nbt.contains("cartridge")) {
-      this.cartridge = new Cartridge(null);
-      this.cartridge.read(nbt.getCompound("cartridge"));
+    public void setCartridge(@Nullable Cartridge cartridge) {
+        this.cartridge = cartridge;
     }
-  }
 
-  public void write(NbtCompound nbt) {
-    if (this.cartridge != null) {
-      var cartridgeNbt = new NbtCompound();
-      this.cartridge.write(cartridgeNbt);
-      nbt.put("cartridge", cartridgeNbt);
+    public boolean isInCartridge() {
+        return cartridge != null;
     }
-  }
+
+    public boolean isEmpty() {
+        return cartridge == null;
+    }
+
+    public boolean canShoot() {
+        return this.cartridge != null && this.cartridge.canShoot();
+    }
+
+    public Optional<BulletData> shoot() {
+        if (this.cartridge == null || this.cartridge.getBullet().isEmpty()) {
+            return Optional.empty();
+        }
+        var bullet = this.cartridge.getBullet().get();
+        this.cartridge.setBullet(null);
+        return Optional.of(bullet);
+    }
+
+    public Optional<Cartridge> ejectCartridge() {
+        if (this.cartridge == null) {
+            return Optional.empty();
+        }
+        var result = Optional.of(this.cartridge);
+        this.cartridge = null;
+        return result;
+    }
+
+    public void read(NbtCompound nbt) {
+        if (nbt.contains("cartridge")) {
+            this.cartridge = new Cartridge(null);
+            this.cartridge.read(nbt.getCompound("cartridge"));
+        }
+    }
+
+    public void write(NbtCompound nbt) {
+        if (this.cartridge != null) {
+            var cartridgeNbt = new NbtCompound();
+            this.cartridge.write(cartridgeNbt);
+            nbt.put("cartridge", cartridgeNbt);
+        }
+    }
 }

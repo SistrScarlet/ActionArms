@@ -6,8 +6,8 @@ import me.shedaniel.autoconfig.AutoConfig;
 import net.sistr.actionarms.config.AAConfig;
 
 public class AAModMenuIntegration implements ModMenuApi {
-  @Override
-  public ConfigScreenFactory<?> getModConfigScreenFactory() {
-    return parent -> AutoConfig.getConfigScreen(AAConfig.class, parent).get();
-  }
+    @Override
+    public ConfigScreenFactory<?> getModConfigScreenFactory() {
+        return parent -> AutoConfig.getConfigScreen(AAConfig.class, parent).get();
+    }
 }
