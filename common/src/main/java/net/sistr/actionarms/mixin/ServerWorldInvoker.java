@@ -9,7 +9,6 @@ import org.spongepowered.asm.mixin.gen.Invoker;
 @Mixin(ServerWorld.class)
 public interface ServerWorldInvoker {
 
-    @Invoker("getEntityLookup")
-    EntityLookup<Entity> invokeGetEntityLookup();
-
+  @Invoker("getEntityLookup")
+  EntityLookup<Entity> invokeGetEntityLookup();
 }

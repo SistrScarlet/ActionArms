@@ -25,42 +25,44 @@ import net.sistr.actionarms.client.render.hud.ClientHudManager;
 import net.sistr.actionarms.setup.Registration;
 
 public class ActionArmsClient {
-    public static void init() {
-        ClientTickEvent.CLIENT_PRE.register(mc -> {
-            if (mc.world == null) return;
-            ClientKeyInputManager.INSTANCE.preTick();
-            ClientAimManager.INSTANCE.preTick();
-            ClientHudManager.INSTANCE.preTick();
+  public static void init() {
+    ClientTickEvent.CLIENT_PRE.register(
+        mc -> {
+          if (mc.world == null) return;
+          ClientKeyInputManager.INSTANCE.preTick();
+          ClientAimManager.INSTANCE.preTick();
+          ClientHudManager.INSTANCE.preTick();
         });
-        ClientTickEvent.CLIENT_POST.register(mc -> {
-            if (mc.world == null) return;
-            ItemAnimationManager.INSTANCE.tick(1f / 20f);
+    ClientTickEvent.CLIENT_POST.register(
+        mc -> {
+          if (mc.world == null) return;
+          ItemAnimationManager.INSTANCE.tick(1f / 20f);
         });
-        ClientGuiEvent.RENDER_HUD.register(AAHudRenderer.INSTANCE::render);
-    }
+    ClientGuiEvent.RENDER_HUD.register(AAHudRenderer.INSTANCE::render);
+  }
 
-    public static void preInit() {
-        AAKeys.init();
-        ReloadListenerRegistry.register(ResourceType.CLIENT_RESOURCES, GltfModelManager.INSTANCE);
-        ReloadListenerRegistry.register(ResourceType.CLIENT_RESOURCES, GltfMetadataManager.INSTANCE);
-        ReloadListenerRegistry.register(ResourceType.CLIENT_RESOURCES, GltfObjectRendererRegistry.INSTANCE);
-        EntityRendererRegistry.register(Registration.BULLET_ENTITY, BulletEntityRenderer::new);
-        registerGltfItem(new Identifier(ActionArms.MOD_ID, "m1873"), ActionArmsItemRenderer::new);
-    }
+  public static void preInit() {
+    AAKeys.init();
+    ReloadListenerRegistry.register(ResourceType.CLIENT_RESOURCES, GltfModelManager.INSTANCE);
+    ReloadListenerRegistry.register(ResourceType.CLIENT_RESOURCES, GltfMetadataManager.INSTANCE);
+    ReloadListenerRegistry.register(
+        ResourceType.CLIENT_RESOURCES, GltfObjectRendererRegistry.INSTANCE);
+    EntityRendererRegistry.register(Registration.BULLET_ENTITY, BulletEntityRenderer::new);
+    registerGltfItem(new Identifier(ActionArms.MOD_ID, "m1873"), ActionArmsItemRenderer::new);
+  }
 
-    private static void registerGltfItem(Identifier id, GltfItemFactory<ItemStack> factory) {
-        GltfObjectRendererRegistry.INSTANCE.registerRenderer(id,
-                (context) -> {
-                    var metadata = context.metadataManager().getModelMetadata(id).orElseThrow();
-                    var model = context.modelManager().getLoadedModel(metadata.modelPath()).orElseThrow();
-                    return factory.create(model, metadata);
-                }
-        );
-    }
+  private static void registerGltfItem(Identifier id, GltfItemFactory<ItemStack> factory) {
+    GltfObjectRendererRegistry.INSTANCE.registerRenderer(
+        id,
+        (context) -> {
+          var metadata = context.metadataManager().getModelMetadata(id).orElseThrow();
+          var model = context.modelManager().getLoadedModel(metadata.modelPath()).orElseThrow();
+          return factory.create(model, metadata);
+        });
+  }
 
-    @FunctionalInterface
-    private interface GltfItemFactory<T> {
-        GltfObjectRenderer<T> create(ProcessedGltfModel model, ModelMetadata metadata);
-    }
-
+  @FunctionalInterface
+  private interface GltfItemFactory<T> {
+    GltfObjectRenderer<T> create(ProcessedGltfModel model, ModelMetadata metadata);
+  }
 }

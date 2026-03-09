@@ -8,28 +8,29 @@ import net.minecraft.util.Identifier;
 
 public class Networking {
 
-    public static void init() {
-        if (Platform.getEnv() == EnvType.CLIENT) {
-            initClient();
-        }
-
-        registerServerReceiver(KeyInputPacket.ID, KeyInputPacket::receiveC2S);
-        registerServerReceiver(AimPacket.ID, AimPacket::receiveC2S);
+  public static void init() {
+    if (Platform.getEnv() == EnvType.CLIENT) {
+      initClient();
     }
 
-    @Environment(EnvType.CLIENT)
-    public static void initClient() {
-        registerClientReceiver(ItemAnimationEventPacket.ID, ItemAnimationEventPacket::receiveS2C);
-        registerClientReceiver(HudStatePacket.ID, HudStatePacket::receiveS2C);
-        registerClientReceiver(RecoilPacket.ID, RecoilPacket::receiveS2C);
-    }
+    registerServerReceiver(KeyInputPacket.ID, KeyInputPacket::receiveC2S);
+    registerServerReceiver(AimPacket.ID, AimPacket::receiveC2S);
+  }
 
-    private static void registerServerReceiver(Identifier id, NetworkManager.NetworkReceiver receiver) {
-        NetworkManager.registerReceiver(NetworkManager.Side.C2S, id, receiver);
-    }
+  @Environment(EnvType.CLIENT)
+  public static void initClient() {
+    registerClientReceiver(ItemAnimationEventPacket.ID, ItemAnimationEventPacket::receiveS2C);
+    registerClientReceiver(HudStatePacket.ID, HudStatePacket::receiveS2C);
+    registerClientReceiver(RecoilPacket.ID, RecoilPacket::receiveS2C);
+  }
 
-    private static void registerClientReceiver(Identifier id, NetworkManager.NetworkReceiver receiver) {
-        NetworkManager.registerReceiver(NetworkManager.Side.S2C, id, receiver);
-    }
+  private static void registerServerReceiver(
+      Identifier id, NetworkManager.NetworkReceiver receiver) {
+    NetworkManager.registerReceiver(NetworkManager.Side.C2S, id, receiver);
+  }
 
+  private static void registerClientReceiver(
+      Identifier id, NetworkManager.NetworkReceiver receiver) {
+    NetworkManager.registerReceiver(NetworkManager.Side.S2C, id, receiver);
+  }
 }

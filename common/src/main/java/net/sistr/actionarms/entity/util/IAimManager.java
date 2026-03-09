@@ -2,7 +2,7 @@ package net.sistr.actionarms.entity.util;
 
 public interface IAimManager {
 
-    boolean isAiming();
+  boolean isAiming();
 
-    void setAiming(boolean aim);
+  void setAiming(boolean aim);
 }

@@ -27,6 +27,13 @@ dependencies {
     //noinspection VulnerableLibrariesLocal
     compileOnly("de.javagl:jgltf-model:${rootProject.jgltf_version}")
     compileOnly("de.javagl:jgltf-impl-v2:${rootProject.jgltf_version}")
+
+    testImplementation "org.junit.jupiter:junit-jupiter:${rootProject.junit_version}"
+    testRuntimeOnly "org.junit.platform:junit-platform-launcher:${rootProject.junit_platform_version}"
+}
+
+test {
+    useJUnitPlatform()
 }
 
 publishing {

@@ -11,14 +11,13 @@ import org.spongepowered.asm.mixin.Unique;
 
 @Mixin(ClientPlayerEntity.class)
 public class MixinClientPlayerEntity implements HasKeyInputManager {
-    @Unique
-    private final KeyInputManager actionArms$keyInputManagerDummy = new KeyInputManager();
+  @Unique private final KeyInputManager actionArms$keyInputManagerDummy = new KeyInputManager();
 
-    @Override
-    public IKeyInputManager actionArms$getKeyInputManager() {
-        if (MinecraftClient.getInstance().player == (Object) this) {
-            return ClientKeyInputManager.INSTANCE.getKeyInputManager();
-        }
-        return this.actionArms$keyInputManagerDummy;
+  @Override
+  public IKeyInputManager actionArms$getKeyInputManager() {
+    if (MinecraftClient.getInstance().player == (Object) this) {
+      return ClientKeyInputManager.INSTANCE.getKeyInputManager();
     }
+    return this.actionArms$keyInputManagerDummy;
+  }
 }

@@ -1,0 +1,3 @@
+# mc-claude-setup variables (auto-generated)
+JAR_PREFIX=ActionArms
+SOURCE_PATH=common/src/main/java/net/sistr/actionarms/

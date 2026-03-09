@@ -7,49 +7,48 @@ import net.sistr.actionarms.item.LeverActionGunItem;
 import org.jetbrains.annotations.Nullable;
 
 public class AimManager implements IAimManager {
-    private final PlayerEntity player;
-    private boolean aiming;
-    @Nullable
-    private ItemStack prevAimStack;
+  private final PlayerEntity player;
+  private boolean aiming;
+  @Nullable private ItemStack prevAimStack;
 
-    public AimManager(PlayerEntity player) {
-        this.player = player;
+  public AimManager(PlayerEntity player) {
+    this.player = player;
+  }
+
+  public void tick() {
+    var stack = this.player.getMainHandStack();
+
+    if (!canAiming()) {
+      aiming = false;
+      prevAimStack = stack;
+      return;
+    }
+    prevAimStack = stack;
+  }
+
+  private boolean canAiming() {
+    var stack = this.player.getMainHandStack();
+    // レバアク以外だったら不可
+    if (!(stack.getItem() instanceof LeverActionGunItem)) {
+      return false;
+    }
+    // アイテムを切り替えたらエイム解除
+    if (prevAimStack != null && prevAimStack != stack) {
+      var prevUuid = ItemUniqueManager.INSTANCE.getOrSet(prevAimStack);
+      var uuid = ItemUniqueManager.INSTANCE.getOrSet(stack);
+      return prevUuid.equals(uuid);
     }
 
-    public void tick() {
-        var stack = this.player.getMainHandStack();
+    return true;
+  }
 
-        if (!canAiming()) {
-            aiming = false;
-            prevAimStack = stack;
-            return;
-        }
-        prevAimStack = stack;
-    }
+  @Override
+  public boolean isAiming() {
+    return this.aiming;
+  }
 
-    private boolean canAiming() {
-        var stack = this.player.getMainHandStack();
-        // レバアク以外だったら不可
-        if (!(stack.getItem() instanceof LeverActionGunItem)) {
-            return false;
-        }
-        // アイテムを切り替えたらエイム解除
-        if (prevAimStack != null && prevAimStack != stack) {
-            var prevUuid = ItemUniqueManager.INSTANCE.getOrSet(prevAimStack);
-            var uuid = ItemUniqueManager.INSTANCE.getOrSet(stack);
-            return prevUuid.equals(uuid);
-        }
-
-        return true;
-    }
-
-    @Override
-    public boolean isAiming() {
-        return this.aiming;
-    }
-
-    @Override
-    public void setAiming(boolean aim) {
-        this.aiming = aim && canAiming();
-    }
+  @Override
+  public void setAiming(boolean aim) {
+    this.aiming = aim && canAiming();
+  }
 }

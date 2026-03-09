@@ -6,12 +6,12 @@ import net.minecraft.util.Identifier;
 import net.sistr.actionarms.entity.BulletEntity;
 
 public class BulletEntityRenderer<T extends BulletEntity> extends EntityRenderer<T> {
-    public BulletEntityRenderer(EntityRendererFactory.Context ctx) {
-        super(ctx);
-    }
+  public BulletEntityRenderer(EntityRendererFactory.Context ctx) {
+    super(ctx);
+  }
 
-    @Override
-    public Identifier getTexture(T entity) {
-        return new Identifier("textures/entity/arrow.png");
-    }
+  @Override
+  public Identifier getTexture(T entity) {
+    return new Identifier("textures/entity/arrow.png");
+  }
 }
