@@ -2,6 +2,7 @@ package net.sistr.actionarms.entity.util;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
@@ -56,72 +57,72 @@ public class GunController {
                     LeverActionPlaySoundContext playSoundContext =
                             leverAction.createPlaySoundContext(user.getWorld(), user);
 
-                    boolean markDuty = false;
-
-                    if (gunComponent.tick(
-                            playSoundContext,
-                            leverAction.createCycleTickContext(),
-                            leverAction.createReloadTickContext(user, getInventory().orElse(null)),
-                            1f / 20f,
-                            isSelected)) {
-                        markDuty = true;
-                    }
+                    boolean markDuty =
+                            gunComponent.tick(
+                                    playSoundContext,
+                                    leverAction.createCycleTickContext(),
+                                    leverAction.createReloadTickContext(
+                                            user, getInventory().orElse(null)),
+                                    1f / 20f,
+                                    isSelected);
 
                     if (!isSelected) {
-                        if (markDuty) {
-                            return IComponent.ComponentResult.MODIFIED;
-                        } else {
-                            return IComponent.ComponentResult.NO_CHANGE;
-                        }
+                        return markDuty
+                                ? IComponent.ComponentResult.MODIFIED
+                                : IComponent.ComponentResult.NO_CHANGE;
                     }
 
                     // FIREキー（射撃操作）
-                    if (keyInputManager.isTurnPressWithin(KeyInputManager.Key.FIRE, 2)) {
-                        if (gunComponent.canTrigger()) {
-                            var fireStartContext =
-                                    leverAction.createFireStartContext(user.getWorld(), user);
-                            if (gunComponent.trigger(
-                                    playSoundContext, animationContext, fireStartContext)) {
-                                stack.damage(
-                                        1, user, p -> p.sendToolBreakStatus(user.getActiveHand()));
-                                keyInputManager.killTurnPressWithin(KeyInputManager.Key.FIRE, 2);
-                                markDuty = true;
-                            }
+                    if (tryKeyAction(KeyInputManager.Key.FIRE, 2, gunComponent::canTrigger)) {
+                        var fireStartContext =
+                                leverAction.createFireStartContext(user.getWorld(), user);
+                        if (gunComponent.trigger(
+                                playSoundContext, animationContext, fireStartContext)) {
+                            stack.damage(1, user, p -> p.sendToolBreakStatus(user.getActiveHand()));
+                            markDuty = true;
                         }
                     }
 
                     // COCKキー（サイクル操作）
-                    if (keyInputManager.isTurnPressWithin(KeyInputManager.Key.COCK, 4)) {
-                        if (gunComponent.canCycle()) {
-                            if (gunComponent.cycle(playSoundContext, animationContext)) {
-                                keyInputManager.killTurnPressWithin(KeyInputManager.Key.COCK, 4);
-                                markDuty = true;
-                            }
+                    if (tryKeyAction(KeyInputManager.Key.COCK, 4, gunComponent::canCycle)) {
+                        if (gunComponent.cycle(playSoundContext, animationContext)) {
+                            markDuty = true;
                         }
                     }
 
                     // RELOADキー（リロード操作）
-                    if (keyInputManager.isTurnPressWithin(KeyInputManager.Key.RELOAD, 2)) {
-                        var isAiming =
-                                user instanceof HasAimManager hasAimManager
-                                        && hasAimManager.actionArms$getAimManager().isAiming();
-                        Reloadable.ReloadStartContext reloadContext =
-                                leverAction.createReloadStartContext(user);
-                        if (!isAiming && gunComponent.canReload(reloadContext)) {
-                            if (gunComponent.reload(
-                                    playSoundContext, animationContext, reloadContext)) {
-                                keyInputManager.killTurnPressWithin(KeyInputManager.Key.RELOAD, 2);
-                                markDuty = true;
-                            }
+                    Reloadable.ReloadStartContext reloadContext =
+                            leverAction.createReloadStartContext(user);
+                    boolean isAiming =
+                            user instanceof HasAimManager hasAimManager
+                                    && hasAimManager.actionArms$getAimManager().isAiming();
+                    if (!isAiming
+                            && tryKeyAction(
+                                    KeyInputManager.Key.RELOAD,
+                                    2,
+                                    () -> gunComponent.canReload(reloadContext))) {
+                        if (gunComponent.reload(
+                                playSoundContext, animationContext, reloadContext)) {
+                            markDuty = true;
                         }
                     }
 
-                    if (markDuty) {
-                        return IComponent.ComponentResult.MODIFIED;
-                    } else {
-                        return IComponent.ComponentResult.NO_CHANGE;
-                    }
+                    return markDuty
+                            ? IComponent.ComponentResult.MODIFIED
+                            : IComponent.ComponentResult.NO_CHANGE;
                 });
+    }
+
+    /** キー入力を確認し、条件を満たせばキー入力を消費して true を返す。 */
+    private boolean tryKeyAction(KeyInputManager.Key key, int window, BooleanSupplier canAction) {
+        if (!keyInputManager.isTurnPressWithin(key, window)) {
+            return false;
+        }
+        if (!canAction.getAsBoolean()) {
+            return false;
+        }
+        keyInputManager.killTurnPressWithin(key, window);
+        return true;
     }
 
     protected Optional<Inventory> getInventory() {
