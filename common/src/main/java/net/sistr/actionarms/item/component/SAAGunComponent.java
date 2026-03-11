@@ -42,19 +42,25 @@ public class SAAGunComponent implements IComponent {
 
     // === tick ===
 
-    public void tick(SoundContext soundContext, float timeDelta, boolean active) {
+    public boolean tick(SoundContext soundContext, float timeDelta, boolean active) {
+        boolean changed = false;
+
         if (this.cooldownTime > 0) {
             this.cooldownTime = Math.max(0, this.cooldownTime - timeDelta);
+            changed = true;
         }
 
-        if (!active) return;
+        if (!active) return changed;
 
         if (this.phaseTimer > 0) {
             this.phaseTimer = Math.max(0, this.phaseTimer - timeDelta);
-            if (this.phaseTimer == 0) {
+            changed = true;
+            if (this.phaseTimer <= 0) {
                 onPhaseComplete(soundContext);
             }
         }
+
+        return changed;
     }
 
     private void onPhaseComplete(SoundContext soundContext) {

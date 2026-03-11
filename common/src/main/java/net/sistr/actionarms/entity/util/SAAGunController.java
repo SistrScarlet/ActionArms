@@ -51,8 +51,8 @@ public class SAAGunController {
                     var soundContext = saaItem.createSoundContext(user.getWorld(), user);
                     var animContext = saaItem.createAnimationContext(user.getWorld(), uuid);
 
-                    boolean markDuty = false;
-                    gunComponent.tick(soundContext, 1f / 20f, isSelected);
+                    boolean markDuty =
+                            gunComponent.tick(soundContext, 1f / 20f, isSelected);
 
                     if (!isSelected) {
                         return markDuty

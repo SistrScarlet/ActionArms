@@ -47,7 +47,7 @@ public class LeverActionGunComponent implements IComponent, FireTrigger, Cycling
         if (this.cooldownTime > 0) {
             this.cooldownTime = Math.max(0, this.cooldownTime - timeDelta);
             markDuty = true;
-            if (this.cooldownTime == 0 && this.phase == GunPhase.COOLING) {
+            if (this.cooldownTime <= 0 && this.phase == GunPhase.COOLING) {
                 this.phase = GunPhase.IDLE;
             }
         }
@@ -119,7 +119,7 @@ public class LeverActionGunComponent implements IComponent, FireTrigger, Cycling
             float timeDelta,
             boolean leverDown) {
         this.phaseTimer = Math.max(0, this.phaseTimer - timeDelta);
-        if (this.phaseTimer == 0) {
+        if (this.phaseTimer <= 0) {
             if (leverDown) {
                 // サイクル終了処理（レバーが上がる）
                 this.phase = GunPhase.COOLING;
@@ -199,7 +199,7 @@ public class LeverActionGunComponent implements IComponent, FireTrigger, Cycling
             ReloadTickContext context,
             float timeDelta) {
         this.phaseTimer = Math.max(0, this.phaseTimer - timeDelta);
-        if (this.phaseTimer == 0) {
+        if (this.phaseTimer <= 0) {
             this.phase = GunPhase.COOLING;
             this.cooldownTime = this.gunData.reloadCoolLength();
             if (this.magazine.canAddBullet()) {
