@@ -186,8 +186,8 @@ class SAAGunComponentTest {
         }
 
         @Test
-        void 排莢後に自動回転する() {
-            // ゲート位置に空薬莢を配置
+        void 排莢後に左右に薬莢がなければ回転しない() {
+            // ゲート位置に空薬莢を1つだけ配置
             gun.getCylinder().loadAtGate(TEST_BULLET);
             gun.getCylinder().cockRotate();
             gun.getCylinder().shootFiring();
@@ -199,10 +199,8 @@ class SAAGunComponentTest {
             tickAndExpect(
                     EJECT_TICKS, () -> gun.getPhase() == SAAGunComponent.Phase.GATE_OPEN, "排莢完了");
 
-            // loadRotate は反時計回り（firingIndex + 1）
-            assertEquals(
-                    (indexBefore + 1) % CYLINDER_CAPACITY,
-                    gun.getCylinder().getFiringIndex());
+            // 左右に薬莢がないので回転しない
+            assertEquals(indexBefore, gun.getCylinder().getFiringIndex());
         }
     }
 

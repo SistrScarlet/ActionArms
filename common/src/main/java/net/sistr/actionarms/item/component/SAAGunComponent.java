@@ -74,11 +74,11 @@ public class SAAGunComponent implements IComponent {
                 break;
             case EJECTING:
                 this.phase = Phase.GATE_OPEN;
-                this.cylinder.loadRotate();
+                rotateTowardSpent();
                 break;
             case LOADING:
                 this.phase = Phase.GATE_OPEN;
-                this.cylinder.loadRotate();
+                rotateTowardEmpty();
                 if (this.cylinder.isAllLoaded()) {
                     closeGate();
                 }
@@ -176,6 +176,44 @@ public class SAAGunComponent implements IComponent {
         } else {
             this.cylinder.loadRotate();
         }
+    }
+
+    /** 排莢後の回転。左右に空薬莢があればそちらに回転、なければ回転しない。 */
+    private void rotateTowardSpent() {
+        int capacity = this.cylinder.getCapacity();
+        int gate = this.cylinder.gateIndex();
+
+        int loadNext = (gate + 1) % capacity;
+        int cockNext = (gate - 1 + capacity) % capacity;
+
+        boolean loadHasSpent = this.cylinder.getChamberAt(loadNext).shouldEject();
+        boolean cockHasSpent = this.cylinder.getChamberAt(cockNext).shouldEject();
+
+        if (cockHasSpent && !loadHasSpent) {
+            this.cylinder.cockRotate();
+        } else if (loadHasSpent) {
+            this.cylinder.loadRotate();
+        }
+        // 両方なし → 回転しない
+    }
+
+    /** 装填後の回転。左右に空の薬室があればそちらに回転、なければ回転しない。 */
+    private void rotateTowardEmpty() {
+        int capacity = this.cylinder.getCapacity();
+        int gate = this.cylinder.gateIndex();
+
+        int loadNext = (gate + 1) % capacity;
+        int cockNext = (gate - 1 + capacity) % capacity;
+
+        boolean loadHasEmpty = this.cylinder.getChamberAt(loadNext).isEmpty();
+        boolean cockHasEmpty = this.cylinder.getChamberAt(cockNext).isEmpty();
+
+        if (cockHasEmpty && !loadHasEmpty) {
+            this.cylinder.cockRotate();
+        } else if (loadHasEmpty) {
+            this.cylinder.loadRotate();
+        }
+        // 両方なし → 回転しない
     }
 
     // === 排莢（ゲート開放中 + COCK キー） ===
