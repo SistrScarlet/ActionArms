@@ -167,16 +167,20 @@ public class AAHudRenderer {
                     break;
                 case EMPTY:
                 default:
-                    drawContext.setShaderColor(1.0f, 1.0f, 1.0f, 0.3f);
                     drawContext.drawTexture(
                             MEDIUM_CALIBER_BULLET_FRAME, x, y, 0, 0, size, size, size, size);
-                    drawContext.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
                     break;
             }
 
             // 射撃位置マーカー（常に上に表示される）
             if (i == hudState.firingIndex()) {
                 drawContext.drawBorder(x - 1, y - 1, size + 2, size + 2, 0xFFFF0000);
+            }
+
+            // ゲート開放中: 操作対象（ゲート位置）の薬室を白枠で囲む
+            int gateIndex = (hudState.firingIndex() + 1) % chamberCount;
+            if (hudState.gateOpen() && i == gateIndex) {
+                drawContext.drawBorder(x - 1, y - 1, size + 2, size + 2, 0xFFFFFFFF);
             }
         }
     }
