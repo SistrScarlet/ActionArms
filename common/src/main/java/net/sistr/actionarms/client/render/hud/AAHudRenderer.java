@@ -172,9 +172,10 @@ public class AAHudRenderer {
                     break;
             }
 
-            // 射撃位置マーカー（常に上に表示される）
+            // 射撃位置マーカー（デフォ赤、撃てる状態で黒）
             if (i == hudState.firingIndex()) {
-                drawContext.drawBorder(x - 1, y - 1, size + 2, size + 2, 0xFFFF0000);
+                int markerColor = hudState.hammerCocked() ? 0xFF000000 : 0xFFFF0000;
+                drawContext.drawBorder(x - 1, y - 1, size + 2, size + 2, markerColor);
             }
 
             // ゲート開放中: 操作対象（ゲート位置）の薬室を白枠で囲む

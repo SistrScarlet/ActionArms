@@ -7,7 +7,8 @@ import net.minecraft.nbt.NbtList;
 import net.minecraft.nbt.NbtString;
 import net.sistr.actionarms.item.component.SAAGunComponent;
 
-public record SAAHudState(int firingIndex, List<ChamberState> chamberStates, boolean gateOpen) {
+public record SAAHudState(
+        int firingIndex, List<ChamberState> chamberStates, boolean gateOpen, boolean hammerCocked) {
 
     public enum ChamberState {
         EMPTY,
@@ -41,7 +42,9 @@ public record SAAHudState(int firingIndex, List<ChamberState> chamberStates, boo
                 states.add(ChamberState.SPENT);
             }
         }
-        return new SAAHudState(cylinder.getFiringIndex(), states, component.isGateOpen());
+        return new SAAHudState(
+                cylinder.getFiringIndex(), states, component.isGateOpen(),
+                component.isHammerCocked());
     }
 
     public static SAAHudState of(NbtCompound nbt) {
@@ -54,13 +57,15 @@ public record SAAHudState(int firingIndex, List<ChamberState> chamberStates, boo
                 states.add(ChamberState.fromId(list.getString(i)));
             }
         }
-        return new SAAHudState(firingIndex, states, gateOpen);
+        boolean hammerCocked = nbt.getBoolean("hammerCocked");
+        return new SAAHudState(firingIndex, states, gateOpen, hammerCocked);
     }
 
     public NbtCompound write() {
         NbtCompound nbt = new NbtCompound();
         nbt.putInt("firingIndex", this.firingIndex);
         nbt.putBoolean("gateOpen", this.gateOpen);
+        nbt.putBoolean("hammerCocked", this.hammerCocked);
         NbtList list = new NbtList();
         for (ChamberState state : this.chamberStates) {
             list.add(NbtString.of(state.id()));
