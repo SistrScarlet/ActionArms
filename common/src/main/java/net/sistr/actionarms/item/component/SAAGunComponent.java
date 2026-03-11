@@ -81,6 +81,7 @@ public class SAAGunComponent implements IComponent {
                 smartGateRotate();
                 if (this.cylinder.isAllLoaded()) {
                     closeGate();
+                    soundContext.playSound("GATE_CLOSE");
                 }
                 break;
             default:
@@ -151,6 +152,14 @@ public class SAAGunComponent implements IComponent {
     }
 
     public void closeGate() {
+        // ゲート位置に空薬莢/空薬室があり、CW に弾丸があるなら CW へ回転
+        int gate = this.cylinder.gateIndex();
+        int cw = (gate - 1 + this.cylinder.getCapacity()) % this.cylinder.getCapacity();
+        if ((this.cylinder.getChamberAt(gate).isEmpty()
+                        || this.cylinder.getChamberAt(gate).shouldEject())
+                && this.cylinder.getChamberAt(cw).canShoot()) {
+            this.cylinder.cockRotate();
+        }
         this.phase = Phase.IDLE;
         this.phaseTimer = 0;
     }

@@ -2,7 +2,7 @@ package net.sistr.actionarms.mixin;
 
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.hud.InGameHud;
-import net.sistr.actionarms.item.LeverActionGunItem;
+import net.sistr.actionarms.item.GunItem;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -21,7 +21,7 @@ public class MixinInGameHud {
         if (player == null) return;
 
         var main = player.getMainHandStack();
-        if (main.getItem() instanceof LeverActionGunItem) {
+        if (main.getItem() instanceof GunItem) {
             ci.cancel();
         }
     }
