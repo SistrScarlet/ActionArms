@@ -41,50 +41,67 @@
   },
   "item.gun.revolver.shot": {
     "sounds": [
-      "actionarms:item/gun/gun_revolver_shot_01",
-      "actionarms:item/gun/gun_revolver_shot_02"
+      "actionarms:item/gun/gun_revolver_pistol_shot_01",
+      "actionarms:item/gun/gun_revolver_pistol_shot_02",
+      "actionarms:item/gun/gun_revolver_pistol_shot_03",
+      "actionarms:item/gun/gun_revolver_pistol_shot_04"
     ],
     "subtitle": "subtitles.actionarms.item.gun.shot"
   },
   "item.gun.revolver.cock": {
     "sounds": [
-      "actionarms:item/gun/gun_revolver_cock_01",
-      "actionarms:item/gun/gun_revolver_cock_02"
+      "actionarms:item/gun/gun_revolver_pistol_cock_01",
+      "actionarms:item/gun/gun_revolver_pistol_cock_02",
+      "actionarms:item/gun/gun_revolver_pistol_cock_03",
+      "actionarms:item/gun/gun_revolver_pistol_cock_04",
+      "actionarms:item/gun/gun_revolver_pistol_cock_05"
     ],
     "subtitle": "subtitles.actionarms.item.gun.cock"
   },
   "item.gun.revolver.dry_fire": {
     "sounds": [
-      "actionarms:item/gun/gun_revolver_dry_fire_01",
-      "actionarms:item/gun/gun_revolver_dry_fire_02"
+      "actionarms:item/gun/gun_revolver_pistol_dry_fire_01",
+      "actionarms:item/gun/gun_revolver_pistol_dry_fire_02",
+      "actionarms:item/gun/gun_revolver_pistol_dry_fire_03",
+      "actionarms:item/gun/gun_revolver_pistol_dry_fire_04",
+      "actionarms:item/gun/gun_revolver_pistol_dry_fire_05"
     ],
     "subtitle": "subtitles.actionarms.item.gun.dry_fire"
   },
   "item.gun.revolver.load_bullet": {
     "sounds": [
-      "actionarms:item/gun/gun_revolver_load_bullet_01",
-      "actionarms:item/gun/gun_revolver_load_bullet_02"
+      "actionarms:item/gun/gun_revolver_pistol_load_bullet_01",
+      "actionarms:item/gun/gun_revolver_pistol_load_bullet_02",
+      "actionarms:item/gun/gun_revolver_pistol_load_bullet_03",
+      "actionarms:item/gun/gun_revolver_pistol_load_bullet_04",
+      "actionarms:item/gun/gun_revolver_pistol_load_bullet_05"
     ],
     "subtitle": "subtitles.actionarms.item.gun.load_bullet"
   },
   "item.gun.revolver.eject": {
     "sounds": [
-      "actionarms:item/gun/gun_revolver_eject_01",
-      "actionarms:item/gun/gun_revolver_eject_02"
+      "actionarms:item/gun/gun_pistol_general_handling_01",
+      "actionarms:item/gun/gun_pistol_general_handling_02",
+      "actionarms:item/gun/gun_pistol_general_handling_03",
+      "actionarms:item/gun/gun_pistol_general_handling_04",
+      "actionarms:item/gun/gun_pistol_general_handling_05"
     ],
     "subtitle": "subtitles.actionarms.item.gun.eject"
   },
   "item.gun.revolver.gate_open": {
     "sounds": [
-      "actionarms:item/gun/gun_revolver_gate_open_01",
-      "actionarms:item/gun/gun_revolver_gate_open_02"
+      "actionarms:item/gun/gun_revolver_pistol_cylinder_open_01",
+      "actionarms:item/gun/gun_revolver_pistol_cylinder_open_02",
+      "actionarms:item/gun/gun_revolver_pistol_cylinder_open_03"
     ],
     "subtitle": "subtitles.actionarms.item.gun.gate_open"
   },
   "item.gun.revolver.gate_close": {
     "sounds": [
-      "actionarms:item/gun/gun_revolver_gate_close_01",
-      "actionarms:item/gun/gun_revolver_gate_close_02"
+      "actionarms:item/gun/gun_revolver_pistol_cylinder_close_01",
+      "actionarms:item/gun/gun_revolver_pistol_cylinder_close_02",
+      "actionarms:item/gun/gun_revolver_pistol_cylinder_close_03",
+      "actionarms:item/gun/gun_revolver_pistol_cylinder_close_04"
     ],
     "subtitle": "subtitles.actionarms.item.gun.gate_close"
   }
