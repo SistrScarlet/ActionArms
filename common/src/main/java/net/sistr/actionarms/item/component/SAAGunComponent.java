@@ -147,11 +147,35 @@ public class SAAGunComponent implements IComponent {
         this.hammerCocked = false;
         this.phase = Phase.GATE_OPEN;
         this.phaseTimer = 0;
+        smartGateRotate();
     }
 
     public void closeGate() {
         this.phase = Phase.IDLE;
         this.phaseTimer = 0;
+    }
+
+    /**
+     * ゲート開放中の回転。薬莢（空薬莢）がある方向に優先して回転する。
+     * 両方向に薬莢がある場合、または両方ない場合は loadRotate（反時計回り）をデフォルトとする。
+     */
+    public void smartGateRotate() {
+        int capacity = this.cylinder.getCapacity();
+        int gate = this.cylinder.gateIndex();
+
+        // loadRotate 方向の次の薬室
+        int loadNext = (gate + 1) % capacity;
+        // cockRotate 方向の次の薬室
+        int cockNext = (gate - 1 + capacity) % capacity;
+
+        boolean loadHasSpent = this.cylinder.getChamberAt(loadNext).shouldEject();
+        boolean cockHasSpent = this.cylinder.getChamberAt(cockNext).shouldEject();
+
+        if (cockHasSpent && !loadHasSpent) {
+            this.cylinder.cockRotate();
+        } else {
+            this.cylinder.loadRotate();
+        }
     }
 
     // === 排莢（ゲート開放中 + COCK キー） ===

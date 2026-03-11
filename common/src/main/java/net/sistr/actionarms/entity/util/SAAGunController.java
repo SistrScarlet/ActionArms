@@ -125,7 +125,7 @@ public class SAAGunController {
                                                 && !gunComponent.canLoadAtGate()
                                                 && hasBullet())) {
                             // 装填済み薬室をスキップする回転（弾がある場合のみ）
-                            gunComponent.getCylinder().loadRotate();
+                            gunComponent.smartGateRotate();
                             markDuty = true;
                         }
 
