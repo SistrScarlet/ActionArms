@@ -22,6 +22,7 @@ import net.sistr.actionarms.item.component.SAAGunComponent;
 import net.sistr.actionarms.item.data.BulletData;
 import net.sistr.actionarms.item.data.SAAGunData;
 import net.sistr.actionarms.item.util.AnimationContext;
+import net.sistr.actionarms.item.util.SAAPlaySoundContext;
 import net.sistr.actionarms.network.RecoilPacket;
 import net.sistr.actionarms.setup.Registration;
 import org.jetbrains.annotations.Nullable;
@@ -120,9 +121,13 @@ public class SAAGunItem extends GunItem {
     }
 
     public SAAGunComponent.SoundContext createSoundContext(World world, LivingEntity user) {
-        return sound -> {
-            // TODO: サウンドイベントの登録後に実装
-        };
+        return (SAAPlaySoundContext)
+                sound -> {
+                    var mapped = SAAPlaySoundContext.SOUND_MAP.get(sound);
+                    if (mapped != null) {
+                        mapped.playSound(world, user, net.minecraft.sound.SoundCategory.PLAYERS);
+                    }
+                };
     }
 
     public AnimationContext createAnimationContext(World world, UUID uuid) {

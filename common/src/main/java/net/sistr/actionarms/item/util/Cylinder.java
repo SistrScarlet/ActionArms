@@ -99,6 +99,10 @@ public class Cylinder {
         return firingIndex;
     }
 
+    public Chamber getChamberAt(int index) {
+        return chambers[index];
+    }
+
     // === NBT ===
 
     public void read(NbtCompound nbt) {

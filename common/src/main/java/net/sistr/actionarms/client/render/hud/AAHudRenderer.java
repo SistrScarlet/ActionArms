@@ -10,9 +10,12 @@ import net.sistr.actionarms.entity.util.HasAimManager;
 import net.sistr.actionarms.entity.util.IAimManager;
 import net.sistr.actionarms.hud.BulletHitHudState;
 import net.sistr.actionarms.hud.LeverActionHudState;
+import net.sistr.actionarms.hud.SAAHudState;
 import net.sistr.actionarms.item.ItemUniqueManager;
 import net.sistr.actionarms.item.LeverActionGunItem;
+import net.sistr.actionarms.item.SAAGunItem;
 import net.sistr.actionarms.item.component.LeverActionGunComponent;
+import net.sistr.actionarms.item.component.SAAGunComponent;
 import net.sistr.actionarms.mixin.GameRendererInvoker;
 
 public class AAHudRenderer {
@@ -46,6 +49,21 @@ public class AAHudRenderer {
                                     textRenderer,
                                     main,
                                     leverAction,
+                                    hudState));
+        }
+
+        if (main.getItem() instanceof SAAGunItem saaGunItem) {
+            var uuid = ItemUniqueManager.INSTANCE.getOrSet(main);
+            Optional<SAAHudState> optional =
+                    ClientHudManager.INSTANCE.getState("saa@" + uuid, SAAHudState::of);
+            optional.ifPresent(
+                    hudState ->
+                            saaHud(
+                                    drawContext,
+                                    tickDelta,
+                                    textRenderer,
+                                    main,
+                                    saaGunItem,
                                     hudState));
         }
     }
@@ -100,6 +118,94 @@ public class AAHudRenderer {
             drawContext.drawTexture(texture, baseX, baseY + yOffset, 0, 0, size, size, size, size);
             yOffset += size;
         }
+    }
+
+    private void saaHud(
+            DrawContext drawContext,
+            float tickDelta,
+            TextRenderer textRenderer,
+            ItemStack stack,
+            SAAGunItem saaGunItem,
+            SAAHudState hudState) {
+        var defaultComponent = saaGunItem.getGunComponent().get();
+
+        // クロスヘア表示
+        renderSAACrosshair(drawContext, saaGunItem, defaultComponent, tickDelta);
+
+        // シリンダー HUD 描画（円形配置）
+        int size = 16;
+        int margin = 10;
+        int radius = 30;
+        var chamberStates = hudState.chamberStates();
+        int chamberCount = chamberStates.size();
+
+        // 円の中心位置（右下）
+        int centerX = drawContext.getScaledWindowWidth() - margin - radius - size / 2;
+        int centerY = drawContext.getScaledWindowHeight() - margin - radius - size / 2;
+
+        for (int i = 0; i < chamberCount; i++) {
+            // 上から時計回りに配置（-90度オフセット）
+            double angle = 2.0 * Math.PI * i / chamberCount - Math.PI / 2.0;
+            int x = centerX + (int) (radius * Math.cos(angle)) - size / 2;
+            int y = centerY + (int) (radius * Math.sin(angle)) - size / 2;
+
+            SAAHudState.ChamberState state = chamberStates.get(i);
+            switch (state) {
+                case LOADED:
+                    drawContext.drawTexture(
+                            MEDIUM_CALIBER_BULLET, x, y, 0, 0, size, size, size, size);
+                    break;
+                case SPENT:
+                    drawContext.drawTexture(
+                            MEDIUM_CALIBER_BULLET_FRAME, x, y, 0, 0, size, size, size, size);
+                    break;
+                case EMPTY:
+                default:
+                    // 薄い枠を描画
+                    drawContext.setShaderColor(1.0f, 1.0f, 1.0f, 0.3f);
+                    drawContext.drawTexture(
+                            MEDIUM_CALIBER_BULLET_FRAME, x, y, 0, 0, size, size, size, size);
+                    drawContext.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
+                    break;
+            }
+
+            // 射撃位置マーカー
+            if (i == hudState.firingIndex()) {
+                drawContext.drawBorder(x - 1, y - 1, size + 2, size + 2, 0xFFFF0000);
+            }
+        }
+    }
+
+    private void renderSAACrosshair(
+            DrawContext drawContext,
+            SAAGunItem gunItem,
+            SAAGunComponent gunComponent,
+            float tickDelta) {
+        var client = MinecraftClient.getInstance();
+        var player = client.player;
+        if (player == null) return;
+
+        boolean isAim = HasAimManager.get(player).map(IAimManager::isAiming).orElse(false);
+        if (isAim) {
+            return;
+        }
+
+        float currentSpread = gunItem.fireSpread(player, gunComponent);
+
+        int screenWidth = drawContext.getScaledWindowWidth();
+        int screenHeight = drawContext.getScaledWindowHeight();
+
+        var gameRenderer = client.gameRenderer;
+        float verticalFOV =
+                (float)
+                        Math.toRadians(
+                                ((GameRendererInvoker) gameRenderer)
+                                        .invokeGetFov(gameRenderer.getCamera(), tickDelta, true));
+        double pixelsPerRadian = screenHeight / (2.0 * Math.tan(verticalFOV / 2.0));
+        double spreadRadius = Math.toRadians(currentSpread) * pixelsPerRadian;
+
+        renderCrosshairLines(
+                client, drawContext, screenWidth / 2, screenHeight / 2, (int) spreadRadius);
     }
 
     private void renderCrosshair(

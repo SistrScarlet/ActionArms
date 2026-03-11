@@ -79,6 +79,7 @@ public class SAAGunController {
                                 2,
                                 () -> gunComponent.getPhase() == SAAGunComponent.Phase.GATE_OPEN)) {
                             gunComponent.closeGate();
+                            soundContext.playSound("GATE_CLOSE");
                             markDuty = true;
                         }
 
@@ -106,9 +107,16 @@ public class SAAGunController {
                                 KeyInputManager.Key.RELOAD,
                                 2,
                                 () -> gunComponent.canLoadAtGate() && hasBullet())) {
-                            // TODO: インベントリから弾を取り出す
-                            // gunComponent.loadAtGate(bullet);
-                            markDuty = true;
+                            var inventory = getInventory();
+                            if (inventory.isPresent()) {
+                                var bullets =
+                                        InventoryAmmoUtil.popBullets(
+                                                inventory.get(), bullet -> true, 1);
+                                if (!bullets.isEmpty()) {
+                                    gunComponent.loadAtGate(bullets.get(0));
+                                    markDuty = true;
+                                }
+                            }
                         } else if (tryKeyAction(
                                 KeyInputManager.Key.RELOAD,
                                 2,
@@ -124,6 +132,7 @@ public class SAAGunController {
                                 2,
                                 () -> gunComponent.getPhase() == SAAGunComponent.Phase.GATE_OPEN)) {
                             gunComponent.closeGate();
+                            soundContext.playSound("GATE_CLOSE");
                             markDuty = true;
                         }
                     } else {
@@ -152,6 +161,7 @@ public class SAAGunController {
                         if (tryKeyAction(
                                 KeyInputManager.Key.OPERATE, 2, () -> !gunComponent.isGateOpen())) {
                             gunComponent.openGate();
+                            soundContext.playSound("GATE_OPEN");
                             markDuty = true;
                         }
                     }
@@ -176,8 +186,7 @@ public class SAAGunController {
 
     private boolean hasBullet() {
         if (this.user instanceof PlayerEntity player) {
-            // TODO: 弾種判定の追加
-            return true;
+            return InventoryAmmoUtil.hasBullet(player.getInventory(), bullet -> true);
         }
         return false;
     }

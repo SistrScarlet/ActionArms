@@ -50,6 +50,8 @@ public class ActionArmsClient {
                 ResourceType.CLIENT_RESOURCES, GltfObjectRendererRegistry.INSTANCE);
         EntityRendererRegistry.register(Registration.BULLET_ENTITY, BulletEntityRenderer::new);
         registerGltfItem(new Identifier(ActionArms.MOD_ID, "m1873"), ActionArmsItemRenderer::new);
+        registerGltfItem(
+                new Identifier(ActionArms.MOD_ID, "colt_saa"), ActionArmsItemRenderer::new);
     }
 
     private static void registerGltfItem(Identifier id, GltfItemFactory<ItemStack> factory) {

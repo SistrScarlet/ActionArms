@@ -76,6 +76,21 @@ public class Registration {
     public static final RegistrySupplier<SoundEvent> RIFLE_COCK_SOUND =
             registerS("item.gun.rifle.cock");
 
+    public static final RegistrySupplier<SoundEvent> REVOLVER_COCK_SOUND =
+            registerS("item.gun.revolver.cock");
+    public static final RegistrySupplier<SoundEvent> REVOLVER_SHOT_SOUND =
+            registerS("item.gun.revolver.shot");
+    public static final RegistrySupplier<SoundEvent> REVOLVER_DRY_FIRE_SOUND =
+            registerS("item.gun.revolver.dry_fire");
+    public static final RegistrySupplier<SoundEvent> REVOLVER_LOAD_BULLET_SOUND =
+            registerS("item.gun.revolver.load_bullet");
+    public static final RegistrySupplier<SoundEvent> REVOLVER_EJECT_SOUND =
+            registerS("item.gun.revolver.eject");
+    public static final RegistrySupplier<SoundEvent> REVOLVER_GATE_OPEN_SOUND =
+            registerS("item.gun.revolver.gate_open");
+    public static final RegistrySupplier<SoundEvent> REVOLVER_GATE_CLOSE_SOUND =
+            registerS("item.gun.revolver.gate_close");
+
     private static RegistrySupplier<SoundEvent> registerS(String id) {
         return SOUND_EVENTS.register(
                 id, () -> SoundEvent.of(new Identifier(ActionArms.MOD_ID, id)));
