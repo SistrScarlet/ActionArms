@@ -24,6 +24,8 @@ public class AAHudRenderer {
             new Identifier("actionarms", "textures/item/bullet/medium_caliber_bullet.png");
     private static final Identifier MEDIUM_CALIBER_BULLET_FRAME =
             new Identifier("actionarms", "textures/item/bullet/medium_caliber_bullet_frame.png");
+    private static final Identifier MEDIUM_CALIBER_CARTRIDGE =
+            new Identifier("actionarms", "textures/item/bullet/medium_caliber_cartridge.png");
 
     public void render(DrawContext drawContext, float tickDelta) {
         var client = MinecraftClient.getInstance();
@@ -132,7 +134,7 @@ public class AAHudRenderer {
         // クロスヘア表示
         renderSAACrosshair(drawContext, saaGunItem, defaultComponent, tickDelta);
 
-        // シリンダー HUD 描画（円形配置）
+        // シリンダー HUD 描画（円形配置、firingIndex に基づいて回転）
         int size = 16;
         int margin = 10;
         int radius = 30;
@@ -143,9 +145,13 @@ public class AAHudRenderer {
         int centerX = drawContext.getScaledWindowWidth() - margin - radius - size / 2;
         int centerY = drawContext.getScaledWindowHeight() - margin - radius - size / 2;
 
+        // firingIndex の薬室が上（-90度）に来るように回転オフセットを計算
+        double rotationOffset = -2.0 * Math.PI * hudState.firingIndex() / chamberCount;
+
         for (int i = 0; i < chamberCount; i++) {
-            // 上から時計回りに配置（-90度オフセット）
-            double angle = 2.0 * Math.PI * i / chamberCount - Math.PI / 2.0;
+            // 各薬室の角度: 上から時計回り、firingIndex 分だけ回転
+            double angle =
+                    2.0 * Math.PI * i / chamberCount - Math.PI / 2.0 + rotationOffset;
             int x = centerX + (int) (radius * Math.cos(angle)) - size / 2;
             int y = centerY + (int) (radius * Math.sin(angle)) - size / 2;
 
@@ -157,11 +163,10 @@ public class AAHudRenderer {
                     break;
                 case SPENT:
                     drawContext.drawTexture(
-                            MEDIUM_CALIBER_BULLET_FRAME, x, y, 0, 0, size, size, size, size);
+                            MEDIUM_CALIBER_CARTRIDGE, x, y, 0, 0, size, size, size, size);
                     break;
                 case EMPTY:
                 default:
-                    // 薄い枠を描画
                     drawContext.setShaderColor(1.0f, 1.0f, 1.0f, 0.3f);
                     drawContext.drawTexture(
                             MEDIUM_CALIBER_BULLET_FRAME, x, y, 0, 0, size, size, size, size);
@@ -169,7 +174,7 @@ public class AAHudRenderer {
                     break;
             }
 
-            // 射撃位置マーカー
+            // 射撃位置マーカー（常に上に表示される）
             if (i == hudState.firingIndex()) {
                 drawContext.drawBorder(x - 1, y - 1, size + 2, size + 2, 0xFFFF0000);
             }
