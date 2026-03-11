@@ -171,25 +171,26 @@ public class SAAGunComponent implements IComponent {
     public void smartGateRotate() {
         int capacity = this.cylinder.getCapacity();
         int gate = this.cylinder.gateIndex();
-        int left = (gate + 1) % capacity;
-        int right = (gate - 1 + capacity) % capacity;
+        // cockRotate 方向（時計回り、firingIndex--）
+        int cw = (gate - 1 + capacity) % capacity;
+        // loadRotate 方向（反時計回り、firingIndex++）
+        int ccw = (gate + 1) % capacity;
 
-        // 空薬莢を優先
-        if (this.cylinder.getChamberAt(left).shouldEject()) {
-            this.cylinder.loadRotate();
+        // 空薬莢を優先（cw → ゲート → ccw）
+        if (this.cylinder.getChamberAt(cw).shouldEject()) {
+            this.cylinder.cockRotate();
         } else if (this.cylinder.getChamberAt(gate).shouldEject()) {
             // ゲート位置に既に空薬莢 → 回転不要
-        } else if (this.cylinder.getChamberAt(right).shouldEject()) {
-            this.cylinder.cockRotate();
-        }
-        // 空薬莢がなければ空薬室を探す（ゲート位置も空なら回転不要）
-        else if (!this.cylinder.getChamberAt(gate).isEmpty()
-                && this.cylinder.getChamberAt(left).isEmpty()) {
+        } else if (this.cylinder.getChamberAt(ccw).shouldEject()) {
             this.cylinder.loadRotate();
-        } else if (this.cylinder.getChamberAt(gate).isEmpty()) {
+        }
+        // 空薬莢がなければ空薬室を探す（ゲート → cw → ccw）
+        else if (this.cylinder.getChamberAt(gate).isEmpty()) {
             // ゲート位置が既に空 → 回転不要
-        } else if (this.cylinder.getChamberAt(right).isEmpty()) {
+        } else if (this.cylinder.getChamberAt(cw).isEmpty()) {
             this.cylinder.cockRotate();
+        } else if (this.cylinder.getChamberAt(ccw).isEmpty()) {
+            this.cylinder.loadRotate();
         }
         // いずれも該当しない → 回転なし
     }

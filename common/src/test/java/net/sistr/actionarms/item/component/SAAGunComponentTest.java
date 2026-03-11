@@ -305,16 +305,13 @@ class SAAGunComponentTest {
         }
 
         @Test
-        void 装填後に自動回転する() {
+        void 装填後に隣の空薬室へ回転する() {
             gun.openGate();
-            int indexBefore = gun.getCylinder().getFiringIndex();
             gun.loadAtGate(TEST_BULLET);
             tickAndExpect(
                     LOAD_TICKS, () -> gun.getPhase() == SAAGunComponent.Phase.GATE_OPEN, "装填完了");
-            // loadRotate は反時計回り（firingIndex + 1）
-            assertEquals(
-                    (indexBefore + 1) % CYLINDER_CAPACITY,
-                    gun.getCylinder().getFiringIndex());
+            // 装填後、隣に空薬室があるので回転する
+            assertTrue(gun.getCylinder().gateChamber().isEmpty());
         }
 
         @Test
