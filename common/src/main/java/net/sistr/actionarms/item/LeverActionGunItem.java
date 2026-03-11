@@ -263,9 +263,7 @@ public class LeverActionGunItem extends GunItem {
             return (Predicate<BulletData> predicate) -> true;
         }
         return (Predicate<BulletData> predicate) ->
-                ((PlayerEntity) user).isCreative()
-                        || InventoryAmmoUtil.hasBullet(
-                                ((PlayerEntity) user).getInventory(), predicate);
+                InventoryAmmoUtil.hasBullet(((PlayerEntity) user).getInventory(), predicate);
     }
 
     public Reloadable.ReloadTickContext createReloadTickContext(

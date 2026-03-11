@@ -120,8 +120,11 @@ public class SAAGunController {
                         } else if (tryKeyAction(
                                 KeyInputManager.Key.RELOAD,
                                 2,
-                                () -> gunComponent.getPhase() == SAAGunComponent.Phase.GATE_OPEN)) {
-                            // 排莢も装填もできない場合はシリンダー回転
+                                () ->
+                                        gunComponent.getPhase() == SAAGunComponent.Phase.GATE_OPEN
+                                                && !gunComponent.canLoadAtGate()
+                                                && hasBullet())) {
+                            // 装填済み薬室をスキップする回転（弾がある場合のみ）
                             gunComponent.getCylinder().loadRotate();
                             markDuty = true;
                         }
