@@ -7,6 +7,7 @@ import java.util.List;
 import net.sistr.actionarms.item.data.BulletData;
 import net.sistr.actionarms.item.data.SAAGunData;
 import net.sistr.actionarms.item.util.AnimationContext;
+import net.sistr.actionarms.item.util.Cartridge;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -187,12 +188,14 @@ class SAAGunComponentTest {
 
         @Test
         void 排莢後に左右に薬莢がなければ回転しない() {
-            // ゲート位置に空薬莢を1つだけ配置
-            gun.getCylinder().loadAtGate(TEST_BULLET);
-            gun.getCylinder().cockRotate();
+            // 射撃位置に直接装填→射撃→コック回転でゲートに空薬莢が来る
+            gun.getCylinder().firingChamber().loadCartridge(new Cartridge(TEST_BULLET));
             gun.getCylinder().shootFiring();
-            gun.getCylinder().loadRotate();
+            gun.getCylinder().cockRotate();
+            // ゲート位置に空薬莢が1つだけある状態
+            assertTrue(gun.getCylinder().gateChamber().shouldEject());
             gun.openGate();
+            // openGate の smartGateRotate でゲートに空薬莢があるので回転しない
             int indexBefore = gun.getCylinder().getFiringIndex();
 
             gun.ejectAtGate(stubSoundContext, stubAnimationContext);

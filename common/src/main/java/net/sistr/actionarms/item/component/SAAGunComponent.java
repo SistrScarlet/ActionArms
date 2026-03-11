@@ -74,11 +74,11 @@ public class SAAGunComponent implements IComponent {
                 break;
             case EJECTING:
                 this.phase = Phase.GATE_OPEN;
-                rotateTowardSpent();
+                smartGateRotate();
                 break;
             case LOADING:
                 this.phase = Phase.GATE_OPEN;
-                rotateTowardEmpty();
+                smartGateRotate();
                 if (this.cylinder.isAllLoaded()) {
                     closeGate();
                 }
@@ -156,64 +156,42 @@ public class SAAGunComponent implements IComponent {
     }
 
     /**
-     * ゲート開放中の回転。薬莢（空薬莢）がある方向に優先して回転する。
-     * 両方向に薬莢がある場合、または両方ない場合は loadRotate（反時計回り）をデフォルトとする。
+     * ゲート開放中のスマート回転。以下の優先順で回転方向を決定する:
+     *
+     * <ol>
+     *   <li>左（loadRotate方向）に空薬莢 → 左回転
+     *   <li>ゲート位置自体に空薬莢 → 回転なし
+     *   <li>右（cockRotate方向）に空薬莢 → 右回転
+     *   <li>左に空薬室 → 左回転
+     *   <li>ゲート位置自体が空 → 回転なし
+     *   <li>右に空薬室 → 右回転
+     *   <li>いずれも該当しない → 回転なし
+     * </ol>
      */
     public void smartGateRotate() {
         int capacity = this.cylinder.getCapacity();
         int gate = this.cylinder.gateIndex();
+        int left = (gate + 1) % capacity;
+        int right = (gate - 1 + capacity) % capacity;
 
-        // loadRotate 方向の次の薬室
-        int loadNext = (gate + 1) % capacity;
-        // cockRotate 方向の次の薬室
-        int cockNext = (gate - 1 + capacity) % capacity;
-
-        boolean loadHasSpent = this.cylinder.getChamberAt(loadNext).shouldEject();
-        boolean cockHasSpent = this.cylinder.getChamberAt(cockNext).shouldEject();
-
-        if (cockHasSpent && !loadHasSpent) {
-            this.cylinder.cockRotate();
-        } else {
+        // 空薬莢を優先
+        if (this.cylinder.getChamberAt(left).shouldEject()) {
             this.cylinder.loadRotate();
-        }
-    }
-
-    /** 排莢後の回転。左右に空薬莢があればそちらに回転、なければ回転しない。 */
-    private void rotateTowardSpent() {
-        int capacity = this.cylinder.getCapacity();
-        int gate = this.cylinder.gateIndex();
-
-        int loadNext = (gate + 1) % capacity;
-        int cockNext = (gate - 1 + capacity) % capacity;
-
-        boolean loadHasSpent = this.cylinder.getChamberAt(loadNext).shouldEject();
-        boolean cockHasSpent = this.cylinder.getChamberAt(cockNext).shouldEject();
-
-        if (cockHasSpent && !loadHasSpent) {
+        } else if (this.cylinder.getChamberAt(gate).shouldEject()) {
+            // ゲート位置に既に空薬莢 → 回転不要
+        } else if (this.cylinder.getChamberAt(right).shouldEject()) {
             this.cylinder.cockRotate();
-        } else if (loadHasSpent) {
-            this.cylinder.loadRotate();
         }
-        // 両方なし → 回転しない
-    }
-
-    /** 装填後の回転。左右に空の薬室があればそちらに回転、なければ回転しない。 */
-    private void rotateTowardEmpty() {
-        int capacity = this.cylinder.getCapacity();
-        int gate = this.cylinder.gateIndex();
-
-        int loadNext = (gate + 1) % capacity;
-        int cockNext = (gate - 1 + capacity) % capacity;
-
-        boolean loadHasEmpty = this.cylinder.getChamberAt(loadNext).isEmpty();
-        boolean cockHasEmpty = this.cylinder.getChamberAt(cockNext).isEmpty();
-
-        if (cockHasEmpty && !loadHasEmpty) {
+        // 空薬莢がなければ空薬室を探す（ゲート位置も空なら回転不要）
+        else if (!this.cylinder.getChamberAt(gate).isEmpty()
+                && this.cylinder.getChamberAt(left).isEmpty()) {
+            this.cylinder.loadRotate();
+        } else if (this.cylinder.getChamberAt(gate).isEmpty()) {
+            // ゲート位置が既に空 → 回転不要
+        } else if (this.cylinder.getChamberAt(right).isEmpty()) {
             this.cylinder.cockRotate();
-        } else if (loadHasEmpty) {
-            this.cylinder.loadRotate();
         }
-        // 両方なし → 回転しない
+        // いずれも該当しない → 回転なし
     }
 
     // === 排莢（ゲート開放中 + COCK キー） ===
