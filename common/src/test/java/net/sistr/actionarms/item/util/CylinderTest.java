@@ -48,10 +48,10 @@ class CylinderTest {
     @Nested
     class コック回転 {
         @Test
-        void 回転すると射撃位置が進む() {
+        void 時計回りに回転する() {
             assertEquals(0, cylinder.getFiringIndex());
             cylinder.cockRotate();
-            assertEquals(1, cylinder.getFiringIndex());
+            assertEquals(CAPACITY - 1, cylinder.getFiringIndex());
         }
 
         @Test
@@ -61,6 +61,16 @@ class CylinderTest {
             }
             assertEquals(0, cylinder.getFiringIndex());
         }
+
+        @Test
+        void コック後に旧射撃位置の薬室がゲートに来る() {
+            // firingIndex=0 の薬室に直接装填してから cockRotate
+            cylinder.firingChamber().loadCartridge(new Cartridge(TEST_BULLET));
+            int firedIndex = cylinder.getFiringIndex(); // 0
+            cylinder.cockRotate();
+            // 旧射撃位置(0)がゲート位置に来る
+            assertEquals(firedIndex, cylinder.gateIndex());
+        }
     }
 
     @Nested
@@ -69,7 +79,7 @@ class CylinderTest {
         void 反時計回りに回転する() {
             assertEquals(0, cylinder.getFiringIndex());
             cylinder.loadRotate();
-            assertEquals(CAPACITY - 1, cylinder.getFiringIndex());
+            assertEquals(1, cylinder.getFiringIndex());
         }
 
         @Test
@@ -95,10 +105,12 @@ class CylinderTest {
         }
 
         @Test
-        void ゲートに装填しコック回転すると射撃位置に来る() {
-            cylinder.loadAtGate(TEST_BULLET);
-            cylinder.cockRotate();
-            assertTrue(cylinder.canShootFiring());
+        void ゲートに装填し装填回転を繰り返して全装填できる() {
+            for (int i = 0; i < CAPACITY; i++) {
+                assertTrue(cylinder.loadAtGate(TEST_BULLET));
+                cylinder.loadRotate();
+            }
+            assertTrue(cylinder.isAllLoaded());
         }
     }
 
@@ -106,8 +118,8 @@ class CylinderTest {
     class 射撃 {
         @Test
         void 射撃位置の装填済み薬室を射撃すると弾が返る() {
-            cylinder.loadAtGate(TEST_BULLET);
-            cylinder.cockRotate();
+            // 射撃位置の薬室に直接装填
+            cylinder.firingChamber().loadCartridge(new Cartridge(TEST_BULLET));
             var bullet = cylinder.shootFiring();
             assertTrue(bullet.isPresent());
             assertEquals(TEST_BULLET, bullet.get());
@@ -115,8 +127,7 @@ class CylinderTest {
 
         @Test
         void 射撃後は空薬莢が残る() {
-            cylinder.loadAtGate(TEST_BULLET);
-            cylinder.cockRotate();
+            cylinder.firingChamber().loadCartridge(new Cartridge(TEST_BULLET));
             cylinder.shootFiring();
             assertFalse(cylinder.firingChamber().isEmpty());
             assertFalse(cylinder.canShootFiring());
@@ -133,14 +144,11 @@ class CylinderTest {
     class 排莢 {
         @Test
         void ゲート位置の空薬莢を排莢できる() {
-            // ゲートに装填 → コック回転で射撃位置へ → 射撃 → コック回転でゲート位置へ戻す
-            cylinder.loadAtGate(TEST_BULLET);
-            cylinder.cockRotate();
+            // 射撃位置に装填 → 射撃 → コック回転で空薬莢がゲートに来る
+            cylinder.firingChamber().loadCartridge(new Cartridge(TEST_BULLET));
             cylinder.shootFiring();
-            // 射撃した薬室(index=1)は今firingIndex=1にある。ゲートはindex=2。
-            // 空薬莢をゲート位置に持ってくるため、loadRotateで戻す。
-            // firingIndex=0に戻すとゲート=1(空薬莢のある薬室)になる。
-            cylinder.loadRotate();
+            cylinder.cockRotate();
+            // 旧射撃位置がゲートに来ている
             assertTrue(cylinder.shouldEjectAtGate());
             var ejected = cylinder.ejectAtGate();
             assertTrue(ejected.isPresent());
@@ -167,12 +175,12 @@ class CylinderTest {
     class 複合操作 {
         @Test
         void 全薬室に装填して全薬室から射撃できる() {
-            // ゲート位置に装填 → コック回転を繰り返して全薬室に装填
+            // ゲートから装填 → loadRotate で次の薬室をゲートに
             for (int i = 0; i < CAPACITY; i++) {
                 cylinder.loadAtGate(TEST_BULLET);
-                cylinder.cockRotate();
+                cylinder.loadRotate();
             }
-            // 全薬室から射撃
+            // 全薬室から射撃（cockRotate で次の薬室を射撃位置に）
             for (int i = 0; i < CAPACITY; i++) {
                 assertTrue(cylinder.canShootFiring(), "薬室" + i + "が射撃可能");
                 assertTrue(cylinder.shootFiring().isPresent());
@@ -181,36 +189,38 @@ class CylinderTest {
         }
 
         @Test
-        void 全排莢してから全装填できる() {
+        void 全弾射撃後コック回転で全排莢できる() {
             // 全装填
             for (int i = 0; i < CAPACITY; i++) {
                 cylinder.loadAtGate(TEST_BULLET);
-                cylinder.cockRotate();
+                cylinder.loadRotate();
             }
             // 全射撃
             for (int i = 0; i < CAPACITY; i++) {
                 cylinder.shootFiring();
                 cylinder.cockRotate();
             }
-            // 全排莢（ゲート位置で排莢 → コック回転）
+            // 全排莢（コック回転で空薬莢がゲートに来る）
             for (int i = 0; i < CAPACITY; i++) {
-                assertTrue(cylinder.ejectAtGate().isPresent(), "薬室" + cylinder.gateIndex() + "の排莢");
+                assertTrue(
+                        cylinder.ejectAtGate().isPresent(),
+                        "薬室" + cylinder.gateIndex() + "の排莢");
                 cylinder.cockRotate();
             }
-            // 全再装填
+            // 全再装填（loadRotate で回しながら）
             for (int i = 0; i < CAPACITY; i++) {
-                assertTrue(cylinder.loadAtGate(TEST_BULLET), "薬室" + cylinder.gateIndex() + "の再装填");
-                cylinder.cockRotate();
+                assertTrue(
+                        cylinder.loadAtGate(TEST_BULLET),
+                        "薬室" + cylinder.gateIndex() + "の再装填");
+                cylinder.loadRotate();
             }
         }
 
         @Test
         void 装填数を数えられる() {
             cylinder.loadAtGate(TEST_BULLET);
-            cylinder.cockRotate();
+            cylinder.loadRotate();
             cylinder.loadAtGate(TEST_BULLET);
-            cylinder.cockRotate();
-            cylinder.cockRotate();
             assertEquals(2, cylinder.countLoaded());
         }
 
@@ -223,7 +233,7 @@ class CylinderTest {
         void 全装填で装填数はキャパシティ() {
             for (int i = 0; i < CAPACITY; i++) {
                 cylinder.loadAtGate(TEST_BULLET);
-                cylinder.cockRotate();
+                cylinder.loadRotate();
             }
             assertEquals(CAPACITY, cylinder.countLoaded());
         }
@@ -233,7 +243,7 @@ class CylinderTest {
             assertFalse(cylinder.isAllLoaded());
             for (int i = 0; i < CAPACITY; i++) {
                 cylinder.loadAtGate(TEST_BULLET);
-                cylinder.cockRotate();
+                cylinder.loadRotate();
             }
             assertTrue(cylinder.isAllLoaded());
         }

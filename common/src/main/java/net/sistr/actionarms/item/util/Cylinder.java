@@ -21,12 +21,12 @@ public class Cylinder {
 
     /** コック回転（時計回り）。次の薬室を射撃位置に持ってくる。 */
     public void cockRotate() {
-        firingIndex = (firingIndex + 1) % chambers.length;
+        firingIndex = (firingIndex - 1 + chambers.length) % chambers.length;
     }
 
     /** 装填回転（反時計回り）。次の薬室をゲート位置に持ってくる。 */
     public void loadRotate() {
-        firingIndex = (firingIndex - 1 + chambers.length) % chambers.length;
+        firingIndex = (firingIndex + 1) % chambers.length;
     }
 
     // === 射撃位置の操作 ===

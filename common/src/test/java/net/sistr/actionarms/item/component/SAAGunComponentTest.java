@@ -148,7 +148,9 @@ class SAAGunComponentTest {
             gun.cockHammer(stubSoundContext, stubAnimationContext);
             tickAndExpect(COCK_TICKS, gun::isHammerCocked, "コック完了");
 
-            assertEquals((indexBefore + 1) % CYLINDER_CAPACITY, gun.getCylinder().getFiringIndex());
+            assertEquals(
+                    (indexBefore - 1 + CYLINDER_CAPACITY) % CYLINDER_CAPACITY,
+                    gun.getCylinder().getFiringIndex());
             assertTrue(gun.isHammerCocked());
         }
 
@@ -197,9 +199,9 @@ class SAAGunComponentTest {
             tickAndExpect(
                     EJECT_TICKS, () -> gun.getPhase() == SAAGunComponent.Phase.GATE_OPEN, "排莢完了");
 
-            // loadRotate は反時計回り（firingIndex - 1）
+            // loadRotate は反時計回り（firingIndex + 1）
             assertEquals(
-                    (indexBefore - 1 + CYLINDER_CAPACITY) % CYLINDER_CAPACITY,
+                    (indexBefore + 1) % CYLINDER_CAPACITY,
                     gun.getCylinder().getFiringIndex());
         }
     }
@@ -308,9 +310,9 @@ class SAAGunComponentTest {
             gun.loadAtGate(TEST_BULLET);
             tickAndExpect(
                     LOAD_TICKS, () -> gun.getPhase() == SAAGunComponent.Phase.GATE_OPEN, "装填完了");
-            // loadRotate は反時計回り（firingIndex - 1）
+            // loadRotate は反時計回り（firingIndex + 1）
             assertEquals(
-                    (indexBefore - 1 + CYLINDER_CAPACITY) % CYLINDER_CAPACITY,
+                    (indexBefore + 1) % CYLINDER_CAPACITY,
                     gun.getCylinder().getFiringIndex());
         }
 
