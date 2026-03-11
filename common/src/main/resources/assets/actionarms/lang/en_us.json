@@ -8,6 +8,15 @@
   "item.actionarms.gun.chamber.empty_caliber": "Chamber: Empty Caliber",
   "item.actionarms.gun.chamber.empty": "Chamber: Empty",
   "item.actionarms.gun.magazine.ammo": "Magazine: %s / %s",
+  "item.actionarms.gun.cylinder.ammo": "Cylinder: %s / %s",
+  "item.actionarms.colt_saa": "Colt SAA",
+
+  "key.actionarms.category": "ActionArms",
+  "key.actionarms.fire": "Fire",
+  "key.actionarms.aim": "Aim",
+  "key.actionarms.reload": "Reload",
+  "key.actionarms.cocking": "Cocking",
+  "key.actionarms.operate": "Operate",
 
   "text.autoconfig.actionarms.title": "ActionArms Config",
 

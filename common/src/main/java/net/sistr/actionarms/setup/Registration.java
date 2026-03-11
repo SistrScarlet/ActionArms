@@ -15,6 +15,7 @@ import net.sistr.actionarms.ActionArms;
 import net.sistr.actionarms.entity.BulletEntity;
 import net.sistr.actionarms.item.BulletItem;
 import net.sistr.actionarms.item.LeverActionGunItem;
+import net.sistr.actionarms.item.SAAGunItem;
 import net.sistr.actionarms.item.data.AADataRegistry;
 
 public class Registration {
@@ -47,6 +48,14 @@ public class Registration {
                                     new Item.Settings().maxDamage(256).arch$tab(ItemGroups.COMBAT),
                                     AADataRegistry.M1873,
                                     AADataRegistry.M1873_TUBE_MAGAZINE));
+
+    public static final RegistrySupplier<Item> COLT_SAA =
+            ITEMS.register(
+                    "colt_saa",
+                    () ->
+                            new SAAGunItem(
+                                    new Item.Settings().maxDamage(256).arch$tab(ItemGroups.COMBAT),
+                                    AADataRegistry.COLT_SAA));
 
     public static final RegistrySupplier<EntityType<BulletEntity>> BULLET_ENTITY =
             ENTITY_TYPES.register(

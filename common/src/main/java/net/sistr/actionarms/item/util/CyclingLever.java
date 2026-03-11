@@ -2,11 +2,11 @@ package net.sistr.actionarms.item.util;
 
 public interface CyclingLever {
 
-    boolean cycle(LeverActionPlaySoundContext playSoundContext, AnimationContext context);
+    boolean cycleLever(LeverActionPlaySoundContext playSoundContext, AnimationContext context);
 
-    boolean canCycle();
+    boolean canCycleLever();
 
-    boolean shouldCycle();
+    boolean shouldCycleLever();
 
     boolean isHammerReady();
 

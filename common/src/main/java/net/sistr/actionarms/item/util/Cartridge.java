@@ -17,8 +17,11 @@ public class Cartridge {
         return Optional.ofNullable(bullet);
     }
 
-    public void setBullet(@Nullable BulletData bullet) {
-        this.bullet = bullet;
+    /** 弾を発射済みにし、弾データを返す。既に発射済みなら空を返す。 */
+    public Optional<BulletData> spend() {
+        var b = this.bullet;
+        this.bullet = null;
+        return Optional.ofNullable(b);
     }
 
     public boolean canShoot() {
@@ -31,7 +34,7 @@ public class Cartridge {
 
     public void read(NbtCompound nbt) {
         this.bullet = null;
-        AADataRegistry.read(BulletData.class, nbt, "bullet").ifPresent(this::setBullet);
+        AADataRegistry.read(BulletData.class, nbt, "bullet").ifPresent(b -> this.bullet = b);
     }
 
     public void write(NbtCompound nbt) {

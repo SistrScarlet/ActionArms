@@ -6,14 +6,14 @@ import net.sistr.actionarms.item.data.BulletData;
 
 public interface Reloadable {
 
-    boolean reload(
+    boolean loadBullet(
             LeverActionPlaySoundContext playSoundContext,
             AnimationContext animationContext,
             ReloadStartContext context);
 
-    boolean canReload(ReloadStartContext context);
+    boolean canLoadBullet(ReloadStartContext context);
 
-    boolean shouldReload();
+    boolean shouldLoadBullet();
 
     interface ReloadStartContext {
         boolean hasBullet(Predicate<BulletData> predicate);

@@ -75,11 +75,11 @@ public class LeverActionGunComponent implements IComponent, FireTrigger, Cycling
 
     // FireTriggerインターフェース実装
     @Override
-    public boolean trigger(
+    public boolean pullTrigger(
             LeverActionPlaySoundContext playSoundContext,
             AnimationContext animationContext,
             FireStartContext fireContext) {
-        if (!canTrigger()) {
+        if (!canPullTrigger()) {
             return false;
         }
         if (!canShoot()) {
@@ -100,7 +100,7 @@ public class LeverActionGunComponent implements IComponent, FireTrigger, Cycling
     }
 
     @Override
-    public boolean canTrigger() {
+    public boolean canPullTrigger() {
         if (!this.hammerReady || this.cooldownTime > 0) {
             return false;
         }
@@ -129,7 +129,7 @@ public class LeverActionGunComponent implements IComponent, FireTrigger, Cycling
                 // チューブマガジンはFILO
                 this.magazine
                         .popFirstBullet()
-                        .ifPresent(bullet -> this.chamber.setCartridge(new Cartridge(bullet)));
+                        .ifPresent(bullet -> this.chamber.loadCartridge(new Cartridge(bullet)));
             } else {
                 // サイクル折り返し処理（レバーが下がる）
                 this.phase = GunPhase.CYCLE_UP;
@@ -141,9 +141,9 @@ public class LeverActionGunComponent implements IComponent, FireTrigger, Cycling
     }
 
     @Override
-    public boolean cycle(
+    public boolean cycleLever(
             LeverActionPlaySoundContext playSoundContext, AnimationContext animationContext) {
-        if (!canCycle()) {
+        if (!canCycleLever()) {
             return false;
         }
         boolean leverDown = isLeverDown();
@@ -165,7 +165,7 @@ public class LeverActionGunComponent implements IComponent, FireTrigger, Cycling
     }
 
     @Override
-    public boolean canCycle() {
+    public boolean canCycleLever() {
         if (this.cooldownTime > 0) {
             return false;
         }
@@ -178,7 +178,7 @@ public class LeverActionGunComponent implements IComponent, FireTrigger, Cycling
     }
 
     @Override
-    public boolean shouldCycle() {
+    public boolean shouldCycleLever() {
         return (this.chamber.canShoot() && (isLeverDown() || !hammerReady))
                 || (!this.chamber.canShoot() && this.magazine.hasBullet());
     }
@@ -218,11 +218,11 @@ public class LeverActionGunComponent implements IComponent, FireTrigger, Cycling
     }
 
     @Override
-    public boolean reload(
+    public boolean loadBullet(
             LeverActionPlaySoundContext playSoundContext,
             AnimationContext animationContext,
             ReloadStartContext context) {
-        if (!canReload(context)) {
+        if (!canLoadBullet(context)) {
             return false;
         }
         int maxBullets = this.magazine.getMaxCapacity();
@@ -239,7 +239,7 @@ public class LeverActionGunComponent implements IComponent, FireTrigger, Cycling
     }
 
     @Override
-    public boolean canReload(ReloadStartContext context) {
+    public boolean canLoadBullet(ReloadStartContext context) {
         if (this.cooldownTime > 0 || this.phase.isCycling()) {
             return false;
         }
@@ -249,12 +249,12 @@ public class LeverActionGunComponent implements IComponent, FireTrigger, Cycling
     }
 
     @Override
-    public boolean shouldReload() {
+    public boolean shouldLoadBullet() {
         return this.magazine.canAddBullet();
     }
 
     private boolean canShoot() {
-        return canTrigger() && this.chamber.canShoot();
+        return canPullTrigger() && this.chamber.canShoot();
     }
 
     // IItemComponentインターフェース実装（NBT永続化）

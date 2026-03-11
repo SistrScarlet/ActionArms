@@ -22,6 +22,17 @@ public class AADataRegistry {
             new LeverActionGunData(
                     "m1873", 0.3f, 0.2f, 0.2f, 0.1f, 0.2f, 0.05f, 0.05f, 0.05f, 1, 5.0f, 0.01f,
                     5.0f);
+    public static final SAAGunData COLT_SAA =
+            new SAAGunData(
+                    "colt_saa",
+                    /* cylinderCapacity= */ 6,
+                    /* cockLength= */ 0.1f,
+                    /* fireCoolLength= */ 0.05f,
+                    /* ejectLength= */ 0.15f,
+                    /* loadLength= */ 0.15f,
+                    /* baseSpreadAngle= */ 5.0f,
+                    /* aimSpreadAngle= */ 0.5f,
+                    /* movementSpreadIncrease= */ 3.0f);
 
     @SuppressWarnings("unchecked")
     public static <T extends IData> Optional<T> getById(Class<T> type, String id) {
@@ -36,6 +47,7 @@ public class AADataRegistry {
         registries.put(BulletData.class, new HashMap<>());
         registries.put(MagazineData.class, new HashMap<>());
         registries.put(LeverActionGunData.class, new HashMap<>());
+        registries.put(SAAGunData.class, new HashMap<>());
     }
 
     @SuppressWarnings("unchecked")
@@ -51,6 +63,7 @@ public class AADataRegistry {
         registerData(BulletData.class, MEDIUM_CALIBER_BULLET);
         registerData(MagazineData.class, M1873_TUBE_MAGAZINE);
         registerData(LeverActionGunData.class, M1873);
+        registerData(SAAGunData.class, COLT_SAA);
     }
 
     @SuppressWarnings("unchecked")

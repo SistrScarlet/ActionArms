@@ -137,7 +137,7 @@ class LeverActionGunComponentTest {
 
     /** チャンバーに直接装填 + hammerReady にする（ショートカット） */
     void setReadyToFire() {
-        gun.getChamber().setCartridge(new Cartridge(TEST_BULLET));
+        gun.getChamber().loadCartridge(new Cartridge(TEST_BULLET));
         gun.setHammerReady(true);
     }
 
@@ -145,13 +145,13 @@ class LeverActionGunComponentTest {
     void completeCycle() {
         tickAndExpect(LEVER_DOWN_TICKS, gun::isLeverDown, "レバー下がる");
         tickAndExpect(LEVER_UP_TICKS, () -> !gun.isCycling(), "サイクル完了");
-        tickAndExpect(CYCLE_COOL_TICKS, () -> gun.canCycle(), "サイクルクールダウン完了");
+        tickAndExpect(CYCLE_COOL_TICKS, () -> gun.canCycleLever(), "サイクルクールダウン完了");
     }
 
     /** マガジンに弾を入れてサイクル完了まで進める（正規ルート） */
     void loadViaNormalRoute() {
         gun.getMagazine().addFirstBullet(TEST_BULLET);
-        gun.cycle(stubSoundContext, stubAnimationContext);
+        gun.cycleLever(stubSoundContext, stubAnimationContext);
         completeCycle();
     }
 
@@ -202,12 +202,12 @@ class LeverActionGunComponentTest {
     class 初期状態 {
         @Test
         void 射撃できない() {
-            assertFalse(gun.canTrigger());
+            assertFalse(gun.canPullTrigger());
         }
 
         @Test
         void サイクルできる() {
-            assertTrue(gun.canCycle());
+            assertTrue(gun.canCycleLever());
         }
 
         @Test
@@ -236,7 +236,7 @@ class LeverActionGunComponentTest {
         @Test
         void チャンバー装填済みハンマー準備済みで射撃できる() {
             setReadyToFire();
-            assertTrue(gun.canTrigger());
+            assertTrue(gun.canPullTrigger());
         }
 
         @Test
@@ -244,13 +244,13 @@ class LeverActionGunComponentTest {
             loadViaNormalRoute();
             assertTrue(gun.getChamber().canShoot());
             assertTrue(gun.isHammerReady());
-            assertTrue(gun.canTrigger());
+            assertTrue(gun.canPullTrigger());
         }
 
         @Test
         void 射撃すると弾が発射される() {
             setReadyToFire();
-            assertTrue(gun.trigger(stubSoundContext, stubAnimationContext, stubFireContext));
+            assertTrue(gun.pullTrigger(stubSoundContext, stubAnimationContext, stubFireContext));
             assertEquals(1, firedBullets.size());
             assertEquals(TEST_BULLET, firedBullets.get(0));
         }
@@ -258,14 +258,14 @@ class LeverActionGunComponentTest {
         @Test
         void 射撃後ハンマーは未準備になる() {
             setReadyToFire();
-            gun.trigger(stubSoundContext, stubAnimationContext, stubFireContext);
+            gun.pullTrigger(stubSoundContext, stubAnimationContext, stubFireContext);
             assertFalse(gun.isHammerReady());
         }
 
         @Test
         void 射撃後チャンバーに空薬莢が残る() {
             setReadyToFire();
-            gun.trigger(stubSoundContext, stubAnimationContext, stubFireContext);
+            gun.pullTrigger(stubSoundContext, stubAnimationContext, stubFireContext);
             assertTrue(gun.getChamber().isInCartridge());
             assertFalse(gun.getChamber().canShoot());
         }
@@ -273,29 +273,29 @@ class LeverActionGunComponentTest {
         @Test
         void 射撃後は再射撃できない() {
             setReadyToFire();
-            gun.trigger(stubSoundContext, stubAnimationContext, stubFireContext);
-            assertFalse(gun.canTrigger());
+            gun.pullTrigger(stubSoundContext, stubAnimationContext, stubFireContext);
+            assertFalse(gun.canPullTrigger());
         }
 
         @Test
         void 射撃サウンドとアニメーションが再生される() {
             setReadyToFire();
-            gun.trigger(stubSoundContext, stubAnimationContext, stubFireContext);
+            gun.pullTrigger(stubSoundContext, stubAnimationContext, stubFireContext);
             assertTrue(soundLog.contains("FIRE"));
             assertTrue(animationLog.contains("fire"));
         }
 
         @Test
         void ハンマー未準備では射撃できない() {
-            gun.getChamber().setCartridge(new Cartridge(TEST_BULLET));
-            assertFalse(gun.canTrigger());
+            gun.getChamber().loadCartridge(new Cartridge(TEST_BULLET));
+            assertFalse(gun.canPullTrigger());
         }
 
         @Test
         void チャンバー空でドライファイアする() {
             gun.setHammerReady(true);
-            assertTrue(gun.canTrigger());
-            assertTrue(gun.trigger(stubSoundContext, stubAnimationContext, stubFireContext));
+            assertTrue(gun.canPullTrigger());
+            assertTrue(gun.pullTrigger(stubSoundContext, stubAnimationContext, stubFireContext));
             assertTrue(soundLog.contains("DRY_FIRE"));
             assertTrue(animationLog.contains("dry_fire"));
             assertEquals(0, firedBullets.size());
@@ -306,18 +306,18 @@ class LeverActionGunComponentTest {
     class サイクル {
         @Test
         void サイクル開始できる() {
-            assertTrue(gun.canCycle());
-            assertTrue(gun.cycle(stubSoundContext, stubAnimationContext));
+            assertTrue(gun.canCycleLever());
+            assertTrue(gun.cycleLever(stubSoundContext, stubAnimationContext));
             assertTrue(gun.isCycling());
         }
 
         @Test
         void サイクル前半完了でレバーが下がり排莢される() {
             setReadyToFire();
-            gun.trigger(stubSoundContext, stubAnimationContext, stubFireContext);
-            tickAndExpect(FIRE_COOL_TICKS, () -> gun.canCycle(), "射撃クールダウン完了");
+            gun.pullTrigger(stubSoundContext, stubAnimationContext, stubFireContext);
+            tickAndExpect(FIRE_COOL_TICKS, () -> gun.canCycleLever(), "射撃クールダウン完了");
 
-            gun.cycle(stubSoundContext, stubAnimationContext);
+            gun.cycleLever(stubSoundContext, stubAnimationContext);
             tickAndExpect(LEVER_DOWN_TICKS, gun::isLeverDown, "レバーが下がる");
 
             assertTrue(gun.isLeverDown());
@@ -327,7 +327,7 @@ class LeverActionGunComponentTest {
         @Test
         void サイクル完了でマガジンから装填される() {
             gun.getMagazine().addFirstBullet(TEST_BULLET);
-            gun.cycle(stubSoundContext, stubAnimationContext);
+            gun.cycleLever(stubSoundContext, stubAnimationContext);
             completeCycle();
 
             assertTrue(gun.getChamber().canShoot());
@@ -338,7 +338,7 @@ class LeverActionGunComponentTest {
 
         @Test
         void マガジン空でサイクルするとチャンバーも空のまま() {
-            gun.cycle(stubSoundContext, stubAnimationContext);
+            gun.cycleLever(stubSoundContext, stubAnimationContext);
             completeCycle();
 
             assertFalse(gun.getChamber().canShoot());
@@ -347,13 +347,13 @@ class LeverActionGunComponentTest {
 
         @Test
         void サイクル中は再サイクルできない() {
-            gun.cycle(stubSoundContext, stubAnimationContext);
-            assertFalse(gun.canCycle());
+            gun.cycleLever(stubSoundContext, stubAnimationContext);
+            assertFalse(gun.canCycleLever());
         }
 
         @Test
         void チャンバー空のサイクルアニメーション() {
-            gun.cycle(stubSoundContext, stubAnimationContext);
+            gun.cycleLever(stubSoundContext, stubAnimationContext);
             assertTrue(soundLog.contains("CYCLE"));
             assertTrue(animationLog.contains("cycle_empty"));
         }
@@ -361,11 +361,11 @@ class LeverActionGunComponentTest {
         @Test
         void チャンバーに薬莢がある場合のサイクルアニメーション() {
             setReadyToFire();
-            gun.trigger(stubSoundContext, stubAnimationContext, stubFireContext);
-            tickAndExpect(FIRE_COOL_TICKS, () -> gun.canCycle(), "射撃クールダウン完了");
+            gun.pullTrigger(stubSoundContext, stubAnimationContext, stubFireContext);
+            tickAndExpect(FIRE_COOL_TICKS, () -> gun.canCycleLever(), "射撃クールダウン完了");
             animationLog.clear();
 
-            gun.cycle(stubSoundContext, stubAnimationContext);
+            gun.cycleLever(stubSoundContext, stubAnimationContext);
             assertTrue(animationLog.contains("cycle"));
         }
     }
@@ -374,7 +374,7 @@ class LeverActionGunComponentTest {
     class リロード {
         @Test
         void マガジンに空きがあり弾があればリロードできる() {
-            assertTrue(gun.canReload(stubReloadStartContext(true)));
+            assertTrue(gun.canLoadBullet(stubReloadStartContext(true)));
         }
 
         @Test
@@ -382,18 +382,18 @@ class LeverActionGunComponentTest {
             for (int i = 0; i < TEST_MAGAZINE_DATA.capacity(); i++) {
                 gun.getMagazine().addFirstBullet(TEST_BULLET);
             }
-            assertFalse(gun.canReload(stubReloadStartContext(true)));
+            assertFalse(gun.canLoadBullet(stubReloadStartContext(true)));
         }
 
         @Test
         void インベントリに弾がなければリロードできない() {
-            assertFalse(gun.canReload(stubReloadStartContext(false)));
+            assertFalse(gun.canLoadBullet(stubReloadStartContext(false)));
         }
 
         @Test
         void リロード完了でマガジンに弾が入る() {
             var reloadContext = stubReloadContext(List.of(TEST_BULLET));
-            gun.reload(stubSoundContext, stubAnimationContext, stubReloadStartContext(true));
+            gun.loadBullet(stubSoundContext, stubAnimationContext, stubReloadStartContext(true));
 
             tickAndExpect(RELOAD_TICKS, () -> !gun.isReloading(), "リロード完了", reloadContext);
 
@@ -402,19 +402,19 @@ class LeverActionGunComponentTest {
 
         @Test
         void リロード中は再リロードできない() {
-            gun.reload(stubSoundContext, stubAnimationContext, stubReloadStartContext(true));
-            assertFalse(gun.canReload(stubReloadStartContext(true)));
+            gun.loadBullet(stubSoundContext, stubAnimationContext, stubReloadStartContext(true));
+            assertFalse(gun.canLoadBullet(stubReloadStartContext(true)));
         }
 
         @Test
         void サイクル中はリロードできない() {
-            gun.cycle(stubSoundContext, stubAnimationContext);
-            assertFalse(gun.canReload(stubReloadStartContext(true)));
+            gun.cycleLever(stubSoundContext, stubAnimationContext);
+            assertFalse(gun.canLoadBullet(stubReloadStartContext(true)));
         }
 
         @Test
         void リロードのサウンドとアニメーションが再生される() {
-            gun.reload(stubSoundContext, stubAnimationContext, stubReloadStartContext(true));
+            gun.loadBullet(stubSoundContext, stubAnimationContext, stubReloadStartContext(true));
             assertTrue(soundLog.contains("RELOAD"));
             assertTrue(animationLog.stream().anyMatch(a -> a.startsWith("reload")));
         }
@@ -425,97 +425,97 @@ class LeverActionGunComponentTest {
         @Test
         void 射撃クールダウン中はサイクルできない() {
             setReadyToFire();
-            gun.trigger(stubSoundContext, stubAnimationContext, stubFireContext);
-            assertFalse(gun.canCycle());
+            gun.pullTrigger(stubSoundContext, stubAnimationContext, stubFireContext);
+            assertFalse(gun.canCycleLever());
         }
 
         @Test
         void 射撃クールダウン中はリロードできない() {
             setReadyToFire();
-            gun.trigger(stubSoundContext, stubAnimationContext, stubFireContext);
-            assertFalse(gun.canReload(stubReloadStartContext(true)));
+            gun.pullTrigger(stubSoundContext, stubAnimationContext, stubFireContext);
+            assertFalse(gun.canLoadBullet(stubReloadStartContext(true)));
         }
 
         @Test
         void 射撃クールダウンは期待tick数で完了する() {
             setReadyToFire();
-            gun.trigger(stubSoundContext, stubAnimationContext, stubFireContext);
-            tickAndExpect(FIRE_COOL_TICKS, () -> gun.canCycle(), "射撃クールダウン完了");
+            gun.pullTrigger(stubSoundContext, stubAnimationContext, stubFireContext);
+            tickAndExpect(FIRE_COOL_TICKS, () -> gun.canCycleLever(), "射撃クールダウン完了");
         }
 
         @Test
         void サイクルクールダウンは期待tick数で完了する() {
-            gun.cycle(stubSoundContext, stubAnimationContext);
+            gun.cycleLever(stubSoundContext, stubAnimationContext);
             completeCycle();
-            assertTrue(gun.canCycle());
+            assertTrue(gun.canCycleLever());
         }
 
         @Test
         void リロードクールダウンは期待tick数で完了する() {
-            gun.reload(stubSoundContext, stubAnimationContext, stubReloadStartContext(true));
+            gun.loadBullet(stubSoundContext, stubAnimationContext, stubReloadStartContext(true));
             int totalReloadTicks = RELOAD_TICKS + RELOAD_COOL_TICKS;
             tickAndExpect(
                     totalReloadTicks,
-                    () -> gun.canReload(stubReloadStartContext(true)),
+                    () -> gun.canLoadBullet(stubReloadStartContext(true)),
                     "リロードクールダウン完了");
         }
 
         @Test
         void 射撃クールダウン完了前はサイクル不可() {
             setReadyToFire();
-            gun.trigger(stubSoundContext, stubAnimationContext, stubFireContext);
+            gun.pullTrigger(stubSoundContext, stubAnimationContext, stubFireContext);
             // クールダウン完了の 1 tick 前
             tickN(Math.max(0, FIRE_COOL_TICKS - 1));
-            assertFalse(gun.canCycle(), "クールダウン完了前にサイクルできてはいけない");
+            assertFalse(gun.canCycleLever(), "クールダウン完了前にサイクルできてはいけない");
         }
     }
 
     @Nested
     class キャンセル {
-        // canTrigger の条件: cycleTime <= cycleCancelableLength
+        // canPullTrigger の条件: cycleTime <= cycleCancelableLength
         // cycleTime はカウントダウンなので、キャンセル可能なのは終了間際
 
         @Test
         void サイクル開始直後はキャンセル不可() {
             setReadyToFire();
-            gun.cycle(stubSoundContext, stubAnimationContext);
-            assertFalse(gun.canTrigger());
+            gun.cycleLever(stubSoundContext, stubAnimationContext);
+            assertFalse(gun.canPullTrigger());
         }
 
         @Test
         void サイクル終了間際にキャンセル可能になる() {
             setReadyToFire();
-            gun.cycle(stubSoundContext, stubAnimationContext);
+            gun.cycleLever(stubSoundContext, stubAnimationContext);
 
-            tickAndExpect(CYCLE_CANCEL_OPEN_TICKS, gun::canTrigger, "キャンセルウィンドウ開始");
+            tickAndExpect(CYCLE_CANCEL_OPEN_TICKS, gun::canPullTrigger, "キャンセルウィンドウ開始");
 
-            assertTrue(gun.trigger(stubSoundContext, stubAnimationContext, stubFireContext));
+            assertTrue(gun.pullTrigger(stubSoundContext, stubAnimationContext, stubFireContext));
             assertFalse(gun.isCycling());
         }
 
         @Test
         void キャンセルウィンドウ前は射撃不可() {
             setReadyToFire();
-            gun.cycle(stubSoundContext, stubAnimationContext);
+            gun.cycleLever(stubSoundContext, stubAnimationContext);
             tickN(Math.max(0, CYCLE_CANCEL_OPEN_TICKS - 1));
-            assertFalse(gun.canTrigger(), "キャンセルウィンドウ前に射撃できてはいけない");
+            assertFalse(gun.canPullTrigger(), "キャンセルウィンドウ前に射撃できてはいけない");
         }
 
         @Test
         void リロード開始直後はキャンセル不可() {
             setReadyToFire();
-            gun.reload(stubSoundContext, stubAnimationContext, stubReloadStartContext(true));
-            assertFalse(gun.canTrigger());
+            gun.loadBullet(stubSoundContext, stubAnimationContext, stubReloadStartContext(true));
+            assertFalse(gun.canPullTrigger());
         }
 
         @Test
         void リロード終了間際にキャンセル可能になる() {
             setReadyToFire();
-            gun.reload(stubSoundContext, stubAnimationContext, stubReloadStartContext(true));
+            gun.loadBullet(stubSoundContext, stubAnimationContext, stubReloadStartContext(true));
 
-            tickAndExpect(RELOAD_CANCEL_OPEN_TICKS, gun::canTrigger, "リロードキャンセルウィンドウ開始");
+            tickAndExpect(RELOAD_CANCEL_OPEN_TICKS, gun::canPullTrigger, "リロードキャンセルウィンドウ開始");
 
-            assertTrue(gun.trigger(stubSoundContext, stubAnimationContext, stubFireContext));
+            assertTrue(gun.pullTrigger(stubSoundContext, stubAnimationContext, stubFireContext));
             // trigger() はリロードもキャンセルする
             assertFalse(gun.isReloading());
         }
@@ -523,9 +523,9 @@ class LeverActionGunComponentTest {
         @Test
         void リロードキャンセルウィンドウ前は射撃不可() {
             setReadyToFire();
-            gun.reload(stubSoundContext, stubAnimationContext, stubReloadStartContext(true));
+            gun.loadBullet(stubSoundContext, stubAnimationContext, stubReloadStartContext(true));
             tickN(Math.max(0, RELOAD_CANCEL_OPEN_TICKS - 1));
-            assertFalse(gun.canTrigger(), "リロードキャンセルウィンドウ前に射撃できてはいけない");
+            assertFalse(gun.canPullTrigger(), "リロードキャンセルウィンドウ前に射撃できてはいけない");
         }
     }
 
@@ -537,15 +537,15 @@ class LeverActionGunComponentTest {
 
             // 1. リロード
             assertTrue(
-                    gun.reload(
+                    gun.loadBullet(
                             stubSoundContext, stubAnimationContext, stubReloadStartContext(true)));
             tickAndExpect(RELOAD_TICKS, () -> !gun.isReloading(), "リロード完了", reloadContext);
-            tickAndExpect(RELOAD_COOL_TICKS, () -> gun.canCycle(), "リロードクールダウン完了");
+            tickAndExpect(RELOAD_COOL_TICKS, () -> gun.canCycleLever(), "リロードクールダウン完了");
 
             assertEquals(1, gun.getMagazine().getBullets().size());
 
             // 2. サイクル
-            assertTrue(gun.cycle(stubSoundContext, stubAnimationContext));
+            assertTrue(gun.cycleLever(stubSoundContext, stubAnimationContext));
             completeCycle();
 
             assertTrue(gun.getChamber().canShoot());
@@ -553,8 +553,8 @@ class LeverActionGunComponentTest {
             assertTrue(gun.getMagazine().isEmpty());
 
             // 3. 射撃
-            assertTrue(gun.canTrigger());
-            assertTrue(gun.trigger(stubSoundContext, stubAnimationContext, stubFireContext));
+            assertTrue(gun.canPullTrigger());
+            assertTrue(gun.pullTrigger(stubSoundContext, stubAnimationContext, stubFireContext));
             assertEquals(1, firedBullets.size());
         }
 
@@ -568,7 +568,7 @@ class LeverActionGunComponentTest {
 
             for (int round = 0; round < TEST_MAGAZINE_DATA.capacity(); round++) {
                 assertTrue(
-                        gun.reload(
+                        gun.loadBullet(
                                 stubSoundContext,
                                 stubAnimationContext,
                                 stubReloadStartContext(true)),
@@ -583,7 +583,7 @@ class LeverActionGunComponentTest {
                 if (round < TEST_MAGAZINE_DATA.capacity() - 1) {
                     tickAndExpect(
                             RELOAD_COOL_TICKS,
-                            () -> gun.canReload(stubReloadStartContext(true)),
+                            () -> gun.canLoadBullet(stubReloadStartContext(true)),
                             "リロード " + (round + 1) + " 回目クールダウン完了");
                 }
             }
@@ -593,7 +593,7 @@ class LeverActionGunComponentTest {
 
         @Test
         void 非アクティブ時はサイクルとリロードが進行しない() {
-            gun.cycle(stubSoundContext, stubAnimationContext);
+            gun.cycleLever(stubSoundContext, stubAnimationContext);
 
             for (int i = 0; i < LEVER_DOWN_TICKS + LEVER_UP_TICKS + CYCLE_COOL_TICKS + 10; i++) {
                 gun.tick(stubSoundContext, stubCycleContext, emptyReloadContext, TICK, false);
@@ -607,21 +607,21 @@ class LeverActionGunComponentTest {
             // マガジンに2発入れてサイクル
             gun.getMagazine().addFirstBullet(TEST_BULLET);
             gun.getMagazine().addFirstBullet(TEST_BULLET);
-            gun.cycle(stubSoundContext, stubAnimationContext);
+            gun.cycleLever(stubSoundContext, stubAnimationContext);
             completeCycle();
 
             // 1発目
-            assertTrue(gun.canTrigger());
-            gun.trigger(stubSoundContext, stubAnimationContext, stubFireContext);
-            tickAndExpect(FIRE_COOL_TICKS, () -> gun.canCycle(), "射撃クールダウン完了");
+            assertTrue(gun.canPullTrigger());
+            gun.pullTrigger(stubSoundContext, stubAnimationContext, stubFireContext);
+            tickAndExpect(FIRE_COOL_TICKS, () -> gun.canCycleLever(), "射撃クールダウン完了");
 
             // サイクルで再装填
-            gun.cycle(stubSoundContext, stubAnimationContext);
+            gun.cycleLever(stubSoundContext, stubAnimationContext);
             completeCycle();
 
             // 2発目
-            assertTrue(gun.canTrigger());
-            gun.trigger(stubSoundContext, stubAnimationContext, stubFireContext);
+            assertTrue(gun.canPullTrigger());
+            gun.pullTrigger(stubSoundContext, stubAnimationContext, stubFireContext);
             assertEquals(2, firedBullets.size());
         }
 
@@ -629,13 +629,13 @@ class LeverActionGunComponentTest {
         void サイクルで排莢と装填が同時に行われる() {
             // チャンバーに空薬莢、マガジンに弾
             setReadyToFire();
-            gun.trigger(stubSoundContext, stubAnimationContext, stubFireContext);
-            tickAndExpect(FIRE_COOL_TICKS, () -> gun.canCycle(), "射撃クールダウン完了");
+            gun.pullTrigger(stubSoundContext, stubAnimationContext, stubFireContext);
+            tickAndExpect(FIRE_COOL_TICKS, () -> gun.canCycleLever(), "射撃クールダウン完了");
             gun.getMagazine().addFirstBullet(TEST_BULLET);
 
             // サイクル開始
             assertTrue(gun.getChamber().isInCartridge()); // 空薬莢がある
-            gun.cycle(stubSoundContext, stubAnimationContext);
+            gun.cycleLever(stubSoundContext, stubAnimationContext);
             completeCycle();
 
             // 排莢されて新しい弾が装填される

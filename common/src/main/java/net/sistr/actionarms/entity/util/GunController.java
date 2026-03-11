@@ -73,10 +73,10 @@ public class GunController {
                     }
 
                     // FIREキー（射撃操作）
-                    if (tryKeyAction(KeyInputManager.Key.FIRE, 2, gunComponent::canTrigger)) {
+                    if (tryKeyAction(KeyInputManager.Key.FIRE, 2, gunComponent::canPullTrigger)) {
                         var fireStartContext =
                                 leverAction.createFireStartContext(user.getWorld(), user);
-                        if (gunComponent.trigger(
+                        if (gunComponent.pullTrigger(
                                 playSoundContext, animationContext, fireStartContext)) {
                             stack.damage(1, user, p -> p.sendToolBreakStatus(user.getActiveHand()));
                             markDuty = true;
@@ -84,8 +84,8 @@ public class GunController {
                     }
 
                     // COCKキー（サイクル操作）
-                    if (tryKeyAction(KeyInputManager.Key.COCK, 4, gunComponent::canCycle)) {
-                        if (gunComponent.cycle(playSoundContext, animationContext)) {
+                    if (tryKeyAction(KeyInputManager.Key.COCK, 4, gunComponent::canCycleLever)) {
+                        if (gunComponent.cycleLever(playSoundContext, animationContext)) {
                             markDuty = true;
                         }
                     }
@@ -100,8 +100,8 @@ public class GunController {
                             && tryKeyAction(
                                     KeyInputManager.Key.RELOAD,
                                     2,
-                                    () -> gunComponent.canReload(reloadContext))) {
-                        if (gunComponent.reload(
+                                    () -> gunComponent.canLoadBullet(reloadContext))) {
+                        if (gunComponent.loadBullet(
                                 playSoundContext, animationContext, reloadContext)) {
                             markDuty = true;
                         }

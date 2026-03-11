@@ -91,7 +91,8 @@ public class KeyInputManager implements IKeyInputManager {
         FIRE,
         AIM,
         COCK,
-        RELOAD;
+        RELOAD,
+        OPERATE;
     }
 
     public static class InputLog {

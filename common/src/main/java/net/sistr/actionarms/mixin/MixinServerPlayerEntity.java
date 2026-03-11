@@ -27,6 +27,13 @@ public abstract class MixinServerPlayerEntity extends PlayerEntity
                     actionArms$keyInputManager,
                     this::actionArms$getItems);
 
+    @Unique
+    private final SAAGunController actionArms$saaGunController =
+            new SAAGunController(
+                    (ServerPlayerEntity) (Object) this,
+                    actionArms$keyInputManager,
+                    this::actionArms$getItems);
+
     public MixinServerPlayerEntity(World world, BlockPos pos, float yaw, GameProfile gameProfile) {
         super(world, pos, yaw, gameProfile);
     }
@@ -44,6 +51,7 @@ public abstract class MixinServerPlayerEntity extends PlayerEntity
     @Inject(method = "tick", at = @At("HEAD"))
     private void onTick(CallbackInfo ci) {
         this.actionArms$gunController.tick();
+        this.actionArms$saaGunController.tick();
     }
 
     @Unique

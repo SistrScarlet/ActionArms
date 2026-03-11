@@ -30,6 +30,9 @@ public class AAKeys {
     public static final KeyBinding KEY_COCKING =
             new KeyBinding(
                     "key.actionarms.cocking", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_C, KEY_CATEGORY);
+    public static final KeyBinding KEY_OPERATE =
+            new KeyBinding(
+                    "key.actionarms.operate", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_V, KEY_CATEGORY);
 
     public static void init() {
         setKey(
@@ -37,8 +40,9 @@ public class AAKeys {
                 KeyRecord.of(KeyInputManager.Key.FIRE, KEY_FIRE),
                 KeyRecord.of(KeyInputManager.Key.COCK, KEY_COCKING),
                 KeyRecord.of(KeyInputManager.Key.RELOAD, KEY_RELOAD),
-                KeyRecord.of(KeyInputManager.Key.AIM, KEY_AIM));
-        setKey(AAKeys::setConflictInGameKeys, KEY_RELOAD, KEY_COCKING);
+                KeyRecord.of(KeyInputManager.Key.AIM, KEY_AIM),
+                KeyRecord.of(KeyInputManager.Key.OPERATE, KEY_OPERATE));
+        setKey(AAKeys::setConflictInGameKeys, KEY_RELOAD, KEY_COCKING, KEY_OPERATE);
         setKey(AAKeys::setConflictMouseKeys, KEY_FIRE, KEY_AIM);
     }
 

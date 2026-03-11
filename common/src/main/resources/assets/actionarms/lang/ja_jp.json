@@ -7,7 +7,16 @@
   "item.actionarms.gun.chamber.loaded": "Chamber: Loaded",
   "item.actionarms.gun.chamber.empty_caliber": "Chamber: Empty Caliber",
   "item.actionarms.gun.chamber.empty": "Chamber: Empty",
-  "item.actionarms.gun.magazine.ammo": "Magazine: %s / %s",
+  "item.actionarms.gun.magazine.ammo": "マガジン: %s / %s",
+  "item.actionarms.gun.cylinder.ammo": "シリンダー: %s / %s",
+  "item.actionarms.colt_saa": "コルト SAA",
+
+  "key.actionarms.category": "ActionArms",
+  "key.actionarms.fire": "射撃",
+  "key.actionarms.aim": "エイム",
+  "key.actionarms.reload": "リロード",
+  "key.actionarms.cocking": "コッキング",
+  "key.actionarms.operate": "操作",
 
   "text.autoconfig.actionarms.title": "ActionArms 設定",
 

@@ -16,8 +16,13 @@ public class Chamber {
         return Optional.ofNullable(cartridge);
     }
 
-    public void setCartridge(@Nullable Cartridge cartridge) {
+    /** 薬莢を装填する。既に装填済みなら false を返す。 */
+    public boolean loadCartridge(Cartridge cartridge) {
+        if (this.cartridge != null) {
+            return false;
+        }
         this.cartridge = cartridge;
+        return true;
     }
 
     public boolean isInCartridge() {
@@ -32,13 +37,16 @@ public class Chamber {
         return this.cartridge != null && this.cartridge.canShoot();
     }
 
+    /** 排莢すべきか。空薬莢が入っている場合に true。 */
+    public boolean shouldEject() {
+        return this.cartridge != null && !this.cartridge.canShoot();
+    }
+
     public Optional<BulletData> shoot() {
-        if (this.cartridge == null || this.cartridge.getBullet().isEmpty()) {
+        if (this.cartridge == null) {
             return Optional.empty();
         }
-        var bullet = this.cartridge.getBullet().get();
-        this.cartridge.setBullet(null);
-        return Optional.of(bullet);
+        return this.cartridge.spend();
     }
 
     public Optional<Cartridge> ejectCartridge() {
@@ -51,6 +59,7 @@ public class Chamber {
     }
 
     public void read(NbtCompound nbt) {
+        this.cartridge = null;
         if (nbt.contains("cartridge")) {
             this.cartridge = new Cartridge(null);
             this.cartridge.read(nbt.getCompound("cartridge"));
