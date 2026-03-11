@@ -49,9 +49,9 @@ class SmartGateRotateTest {
         return Stream.of(
                 //          cw       gate     ccw      expected
                 // 全空
-                Arguments.of(S.EMPTY, S.EMPTY, S.EMPTY, R.NONE),
+                Arguments.of(S.EMPTY, S.EMPTY, S.EMPTY, R.CW),
                 Arguments.of(S.EMPTY, S.EMPTY, S.SPENT, R.CCW),
-                Arguments.of(S.EMPTY, S.EMPTY, S.LOADED, R.NONE),
+                Arguments.of(S.EMPTY, S.EMPTY, S.LOADED, R.CW),
                 // gate=SPENT
                 Arguments.of(S.EMPTY, S.SPENT, S.EMPTY, R.NONE),
                 Arguments.of(S.EMPTY, S.SPENT, S.SPENT, R.NONE),
@@ -81,7 +81,7 @@ class SmartGateRotateTest {
                 // cw=LOADED, gate=LOADED
                 Arguments.of(S.LOADED, S.LOADED, S.EMPTY, R.CCW),
                 Arguments.of(S.LOADED, S.LOADED, S.SPENT, R.CCW),
-                Arguments.of(S.LOADED, S.LOADED, S.LOADED, R.NONE));
+                Arguments.of(S.LOADED, S.LOADED, S.LOADED, R.CCW));
     }
 
     // @formatter:on

@@ -187,7 +187,7 @@ class SAAGunComponentTest {
         }
 
         @Test
-        void 排莢後に左右に薬莢がなければ回転しない() {
+        void 排莢後に全薬室空ならCW回転する() {
             // 射撃位置に直接装填→射撃→コック回転でゲートに空薬莢が来る
             gun.getCylinder().firingChamber().loadCartridge(new Cartridge(TEST_BULLET));
             gun.getCylinder().shootFiring();
@@ -195,15 +195,16 @@ class SAAGunComponentTest {
             // ゲート位置に空薬莢が1つだけある状態
             assertTrue(gun.getCylinder().gateChamber().shouldEject());
             gun.openGate();
-            // openGate の smartGateRotate でゲートに空薬莢があるので回転しない
             int indexBefore = gun.getCylinder().getFiringIndex();
 
             gun.ejectAtGate(stubSoundContext, stubAnimationContext);
             tickAndExpect(
                     EJECT_TICKS, () -> gun.getPhase() == SAAGunComponent.Phase.GATE_OPEN, "排莢完了");
 
-            // 左右に薬莢がないので回転しない
-            assertEquals(indexBefore, gun.getCylinder().getFiringIndex());
+            // 全薬室空(E,E,E)なのでCW回転する
+            assertEquals(
+                    (indexBefore - 1 + CYLINDER_CAPACITY) % CYLINDER_CAPACITY,
+                    gun.getCylinder().getFiringIndex());
         }
     }
 
