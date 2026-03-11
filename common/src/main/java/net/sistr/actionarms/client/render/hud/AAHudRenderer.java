@@ -20,12 +20,25 @@ import net.sistr.actionarms.mixin.GameRendererInvoker;
 
 public class AAHudRenderer {
     public static final AAHudRenderer INSTANCE = new AAHudRenderer();
+
+    // SAA シリンダー回転アニメーション用
+    private int prevFiringIndex = -1;
+    private float prevRotation;
+    private float currentRotation;
+    private float targetRotation;
     private static final Identifier MEDIUM_CALIBER_BULLET =
             new Identifier("actionarms", "textures/item/bullet/medium_caliber_bullet.png");
     private static final Identifier MEDIUM_CALIBER_BULLET_FRAME =
             new Identifier("actionarms", "textures/item/bullet/medium_caliber_bullet_frame.png");
     private static final Identifier MEDIUM_CALIBER_CARTRIDGE =
             new Identifier("actionarms", "textures/item/bullet/medium_caliber_cartridge.png");
+
+    /** 毎 tick 呼び出し。回転アニメーションの更新。 */
+    public void tick() {
+        prevRotation = currentRotation;
+        // 1tick で target に到達
+        currentRotation = targetRotation;
+    }
 
     public void render(DrawContext drawContext, float tickDelta) {
         var client = MinecraftClient.getInstance();
@@ -145,13 +158,29 @@ public class AAHudRenderer {
         int centerX = drawContext.getScaledWindowWidth() - margin - radius - size / 2;
         int centerY = drawContext.getScaledWindowHeight() - margin - radius - size / 2;
 
-        // firingIndex の薬室が上（-90度）に来るように回転オフセットを計算
-        double rotationOffset = -2.0 * Math.PI * hudState.firingIndex() / chamberCount;
+        // 回転アニメーション: firingIndex 変化時に target を更新
+        int currentIndex = hudState.firingIndex();
+        float stepAngle = (float) (2.0 * Math.PI / chamberCount);
+
+        if (prevFiringIndex == -1) {
+            prevFiringIndex = currentIndex;
+            targetRotation = -stepAngle * currentIndex;
+            prevRotation = targetRotation;
+            currentRotation = targetRotation;
+        } else if (currentIndex != prevFiringIndex) {
+            int diff = currentIndex - prevFiringIndex;
+            if (diff > chamberCount / 2) diff -= chamberCount;
+            if (diff < -chamberCount / 2) diff += chamberCount;
+            targetRotation += -stepAngle * diff;
+            prevFiringIndex = currentIndex;
+        }
+
+        // tick 間を tickDelta で線形補間
+        double rotationOffset = prevRotation + (currentRotation - prevRotation) * tickDelta;
 
         for (int i = 0; i < chamberCount; i++) {
             // 各薬室の角度: 上から時計回り、firingIndex 分だけ回転
-            double angle =
-                    2.0 * Math.PI * i / chamberCount - Math.PI / 2.0 + rotationOffset;
+            double angle = 2.0 * Math.PI * i / chamberCount - Math.PI / 2.0 + rotationOffset;
             int x = centerX + (int) (radius * Math.cos(angle)) - size / 2;
             int y = centerY + (int) (radius * Math.sin(angle)) - size / 2;
 

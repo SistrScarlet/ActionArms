@@ -37,6 +37,7 @@ public class ActionArmsClient {
                 mc -> {
                     if (mc.world == null) return;
                     ItemAnimationManager.INSTANCE.tick(1f / 20f);
+                    AAHudRenderer.INSTANCE.tick();
                 });
         ClientGuiEvent.RENDER_HUD.register(AAHudRenderer.INSTANCE::render);
     }
