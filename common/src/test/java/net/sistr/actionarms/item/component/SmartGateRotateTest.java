@@ -51,13 +51,13 @@ class SmartGateRotateTest {
                 // 全空
                 Arguments.of(S.EMPTY, S.EMPTY, S.EMPTY, R.CW),
                 Arguments.of(S.EMPTY, S.EMPTY, S.SPENT, R.CCW),
-                Arguments.of(S.EMPTY, S.EMPTY, S.LOADED, R.CW),
+                Arguments.of(S.EMPTY, S.EMPTY, S.LOADED, R.NONE),
                 // gate=SPENT
                 Arguments.of(S.EMPTY, S.SPENT, S.EMPTY, R.NONE),
                 Arguments.of(S.EMPTY, S.SPENT, S.SPENT, R.NONE),
                 Arguments.of(S.EMPTY, S.SPENT, S.LOADED, R.NONE),
                 // gate=LOADED, cw=EMPTY
-                Arguments.of(S.EMPTY, S.LOADED, S.EMPTY, R.CW),
+                Arguments.of(S.EMPTY, S.LOADED, S.EMPTY, R.CCW),
                 Arguments.of(S.EMPTY, S.LOADED, S.SPENT, R.CCW),
                 Arguments.of(S.EMPTY, S.LOADED, S.LOADED, R.CW),
                 // cw=SPENT
@@ -71,7 +71,7 @@ class SmartGateRotateTest {
                 Arguments.of(S.SPENT, S.LOADED, S.SPENT, R.CW),
                 Arguments.of(S.SPENT, S.LOADED, S.LOADED, R.CW),
                 // cw=LOADED, gate=EMPTY
-                Arguments.of(S.LOADED, S.EMPTY, S.EMPTY, R.NONE),
+                Arguments.of(S.LOADED, S.EMPTY, S.EMPTY, R.CCW),
                 Arguments.of(S.LOADED, S.EMPTY, S.SPENT, R.CCW),
                 Arguments.of(S.LOADED, S.EMPTY, S.LOADED, R.NONE),
                 // cw=LOADED, gate=SPENT

@@ -185,14 +185,20 @@ public class SAAGunComponent implements IComponent {
             this.cylinder.loadRotate();
         }
         // 空薬莢がなければ空薬室を探す
-        // ゲートが空でも cw が空なら回転する（cw 方向を優先探索）
-        else if (this.cylinder.getChamberAt(gate).isEmpty()
-                && !this.cylinder.getChamberAt(cw).isEmpty()) {
-            // ゲート位置が既に空で、cw は空でない → 回転不要
-        } else if (this.cylinder.getChamberAt(cw).isEmpty()) {
-            this.cylinder.cockRotate();
+        else if (this.cylinder.getChamberAt(gate).isEmpty()) {
+            if (!this.cylinder.getChamberAt(ccw).isEmpty()) {
+                // ゲートが空で ccw が空でない → 回転不要（ゲートに装填可）
+            } else if (!this.cylinder.getChamberAt(cw).isEmpty()) {
+                // ccw も空 → ccw 方向に回転
+                this.cylinder.loadRotate();
+            } else {
+                // 全て空 → デフォルト cw 回転
+                this.cylinder.cockRotate();
+            }
         } else if (this.cylinder.getChamberAt(ccw).isEmpty()) {
             this.cylinder.loadRotate();
+        } else if (this.cylinder.getChamberAt(cw).isEmpty()) {
+            this.cylinder.cockRotate();
         }
         // いずれも該当しない → デフォルト ccw 回転
         else {
