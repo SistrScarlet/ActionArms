@@ -152,16 +152,32 @@ public class SAAGunComponent implements IComponent {
     }
 
     public void closeGate() {
-        // ゲート位置に空薬莢/空薬室があり、CW に弾丸があるなら CW へ回転
-        int gate = this.cylinder.gateIndex();
-        int cw = (gate - 1 + this.cylinder.getCapacity()) % this.cylinder.getCapacity();
-        if ((this.cylinder.getChamberAt(gate).isEmpty()
-                        || this.cylinder.getChamberAt(gate).shouldEject())
-                && this.cylinder.getChamberAt(cw).canShoot()) {
-            this.cylinder.cockRotate();
-        }
+        alignCylinderForFiring();
         this.phase = Phase.IDLE;
         this.phaseTimer = 0;
+    }
+
+    /**
+     * ゲート閉鎖時のシリンダー位置合わせ。
+     *
+     * <p>コック→射撃を繰り返したとき、!canShoot な薬室が最後に来るように配置する。 firingIndex に !canShoot、その CW (firingIndex-1) に
+     * canShoot が来る位置を探す。 見つからなければ回転しない。
+     */
+    private void alignCylinderForFiring() {
+        int capacity = this.cylinder.getCapacity();
+
+        for (int i = 0; i < capacity; i++) {
+            int cw = (i - 1 + capacity) % capacity;
+            if (!this.cylinder.getChamberAt(i).canShoot()
+                    && this.cylinder.getChamberAt(cw).canShoot()) {
+                // この位置に firingIndex を合わせる
+                while (this.cylinder.getFiringIndex() != i) {
+                    this.cylinder.cockRotate();
+                }
+                return;
+            }
+        }
+        // 全て canShoot or 全て !canShoot → 回転不要
     }
 
     /**
