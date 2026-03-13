@@ -4,6 +4,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.sistr.actionarms.item.ItemUniqueManager;
 import net.sistr.actionarms.item.LeverActionGunItem;
+import net.sistr.actionarms.item.SAAGunItem;
 import org.jetbrains.annotations.Nullable;
 
 public class AimManager implements IAimManager {
@@ -29,7 +30,8 @@ public class AimManager implements IAimManager {
     private boolean canAiming() {
         var stack = this.player.getMainHandStack();
         // レバアク以外だったら不可
-        if (!(stack.getItem() instanceof LeverActionGunItem)) {
+        if (!(stack.getItem() instanceof LeverActionGunItem)
+                && !(stack.getItem() instanceof SAAGunItem)) {
             return false;
         }
         // アイテムを切り替えたらエイム解除

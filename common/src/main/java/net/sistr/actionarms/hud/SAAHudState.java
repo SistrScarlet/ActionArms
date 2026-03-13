@@ -43,7 +43,9 @@ public record SAAHudState(
             }
         }
         return new SAAHudState(
-                cylinder.getFiringIndex(), states, component.isGateOpen(),
+                cylinder.getFiringIndex(),
+                states,
+                component.isGateOpen(),
                 component.isHammerCocked());
     }
 

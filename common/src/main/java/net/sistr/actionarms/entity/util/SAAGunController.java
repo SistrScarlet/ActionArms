@@ -51,14 +51,17 @@ public class SAAGunController {
                     var soundContext = saaItem.createSoundContext(user.getWorld(), user);
                     var animContext = saaItem.createAnimationContext(user.getWorld(), uuid);
 
-                    boolean markDuty =
-                            gunComponent.tick(soundContext, 1f / 20f, isSelected);
+                    boolean markDuty = gunComponent.tick(soundContext, 1f / 20f, isSelected);
 
                     if (!isSelected) {
                         return markDuty
                                 ? IComponent.ComponentResult.MODIFIED
                                 : IComponent.ComponentResult.NO_CHANGE;
                     }
+
+                    boolean isAiming =
+                            user instanceof HasAimManager hasAimManager
+                                    && hasAimManager.actionArms$getAimManager().isAiming();
 
                     // ファニング: トリガー保持中 + コック完了 → 即射撃
                     if (keyInputManager.isPress(KeyInputManager.Key.FIRE)
@@ -84,29 +87,35 @@ public class SAAGunController {
                         }
 
                         // COCK キー → 排莢（空でも実行可、空なら何も起きない）
-                        if (tryKeyAction(
-                                KeyInputManager.Key.COCK, 4, gunComponent::canEjectAtGate)) {
+                        if (!isAiming
+                                && tryKeyAction(
+                                        KeyInputManager.Key.COCK,
+                                        4,
+                                        gunComponent::canEjectAtGate)) {
                             if (gunComponent.ejectAtGate(soundContext, animContext)) {
                                 markDuty = true;
                             }
                         }
 
-                        // RELOAD キー → 排莢 / 装填 / シリンダー回転
-                        if (tryKeyAction(
-                                KeyInputManager.Key.RELOAD,
-                                2,
-                                () ->
-                                        gunComponent.getPhase() == SAAGunComponent.Phase.GATE_OPEN
-                                                && gunComponent
-                                                        .getCylinder()
-                                                        .shouldEjectAtGate())) {
+                        // RELOAD キー → 排莢 / 装填 / シリンダー回転（エイム中は不可）
+                        if (!isAiming
+                                && tryKeyAction(
+                                        KeyInputManager.Key.RELOAD,
+                                        2,
+                                        () ->
+                                                gunComponent.getPhase()
+                                                                == SAAGunComponent.Phase.GATE_OPEN
+                                                        && gunComponent
+                                                                .getCylinder()
+                                                                .shouldEjectAtGate())) {
                             if (gunComponent.ejectAtGate(soundContext, animContext)) {
                                 markDuty = true;
                             }
-                        } else if (tryKeyAction(
-                                KeyInputManager.Key.RELOAD,
-                                2,
-                                () -> gunComponent.canLoadAtGate() && hasBullet())) {
+                        } else if (!isAiming
+                                && tryKeyAction(
+                                        KeyInputManager.Key.RELOAD,
+                                        2,
+                                        () -> gunComponent.canLoadAtGate() && hasBullet())) {
                             var inventory = getInventory();
                             if (inventory.isPresent()) {
                                 var bullets =
@@ -117,13 +126,15 @@ public class SAAGunController {
                                     markDuty = true;
                                 }
                             }
-                        } else if (tryKeyAction(
-                                KeyInputManager.Key.RELOAD,
-                                2,
-                                () ->
-                                        gunComponent.getPhase() == SAAGunComponent.Phase.GATE_OPEN
-                                                && !gunComponent.canLoadAtGate()
-                                                && hasBullet())) {
+                        } else if (!isAiming
+                                && tryKeyAction(
+                                        KeyInputManager.Key.RELOAD,
+                                        2,
+                                        () ->
+                                                gunComponent.getPhase()
+                                                                == SAAGunComponent.Phase.GATE_OPEN
+                                                        && !gunComponent.canLoadAtGate()
+                                                        && hasBullet())) {
                             // 装填済み薬室をスキップする回転（弾がある場合のみ）
                             gunComponent.smartGateRotate();
                             markDuty = true;
@@ -160,9 +171,12 @@ public class SAAGunController {
                             }
                         }
 
-                        // OPERATE キー → ゲート開く
-                        if (tryKeyAction(
-                                KeyInputManager.Key.OPERATE, 2, () -> !gunComponent.isGateOpen())) {
+                        // OPERATE キー → ゲート開く（エイム中は不可）
+                        if (!isAiming
+                                && tryKeyAction(
+                                        KeyInputManager.Key.OPERATE,
+                                        2,
+                                        () -> !gunComponent.isGateOpen())) {
                             gunComponent.openGate();
                             soundContext.playSound("GATE_OPEN");
                             markDuty = true;
