@@ -5,6 +5,7 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.item.ItemStack;
+import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import net.sistr.actionarms.entity.util.HasAimManager;
 import net.sistr.actionarms.entity.util.IAimManager;
@@ -133,6 +134,19 @@ public class AAHudRenderer {
             drawContext.drawTexture(texture, baseX, baseY + yOffset, 0, 0, size, size, size, size);
             yOffset += size;
         }
+
+        // 操作ヒント表示
+        Text hint = null;
+        if (!loaded && bullets.isEmpty()) {
+            hint = Text.translatable("hud.actionarms.hint.reload");
+        } else if (!loaded && !bullets.isEmpty()) {
+            hint = Text.translatable("hud.actionarms.hint.lever");
+        }
+        if (hint != null) {
+            int hintX = drawContext.getScaledWindowWidth() / 2 + 12;
+            int hintY = drawContext.getScaledWindowHeight() / 2 + 12;
+            drawContext.drawTextWithShadow(textRenderer, hint, hintX, hintY, 0xFFFFFFFF);
+        }
     }
 
     private void saaHud(
@@ -212,6 +226,23 @@ public class AAHudRenderer {
             if (hudState.gateOpen() && i == gateIndex) {
                 drawContext.drawBorder(x - 1, y - 1, size + 2, size + 2, 0xFFFFFFFF);
             }
+        }
+
+        // 操作ヒント表示
+        Text hint = null;
+        boolean hasShootable =
+                chamberStates.stream().anyMatch(s -> s == SAAHudState.ChamberState.LOADED);
+        if (hudState.gateOpen()) {
+            hint = Text.translatable("hud.actionarms.hint.saa.load");
+        } else if (!hasShootable) {
+            hint = Text.translatable("hud.actionarms.hint.saa.open_gate");
+        } else if (!hudState.hammerCocked()) {
+            hint = Text.translatable("hud.actionarms.hint.saa.cock");
+        }
+        if (hint != null) {
+            int hintX = drawContext.getScaledWindowWidth() / 2 + 12;
+            int hintY = drawContext.getScaledWindowHeight() / 2 + 12;
+            drawContext.drawTextWithShadow(textRenderer, hint, hintX, hintY, 0xFFFFFFFF);
         }
     }
 
