@@ -26,11 +26,11 @@ public class AADataRegistry {
             new SAAGunData(
                     "colt_saa",
                     /* cylinderCapacity= */ 6,
-                    /* cockLength= */ 0.1f,
+                    /* cockLength= */ 0.05f,
                     /* fireCoolLength= */ 0.05f,
-                    /* ejectLength= */ 0.15f,
-                    /* loadLength= */ 0.15f,
-                    /* baseSpreadAngle= */ 5.0f,
+                    /* ejectLength= */ 0.05f,
+                    /* loadLength= */ 0.05f,
+                    /* baseSpreadAngle= */ 1f,
                     /* aimSpreadAngle= */ 0.5f,
                     /* movementSpreadIncrease= */ 3.0f);
 
