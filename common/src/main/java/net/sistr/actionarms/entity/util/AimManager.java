@@ -5,6 +5,7 @@ import net.minecraft.item.ItemStack;
 import net.sistr.actionarms.item.ItemUniqueManager;
 import net.sistr.actionarms.item.LeverActionGunItem;
 import net.sistr.actionarms.item.SAAGunItem;
+import net.sistr.actionarms.item.component.IComponent;
 import org.jetbrains.annotations.Nullable;
 
 public class AimManager implements IAimManager {
@@ -29,10 +30,17 @@ public class AimManager implements IAimManager {
 
     private boolean canAiming() {
         var stack = this.player.getMainHandStack();
-        // レバアク以外だったら不可
+        // 銃以外だったら不可
         if (!(stack.getItem() instanceof LeverActionGunItem)
                 && !(stack.getItem() instanceof SAAGunItem)) {
             return false;
+        }
+        // SAA: ゲート開放中はエイム不可
+        if (stack.getItem() instanceof SAAGunItem saaGunItem) {
+            var gunComponent = IComponent.query(saaGunItem.getGunComponent(), stack, c -> c);
+            if (gunComponent.isGateOpen()) {
+                return false;
+            }
         }
         // アイテムを切り替えたらエイム解除
         if (prevAimStack != null && prevAimStack != stack) {
