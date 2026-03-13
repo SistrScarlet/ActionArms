@@ -14,6 +14,7 @@ public class AAConfig implements ConfigData {
 
     public static class Key {
         @ConfigEntry.Gui.Tooltip public boolean aimToggle = false;
+        @ConfigEntry.Gui.Tooltip public boolean showHint = true;
     }
 
     @ConfigEntry.Category("key")

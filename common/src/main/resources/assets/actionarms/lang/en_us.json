@@ -22,13 +22,15 @@
 
   "text.autoconfig.actionarms.option.key.aimToggle": "Toggle Aim",
   "text.autoconfig.actionarms.option.key.aimToggle.@Tooltip": "Enable Toggle Aim",
+  "text.autoconfig.actionarms.option.key.showHint": "Show Action Hints",
+  "text.autoconfig.actionarms.option.key.showHint.@Tooltip": "Show action hints on the HUD",
 
   "text.autoconfig.actionarms.option.game.medium_caliber_bullet_damage": "Medium Bullet Damage",
   "text.autoconfig.actionarms.option.game.medium_caliber_bullet_headshot_damage": "Medium Bullet HS Damage",
 
-  "hud.actionarms.hint.reload": "[R] Reload",
-  "hud.actionarms.hint.lever": "[C] Lever Action",
-  "hud.actionarms.hint.saa.open_gate": "[V] Open Gate",
-  "hud.actionarms.hint.saa.load": "[R] Eject/Load",
-  "hud.actionarms.hint.saa.cock": "[C] Cock Hammer"
+  "hud.actionarms.hint.reload": "[%s] Reload",
+  "hud.actionarms.hint.lever": "[%s] Lever Action",
+  "hud.actionarms.hint.saa.open_gate": "[%s] Open Gate",
+  "hud.actionarms.hint.saa.load": "[%s] Eject/Load",
+  "hud.actionarms.hint.saa.cock": "[%s] Cock Hammer"
 }

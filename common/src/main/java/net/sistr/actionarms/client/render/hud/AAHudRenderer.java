@@ -7,6 +7,8 @@ import net.minecraft.client.gui.DrawContext;
 import net.minecraft.item.ItemStack;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
+import net.sistr.actionarms.ActionArms;
+import net.sistr.actionarms.client.key.AAKeys;
 import net.sistr.actionarms.entity.util.HasAimManager;
 import net.sistr.actionarms.entity.util.IAimManager;
 import net.sistr.actionarms.hud.BulletHitHudState;
@@ -136,16 +138,24 @@ public class AAHudRenderer {
         }
 
         // 操作ヒント表示
-        Text hint = null;
-        if (!loaded && bullets.isEmpty()) {
-            hint = Text.translatable("hud.actionarms.hint.reload");
-        } else if (!loaded && !bullets.isEmpty()) {
-            hint = Text.translatable("hud.actionarms.hint.lever");
-        }
-        if (hint != null) {
-            int hintX = drawContext.getScaledWindowWidth() / 2 + 12;
-            int hintY = drawContext.getScaledWindowHeight() / 2 + 12;
-            drawContext.drawTextWithShadow(textRenderer, hint, hintX, hintY, 0xFFFFFFFF);
+        if (ActionArms.getConfig().key.showHint) {
+            Text hint = null;
+            if (!loaded && bullets.isEmpty()) {
+                hint =
+                        Text.translatable(
+                                "hud.actionarms.hint.reload",
+                                AAKeys.KEY_RELOAD.getBoundKeyLocalizedText());
+            } else if (!loaded && !bullets.isEmpty()) {
+                hint =
+                        Text.translatable(
+                                "hud.actionarms.hint.lever",
+                                AAKeys.KEY_COCKING.getBoundKeyLocalizedText());
+            }
+            if (hint != null) {
+                int hintX = drawContext.getScaledWindowWidth() / 2 + 12;
+                int hintY = drawContext.getScaledWindowHeight() / 2 + 12;
+                drawContext.drawTextWithShadow(textRenderer, hint, hintX, hintY, 0xFFFFFFFF);
+            }
         }
     }
 
@@ -229,20 +239,31 @@ public class AAHudRenderer {
         }
 
         // 操作ヒント表示
-        Text hint = null;
-        boolean hasShootable =
-                chamberStates.stream().anyMatch(s -> s == SAAHudState.ChamberState.LOADED);
-        if (hudState.gateOpen()) {
-            hint = Text.translatable("hud.actionarms.hint.saa.load");
-        } else if (!hasShootable) {
-            hint = Text.translatable("hud.actionarms.hint.saa.open_gate");
-        } else if (!hudState.hammerCocked()) {
-            hint = Text.translatable("hud.actionarms.hint.saa.cock");
-        }
-        if (hint != null) {
-            int hintX = drawContext.getScaledWindowWidth() / 2 + 12;
-            int hintY = drawContext.getScaledWindowHeight() / 2 + 12;
-            drawContext.drawTextWithShadow(textRenderer, hint, hintX, hintY, 0xFFFFFFFF);
+        if (ActionArms.getConfig().key.showHint) {
+            Text hint = null;
+            boolean hasShootable =
+                    chamberStates.stream().anyMatch(s -> s == SAAHudState.ChamberState.LOADED);
+            if (hudState.gateOpen()) {
+                hint =
+                        Text.translatable(
+                                "hud.actionarms.hint.saa.load",
+                                AAKeys.KEY_RELOAD.getBoundKeyLocalizedText());
+            } else if (!hasShootable) {
+                hint =
+                        Text.translatable(
+                                "hud.actionarms.hint.saa.open_gate",
+                                AAKeys.KEY_OPERATE.getBoundKeyLocalizedText());
+            } else if (!hudState.hammerCocked()) {
+                hint =
+                        Text.translatable(
+                                "hud.actionarms.hint.saa.cock",
+                                AAKeys.KEY_COCKING.getBoundKeyLocalizedText());
+            }
+            if (hint != null) {
+                int hintX = drawContext.getScaledWindowWidth() / 2 + 12;
+                int hintY = drawContext.getScaledWindowHeight() / 2 + 12;
+                drawContext.drawTextWithShadow(textRenderer, hint, hintX, hintY, 0xFFFFFFFF);
+            }
         }
     }
 
