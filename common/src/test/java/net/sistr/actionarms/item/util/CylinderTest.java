@@ -110,7 +110,7 @@ class CylinderTest {
                 assertTrue(cylinder.loadAtGate(TEST_BULLET));
                 cylinder.loadRotate();
             }
-            assertTrue(cylinder.isAllLoaded());
+            assertTrue(cylinder.isAllReady());
         }
     }
 
@@ -202,16 +202,12 @@ class CylinderTest {
             }
             // 全排莢（コック回転で空薬莢がゲートに来る）
             for (int i = 0; i < CAPACITY; i++) {
-                assertTrue(
-                        cylinder.ejectAtGate().isPresent(),
-                        "薬室" + cylinder.gateIndex() + "の排莢");
+                assertTrue(cylinder.ejectAtGate().isPresent(), "薬室" + cylinder.gateIndex() + "の排莢");
                 cylinder.cockRotate();
             }
             // 全再装填（loadRotate で回しながら）
             for (int i = 0; i < CAPACITY; i++) {
-                assertTrue(
-                        cylinder.loadAtGate(TEST_BULLET),
-                        "薬室" + cylinder.gateIndex() + "の再装填");
+                assertTrue(cylinder.loadAtGate(TEST_BULLET), "薬室" + cylinder.gateIndex() + "の再装填");
                 cylinder.loadRotate();
             }
         }
@@ -239,13 +235,13 @@ class CylinderTest {
         }
 
         @Test
-        void 全装填でisAllLoadedがtrue() {
-            assertFalse(cylinder.isAllLoaded());
+        void 全装填でisAllReadyがtrue() {
+            assertFalse(cylinder.isAllReady());
             for (int i = 0; i < CAPACITY; i++) {
                 cylinder.loadAtGate(TEST_BULLET);
                 cylinder.loadRotate();
             }
-            assertTrue(cylinder.isAllLoaded());
+            assertTrue(cylinder.isAllReady());
         }
     }
 }

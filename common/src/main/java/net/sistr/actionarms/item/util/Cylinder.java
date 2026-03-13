@@ -82,9 +82,9 @@ public class Cylinder {
         return count;
     }
 
-    public boolean isAllLoaded() {
+    public boolean isAllReady() {
         for (Chamber c : chambers) {
-            if (c.isEmpty()) {
+            if (!c.canShoot()) {
                 return false;
             }
         }

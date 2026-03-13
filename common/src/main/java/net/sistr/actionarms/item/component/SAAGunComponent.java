@@ -79,7 +79,7 @@ public class SAAGunComponent implements IComponent {
             case LOADING:
                 this.phase = Phase.GATE_OPEN;
                 smartGateRotate();
-                if (this.cylinder.isAllLoaded()) {
+                if (this.cylinder.isAllReady()) {
                     closeGate();
                     soundContext.playSound("GATE_CLOSE");
                 }
