@@ -49,10 +49,17 @@ public class SAAGunItem extends GunItem {
     @Override
     public void appendTooltip(
             ItemStack stack, @Nullable World world, List<Text> tooltip, TooltipContext context) {
-        var gunComponent = IComponent.query(getGunComponent(), stack, c -> c);
-        var cylinder = gunComponent.getCylinder();
+        // 適合弾薬
+        tooltip.add(Text.translatable("item.actionarms.gun.loadable_ammo"));
+        tooltip.add(
+                Text.translatable(
+                                "item.actionarms.gun.loadable_ammo.list",
+                                Text.translatable("item.actionarms.medium_caliber_bullet"))
+                        .formatted(Formatting.GRAY));
 
         // シリンダー情報
+        var gunComponent = IComponent.query(getGunComponent(), stack, c -> c);
+        var cylinder = gunComponent.getCylinder();
         int loaded = cylinder.countLoaded();
         int capacity = cylinder.getCapacity();
         tooltip.add(
