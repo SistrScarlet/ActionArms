@@ -24,14 +24,22 @@ import org.joml.Quaternionf;
 public class SAAItemRenderer extends ActionArmsItemRenderer {
     private static final int CYLINDER_CAPACITY = 6;
     private static final String DEFAULT_CYLINDER_BONE = "cylinder";
+    private static final String DEFAULT_BULLET_BONE_PREFIX = "bullet_";
+    private static final String DEFAULT_CARTRIDGE_BONE_PREFIX = "cartridge_";
 
     private final String cylinderBoneName;
+    private final String bulletBonePrefix;
+    private final String cartridgeBonePrefix;
     private final Map<UUID, CylinderState> cylinderStates = new HashMap<>();
 
     public SAAItemRenderer(ProcessedGltfModel model, ModelMetadata metadata) {
         super(model, metadata);
-        this.cylinderBoneName =
-                metadata.properties().getOrDefault("cylinder_bone", DEFAULT_CYLINDER_BONE);
+        var props = metadata.properties();
+        this.cylinderBoneName = props.getOrDefault("cylinder_bone", DEFAULT_CYLINDER_BONE);
+        this.bulletBonePrefix =
+                props.getOrDefault("bullet_bone_prefix", DEFAULT_BULLET_BONE_PREFIX);
+        this.cartridgeBonePrefix =
+                props.getOrDefault("cartridge_bone_prefix", DEFAULT_CARTRIDGE_BONE_PREFIX);
     }
 
     public void tickCylinderAnimation() {
@@ -122,10 +130,10 @@ public class SAAItemRenderer extends ActionArmsItemRenderer {
                         var states = hudState.chamberStates();
                         for (int i = 0; i < states.size(); i++) {
                             if (states.get(i) != SAAHudState.ChamberState.LOADED) {
-                                builder.addHideBone("bullet_" + i);
+                                builder.addHideBone(bulletBonePrefix + i);
                             }
                             if (states.get(i) != SAAHudState.ChamberState.SPENT) {
-                                builder.addHideBone("cartridge_" + i);
+                                builder.addHideBone(cartridgeBonePrefix + i);
                             }
                         }
                     });
