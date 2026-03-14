@@ -1,6 +1,7 @@
 package net.sistr.actionarms.client.render.gltf.renderer;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import net.minecraft.entity.Entity;
 import org.jetbrains.annotations.Nullable;
@@ -10,7 +11,7 @@ public record RenderingContext(
         float tickDelta,
         int light,
         int overlay,
-        AnimationState[] animations,
+        AnimationLayer[] layers,
         @Nullable Entity entity,
         List<String> hideBones // 隠蔽対象ボーン名のリスト
         ) {
@@ -23,9 +24,9 @@ public record RenderingContext(
         private float tickDelta;
         private int light;
         private int overlay;
-        private final List<AnimationState> animations = new ArrayList<>();
+        private final List<AnimationLayer> layers = new ArrayList<>();
         @Nullable Entity entity;
-        private final List<String> hideBones = new ArrayList<>(); // 隠蔽対象ボーン名のリスト
+        private final List<String> hideBones = new ArrayList<>();
 
         public Builder tickDelta(float tickDelta) {
             this.tickDelta = tickDelta;
@@ -42,16 +43,9 @@ public record RenderingContext(
             return this;
         }
 
-        public Builder addAnimationState(AnimationState state) {
-            if (state != null) {
-                this.animations.add(state);
-            }
-            return this;
-        }
-
-        public Builder addAnimationState(@Nullable List<AnimationState> states) {
-            if (states != null) {
-                this.animations.addAll(states);
+        public Builder addLayer(AnimationLayer layer) {
+            if (layer != null) {
+                this.layers.add(layer);
             }
             return this;
         }
@@ -73,15 +67,14 @@ public record RenderingContext(
         }
 
         public RenderingContext build() {
+            layers.sort(Comparator.comparingInt(AnimationLayer::priority));
             return new RenderingContext(
                     tickDelta,
                     light,
                     overlay,
-                    animations.toArray(new AnimationState[0]),
+                    layers.toArray(new AnimationLayer[0]),
                     entity,
                     List.copyOf(hideBones));
         }
     }
-
-    public record AnimationState(String name, float seconds, boolean isLooping) {}
 }

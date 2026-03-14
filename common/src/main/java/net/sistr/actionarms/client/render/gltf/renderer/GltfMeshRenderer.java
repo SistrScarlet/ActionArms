@@ -1,9 +1,9 @@
 package net.sistr.actionarms.client.render.gltf.renderer;
 
 import java.util.ArrayDeque;
-import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
 import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.util.math.MatrixStack;
 import net.sistr.actionarms.client.render.gltf.data.*;
@@ -42,7 +42,7 @@ public class GltfMeshRenderer {
 
         try {
             // ボーン行列を直接計算
-            if (boneMatrices != null && context.animations().length > 0) {
+            if (boneMatrices != null && context.layers().length > 0) {
                 computeBoneMatrices(context, skin, model, boneMatrices);
             }
 
@@ -142,24 +142,16 @@ public class GltfMeshRenderer {
             ProcessedSkin skin,
             ProcessedGltfModel model,
             float[] animationData) {
-        // コンテキストのアニメーション名からアニメーションを取得
-        var animations =
-                Arrays.stream(context.animations())
-                        .map(
-                                state ->
-                                        model.getAnimation(state.name())
-                                                .map(value -> new Animation(value, state)))
-                        .filter(Optional::isPresent)
-                        .map(Optional::get)
-                        .toList();
         var bones = skin.bones();
+        int stride = 3 + 4 + 3;
+
+        // ボーン名→インデックスマップ構築 + デフォルト TRS 設定
+        Map<String, Integer> boneIndexMap = new HashMap<>();
         for (int i = 0; i < bones.size(); i++) {
             var bone = bones.get(i);
-
-            int stride = 3 + 4 + 3;
+            boneIndexMap.put(bone.name(), i);
             int offset = i * stride;
 
-            // デフォルトのTRS値を設定
             Vector3f translation = bone.getTranslation();
             Quaternionf rotation = bone.getRotation();
             Vector3f scale = bone.getScale();
@@ -174,20 +166,46 @@ public class GltfMeshRenderer {
             animationData[offset + 7] = scale.x;
             animationData[offset + 8] = scale.y;
             animationData[offset + 9] = scale.z;
+        }
 
-            for (Animation value : animations) {
-                var animation = value.animation();
-                var state = value.state();
-                if (animation == null || !animation.hasBone(bone.name())) {
-                    continue;
-                }
-                float time = animation.normalizeTime(state.seconds(), state.isLooping());
-                animationOverwrite(bone, animation, time, offset, animationData);
+        // Layer 処理（priority ソート済み）
+        for (AnimationLayer layer : context.layers()) {
+            if (layer instanceof AnimationLayer.Clip clip) {
+                applyClipLayer(clip, bones, model, animationData);
+            } else if (layer instanceof AnimationLayer.Procedural proc) {
+                applyProceduralLayer(proc, boneIndexMap, animationData);
             }
         }
     }
 
-    private record Animation(ProcessedAnimation animation, RenderingContext.AnimationState state) {}
+    private void applyClipLayer(
+            AnimationLayer.Clip clip,
+            List<ProcessedBone> bones,
+            ProcessedGltfModel model,
+            float[] animationData) {
+        var animOpt = model.getAnimation(clip.animationName());
+        if (animOpt.isEmpty()) return;
+        var animation = animOpt.get();
+        float time = animation.normalizeTime(clip.seconds(), clip.looping());
+        int stride = 3 + 4 + 3;
+        for (int i = 0; i < bones.size(); i++) {
+            var bone = bones.get(i);
+            if (!animation.hasBone(bone.name())) continue;
+            animationOverwrite(bone, animation, time, i * stride, animationData);
+        }
+    }
+
+    private void applyProceduralLayer(
+            AnimationLayer.Procedural proc,
+            Map<String, Integer> boneIndexMap,
+            float[] animationData) {
+        Integer idx = boneIndexMap.get(proc.boneName());
+        if (idx == null) return;
+        int stride = 3 + 4 + 3;
+        var boneTRS = new BoneTRS(animationData, idx * stride);
+        proc.trsSupplier().apply(boneTRS);
+        boneTRS.flush();
+    }
 
     // 単に上書きするのみ
     private void animationOverwrite(

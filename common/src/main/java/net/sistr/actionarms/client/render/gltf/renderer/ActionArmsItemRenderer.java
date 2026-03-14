@@ -20,7 +20,7 @@ import net.sistr.actionarms.item.LeverActionGunItem;
 import net.sistr.actionarms.item.component.IComponent;
 import org.jetbrains.annotations.Nullable;
 
-/** ActionArms用ItemStackレンダラー LeverActionGunItem専用のglTFレンダリング実装 */
+/** ActionArms用ItemStackレンダラー glTFレンダリング実装 */
 public class ActionArmsItemRenderer extends GltfObjectRenderer<ItemStack> {
 
     public ActionArmsItemRenderer(ProcessedGltfModel model, ModelMetadata metadata) {
@@ -30,14 +30,10 @@ public class ActionArmsItemRenderer extends GltfObjectRenderer<ItemStack> {
     @Override
     public RenderingContext.Builder createRenderContext(
             ItemStack stack, ModelTransformationMode mode, @Nullable LivingEntity entity) {
-
         RenderingContext.Builder builder = RenderingContext.builder();
-
-        // アニメーション状態の設定
-        List<RenderingContext.AnimationState> animationStates =
-                createAnimationStates(stack, mode, entity);
-        builder.addAnimationState(animationStates);
-
+        for (var layer : createAnimationLayers(stack, mode, entity)) {
+            builder.addLayer(layer);
+        }
         return builder;
     }
 
@@ -46,63 +42,49 @@ public class ActionArmsItemRenderer extends GltfObjectRenderer<ItemStack> {
     protected List<String> getHideKeys(
             ModelTransformationMode mode, @Nullable LivingEntity entity) {
         var list = new ArrayList<String>(1);
-        // FPV（一人称視点）の判定
         if (mode != ModelTransformationMode.FIRST_PERSON_RIGHT_HAND) {
             list.add("fpv");
         }
-
         return list;
     }
 
-    /** アニメーション状態を作成 既存のMixinItemRenderer#getAnimationStatesロジックを移植 */
-    protected List<RenderingContext.AnimationState> createAnimationStates(
+    protected List<AnimationLayer> createAnimationLayers(
             ItemStack stack, ModelTransformationMode mode, @Nullable LivingEntity entity) {
         if (!(stack.getItem() instanceof LeverActionGunItem gunItem)) {
-            return new ArrayList<>(0);
+            return List.of();
         }
-
-        var states = new ArrayList<RenderingContext.AnimationState>(10);
-
         if (entity == null) {
-            return states;
+            return List.of();
         }
 
+        var layers = new ArrayList<AnimationLayer>();
         float tickDelta = MinecraftClient.getInstance().getTickDelta();
-
-        // ガンコンポーネントの取得
         var gunComponent = IComponent.query(gunItem.getGunComponent(), stack, c -> c);
-
-        // エイム状態の判定
         boolean isAiming =
                 entity instanceof HasAimManager hasAim
                         && hasAim.actionArms$getAimManager().isAiming();
-
         float entityAge = entity.age * (1.0f / 20) + tickDelta;
 
-        // ハンマー状態のアニメーション
-        if (gunComponent.isHammerReady()) {
-            states.add(new RenderingContext.AnimationState("hammerReady", entityAge, true));
-        } else {
-            states.add(new RenderingContext.AnimationState("hammerNotReady", entityAge, true));
-        }
+        // Priority 10: 状態ポーズ
+        layers.add(
+                new AnimationLayer.Clip(
+                        gunComponent.isHammerReady() ? "hammerReady" : "hammerNotReady",
+                        entityAge,
+                        true,
+                        10));
+        layers.add(
+                new AnimationLayer.Clip(
+                        gunComponent.isLeverDown() ? "leverDown" : "leverUp", entityAge, true, 10));
 
-        // レバー状態のアニメーション
-        if (gunComponent.isLeverDown()) {
-            states.add(new RenderingContext.AnimationState("leverDown", entityAge, true));
-        } else {
-            states.add(new RenderingContext.AnimationState("leverUp", entityAge, true));
-        }
-
-        // FPV専用のアニメーション
+        // FPV 専用
         if (mode == ModelTransformationMode.FIRST_PERSON_RIGHT_HAND) {
             float secondDelta = tickDelta * (1f / 20f);
 
-            // アイドルアニメーション
-            states.add(
-                    new RenderingContext.AnimationState(
-                            isAiming ? "idle_aiming" : "idle", entityAge, true));
+            // Priority 0: アイドル
+            layers.add(
+                    new AnimationLayer.Clip(isAiming ? "idle_aiming" : "idle", entityAge, true, 0));
 
-            // アイテムアニメーションの追加
+            // Priority 30: ワンショット
             var itemStates = ItemAnimationManager.INSTANCE.getItemStateMap(stack);
             itemStates.values().stream()
                     .sorted(
@@ -110,17 +92,17 @@ public class ActionArmsItemRenderer extends GltfObjectRenderer<ItemStack> {
                                     .reversed())
                     .forEach(
                             state -> {
-                                String animationId = state.id();
+                                String id = state.id();
                                 if (isAiming) {
-                                    animationId += "_aiming";
+                                    id += "_aiming";
                                 }
-                                states.add(
-                                        new RenderingContext.AnimationState(
-                                                animationId, state.seconds() + secondDelta, false));
+                                layers.add(
+                                        new AnimationLayer.Clip(
+                                                id, state.seconds() + secondDelta, false, 30));
                             });
         }
 
-        return states;
+        return layers;
     }
 
     /** レンダーレイヤーの決定 */
@@ -142,21 +124,17 @@ public class ActionArmsItemRenderer extends GltfObjectRenderer<ItemStack> {
             throw new IllegalArgumentException("テクスチャリソースが見つかりません: " + textureFileName);
         }
 
-        // contexts_overridesでplayer_skinが設定されているテクスチャの特別処理
         if (metadata.textureSettings().dynamicTextures().containsKey(textureFileName)) {
             String contextName = metadata.textureSettings().dynamicTextures().get(textureFileName);
             if ("player_skin".equals(contextName)) {
-                // プレイヤースキンの動的解決
                 if (context.entity() instanceof AbstractClientPlayerEntity player) {
                     var skinTexture = player.getSkinTexture();
                     return GltfRenderLayer.getEntityTranslucentTriangle(skinTexture, true);
                 }
-                // プレイヤーが存在しない場合はデフォルトスキン
                 return GltfRenderLayer.getEntityTranslucentTriangle(textureResource, true);
             }
         }
 
-        // 通常のテクスチャ
         return GltfRenderLayer.getEntityCutoutTriangle(textureResource);
     }
 }
