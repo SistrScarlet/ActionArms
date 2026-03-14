@@ -177,14 +177,14 @@ public class SAAItemRenderer extends ActionArmsItemRenderer {
             float stepAngle = (float) (2.0 * Math.PI / capacity);
             if (prevFiringIndex == -1) {
                 prevFiringIndex = firingIndex;
-                targetRotation = -stepAngle * firingIndex;
+                targetRotation = stepAngle * firingIndex;
                 prevRotation = targetRotation;
                 currentRotation = targetRotation;
             } else if (firingIndex != prevFiringIndex) {
                 int diff = firingIndex - prevFiringIndex;
                 if (diff > capacity / 2) diff -= capacity;
                 if (diff < -capacity / 2) diff += capacity;
-                targetRotation += -stepAngle * diff;
+                targetRotation += stepAngle * diff;
                 prevFiringIndex = firingIndex;
             }
         }
