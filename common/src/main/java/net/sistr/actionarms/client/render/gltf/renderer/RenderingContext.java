@@ -66,6 +66,11 @@ public record RenderingContext(
             return this;
         }
 
+        public Builder addHideBone(String boneName) {
+            this.hideBones.add(boneName);
+            return this;
+        }
+
         public RenderingContext build() {
             layers.sort(Comparator.comparingInt(AnimationLayer::priority));
             return new RenderingContext(

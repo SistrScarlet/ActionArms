@@ -20,6 +20,7 @@ import net.sistr.actionarms.client.render.gltf.manager.GltfObjectRendererRegistr
 import net.sistr.actionarms.client.render.gltf.manager.ItemAnimationManager;
 import net.sistr.actionarms.client.render.gltf.renderer.ActionArmsItemRenderer;
 import net.sistr.actionarms.client.render.gltf.renderer.GltfObjectRenderer;
+import net.sistr.actionarms.client.render.gltf.renderer.SAAItemRenderer;
 import net.sistr.actionarms.client.render.hud.AAHudRenderer;
 import net.sistr.actionarms.client.render.hud.ClientHudManager;
 import net.sistr.actionarms.setup.Registration;
@@ -38,6 +39,11 @@ public class ActionArmsClient {
                     if (mc.world == null) return;
                     ItemAnimationManager.INSTANCE.tick(1f / 20f);
                     AAHudRenderer.INSTANCE.tick();
+                    GltfObjectRendererRegistry.INSTANCE
+                            .<ItemStack>getRenderer(new Identifier(ActionArms.MOD_ID, "colt_saa"))
+                            .filter(SAAItemRenderer.class::isInstance)
+                            .map(SAAItemRenderer.class::cast)
+                            .ifPresent(SAAItemRenderer::tickCylinderAnimation);
                 });
         ClientGuiEvent.RENDER_HUD.register(AAHudRenderer.INSTANCE::render);
     }
@@ -51,8 +57,7 @@ public class ActionArmsClient {
                 ResourceType.CLIENT_RESOURCES, GltfObjectRendererRegistry.INSTANCE);
         EntityRendererRegistry.register(Registration.BULLET_ENTITY, BulletEntityRenderer::new);
         registerGltfItem(new Identifier(ActionArms.MOD_ID, "m1873"), ActionArmsItemRenderer::new);
-        registerGltfItem(
-                new Identifier(ActionArms.MOD_ID, "colt_saa"), ActionArmsItemRenderer::new);
+        registerGltfItem(new Identifier(ActionArms.MOD_ID, "colt_saa"), SAAItemRenderer::new);
     }
 
     private static void registerGltfItem(Identifier id, GltfItemFactory<ItemStack> factory) {
