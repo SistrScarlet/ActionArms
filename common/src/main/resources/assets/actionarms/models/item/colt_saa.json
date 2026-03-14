@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:item/handheld",
   "textures": {
-    "layer0": "actionarms:item/gun/m1873"
+    "layer0": "actionarms:item/gun/colt_saa"
   }
 }

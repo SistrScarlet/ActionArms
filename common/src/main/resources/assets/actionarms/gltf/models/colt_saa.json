@@ -12,7 +12,7 @@
   "texture_settings": {
     "texture_map": {
       "skin_alex.png": "actionarms:textures/test/skin_alex.png",
-      "texture.png": "actionarms:textures/test/texture.png",
+      "texture.png": "actionarms:textures/gltf/colt_saa/texture.png",
       "bullet.png": "actionarms:textures/test/bullet.png"
     },
     "dynamic_textures": {
