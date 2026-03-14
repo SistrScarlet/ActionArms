@@ -3,6 +3,7 @@
   "scene_index": 0,
   "properties": {
     "cylinder_bone": "cylinder",
+    "cylinder_axis": "z",
     "bullet_bone_prefix": "bullet_",
     "cartridge_bone_prefix": "cartridge_"
   },

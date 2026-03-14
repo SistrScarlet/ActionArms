@@ -24,10 +24,12 @@ import org.joml.Quaternionf;
 public class SAAItemRenderer extends ActionArmsItemRenderer {
     private static final int CYLINDER_CAPACITY = 6;
     private static final String DEFAULT_CYLINDER_BONE = "cylinder";
+    private static final String DEFAULT_CYLINDER_AXIS = "z";
     private static final String DEFAULT_BULLET_BONE_PREFIX = "bullet_";
     private static final String DEFAULT_CARTRIDGE_BONE_PREFIX = "cartridge_";
 
     private final String cylinderBoneName;
+    private final String cylinderAxis;
     private final String bulletBonePrefix;
     private final String cartridgeBonePrefix;
     private final Map<UUID, CylinderState> cylinderStates = new HashMap<>();
@@ -36,6 +38,7 @@ public class SAAItemRenderer extends ActionArmsItemRenderer {
         super(model, metadata);
         var props = metadata.properties();
         this.cylinderBoneName = props.getOrDefault("cylinder_bone", DEFAULT_CYLINDER_BONE);
+        this.cylinderAxis = props.getOrDefault("cylinder_axis", DEFAULT_CYLINDER_AXIS);
         this.bulletBonePrefix =
                 props.getOrDefault("bullet_bone_prefix", DEFAULT_BULLET_BONE_PREFIX);
         this.cartridgeBonePrefix =
@@ -81,7 +84,7 @@ public class SAAItemRenderer extends ActionArmsItemRenderer {
                 new AnimationLayer.Procedural(
                         cylinderBoneName,
                         trs -> {
-                            var q = new Quaternionf().rotateY(cylinderAngle);
+                            var q = createAxisRotation(cylinderAxis, cylinderAngle);
                             trs.setRotation(q);
                         },
                         20));
@@ -152,6 +155,15 @@ public class SAAItemRenderer extends ActionArmsItemRenderer {
         }
 
         return state.getInterpolatedAngle(tickDelta);
+    }
+
+    private static Quaternionf createAxisRotation(String axis, float angle) {
+        return switch (axis) {
+            case "x" -> new Quaternionf().rotateX(angle);
+            case "y" -> new Quaternionf().rotateY(angle);
+            case "z" -> new Quaternionf().rotateZ(angle);
+            default -> new Quaternionf().rotateZ(angle);
+        };
     }
 
     static class CylinderState {
