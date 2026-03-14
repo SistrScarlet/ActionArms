@@ -121,10 +121,14 @@ public class GltfMetadataManager implements ResourceReloader, AutoCloseable {
             // 4. "texture_settings"フィールドの解析
             TextureSettings textureSettings = parseTextureSettings(json);
 
+            // 5. "properties"フィールドの解析
+            Map<String, String> properties = parseProperties(json);
+
             return ModelMetadata.builder(modelPath)
                     .sceneIndex(sceneIndex)
                     .hideBoneKeys(hideBoneKeys)
                     .textureSettings(textureSettings)
+                    .properties(properties)
                     .build();
 
         } catch (Exception e) {
@@ -197,6 +201,22 @@ public class GltfMetadataManager implements ResourceReloader, AutoCloseable {
         }
 
         return builder.build();
+    }
+
+    /** "properties"フィールドを解析 */
+    private Map<String, String> parseProperties(JsonObject json) {
+        Map<String, String> properties = new HashMap<>();
+
+        if (!json.has("properties")) {
+            return properties;
+        }
+
+        JsonObject propertiesObj = json.getAsJsonObject("properties");
+        for (var entry : propertiesObj.entrySet()) {
+            properties.put(entry.getKey(), entry.getValue().getAsString());
+        }
+
+        return properties;
     }
 
     @Override

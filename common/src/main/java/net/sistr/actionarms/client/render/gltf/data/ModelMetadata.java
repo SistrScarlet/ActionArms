@@ -8,7 +8,8 @@ import net.minecraft.util.Identifier;
 public record ModelMetadata(
         Identifier modelPath, // "model": MCパス形式のモデルパス
         Map<String, List<String>> hideBoneKeys, // "hide_bone_keys": コンテキスト → 隠蔽対象ボーンリスト
-        TextureSettings textureSettings // "texture_settings": テクスチャ設定
+        TextureSettings textureSettings, // "texture_settings": テクスチャ設定
+        Map<String, String> properties // "properties": カスタムプロパティ
         ) {
     /**
      * ビルダーパターンでModelMetadataを構築
@@ -25,6 +26,7 @@ public record ModelMetadata(
         private int sceneIndex;
         private Map<String, List<String>> hideBoneKeys = Map.of();
         private TextureSettings textureSettings;
+        private Map<String, String> properties = Map.of();
 
         private Builder(Identifier modelPath) {
             this.modelPath = modelPath;
@@ -60,12 +62,18 @@ public record ModelMetadata(
             return this;
         }
 
+        public Builder properties(Map<String, String> properties) {
+            this.properties = Map.copyOf(properties);
+            return this;
+        }
+
         public ModelMetadata build() {
             return new ModelMetadata(
                     new Identifier(
                             modelPath.getNamespace(), modelPath.getPath() + "_scene" + sceneIndex),
                     hideBoneKeys,
-                    textureSettings);
+                    textureSettings,
+                    properties);
         }
     }
 }

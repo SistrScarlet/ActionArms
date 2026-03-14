@@ -23,12 +23,15 @@ import org.joml.Quaternionf;
 
 public class SAAItemRenderer extends ActionArmsItemRenderer {
     private static final int CYLINDER_CAPACITY = 6;
-    private static final float STEP_ANGLE = (float) (2.0 * Math.PI / CYLINDER_CAPACITY);
+    private static final String DEFAULT_CYLINDER_BONE = "cylinder";
 
+    private final String cylinderBoneName;
     private final Map<UUID, CylinderState> cylinderStates = new HashMap<>();
 
     public SAAItemRenderer(ProcessedGltfModel model, ModelMetadata metadata) {
         super(model, metadata);
+        this.cylinderBoneName =
+                metadata.properties().getOrDefault("cylinder_bone", DEFAULT_CYLINDER_BONE);
     }
 
     public void tickCylinderAnimation() {
@@ -68,7 +71,7 @@ public class SAAItemRenderer extends ActionArmsItemRenderer {
         float cylinderAngle = getCylinderAngle(uuid, hudStateOpt, tickDelta);
         layers.add(
                 new AnimationLayer.Procedural(
-                        "cylinder",
+                        cylinderBoneName,
                         trs -> {
                             var q = new Quaternionf().rotateY(cylinderAngle);
                             trs.setRotation(q);

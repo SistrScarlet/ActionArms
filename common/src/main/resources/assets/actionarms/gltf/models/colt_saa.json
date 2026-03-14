@@ -1,6 +1,9 @@
 {
   "model": "actionarms:models/gltf/gun/colt_saa.glb",
   "scene_index": 0,
+  "properties": {
+    "cylinder_bone": "cylinder"
+  },
   "hide_bone_keys": {
     "fpv": ["right_hand_alex", "left_hand_alex"]
   },
