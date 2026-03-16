@@ -1,6 +1,7 @@
 package net.sistr.actionarms.item;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -9,6 +10,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.Inventory;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ToolMaterials;
 import net.minecraft.particle.ParticleTypes;
@@ -21,9 +23,11 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.random.Random;
 import net.minecraft.world.World;
 import net.sistr.actionarms.entity.BulletEntity;
+import net.sistr.actionarms.entity.util.AIGunController;
 import net.sistr.actionarms.entity.util.HasAimManager;
 import net.sistr.actionarms.entity.util.IAimManager;
 import net.sistr.actionarms.entity.util.InventoryAmmoUtil;
+import net.sistr.actionarms.entity.util.LeverActionAIGunController;
 import net.sistr.actionarms.item.component.*;
 import net.sistr.actionarms.item.data.BulletData;
 import net.sistr.actionarms.item.data.LeverActionGunData;
@@ -33,7 +37,7 @@ import net.sistr.actionarms.network.RecoilPacket;
 import net.sistr.actionarms.setup.Registration;
 import org.jetbrains.annotations.Nullable;
 
-public class LeverActionGunItem extends GunItem {
+public class LeverActionGunItem extends Item implements GunItem {
     private final LeverActionGunData gunData;
     private final MagazineData magazineData;
 
@@ -286,6 +290,14 @@ public class LeverActionGunItem extends GunItem {
         public void returnBullets(List<BulletData> bullets) {
             // todo 弾薬返還処理
         }
+    }
+
+    @Override
+    public AIGunController createAIController(
+            LivingEntity user,
+            Supplier<ItemStack> stackSupplier,
+            Supplier<Optional<Inventory>> inventorySupplier) {
+        return new LeverActionAIGunController(user, this, stackSupplier, inventorySupplier);
     }
 
     public LeverActionGunData getGunData() {

@@ -1,11 +1,14 @@
 package net.sistr.actionarms.item;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Supplier;
 import net.minecraft.client.item.TooltipContext;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.inventory.Inventory;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ToolMaterials;
 import net.minecraft.particle.ParticleTypes;
@@ -15,8 +18,10 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.world.World;
 import net.sistr.actionarms.entity.BulletEntity;
+import net.sistr.actionarms.entity.util.AIGunController;
 import net.sistr.actionarms.entity.util.HasAimManager;
 import net.sistr.actionarms.entity.util.IAimManager;
+import net.sistr.actionarms.entity.util.SAAAIGunController;
 import net.sistr.actionarms.item.component.IComponent;
 import net.sistr.actionarms.item.component.SAAGunComponent;
 import net.sistr.actionarms.item.data.BulletData;
@@ -27,7 +32,7 @@ import net.sistr.actionarms.network.RecoilPacket;
 import net.sistr.actionarms.setup.Registration;
 import org.jetbrains.annotations.Nullable;
 
-public class SAAGunItem extends GunItem {
+public class SAAGunItem extends Item implements GunItem {
     private final SAAGunData gunData;
 
     public SAAGunItem(Settings settings, SAAGunData gunData) {
@@ -148,6 +153,14 @@ public class SAAGunItem extends GunItem {
             }
             fireBullet(serverWorld, user, gun, bullet);
         };
+    }
+
+    @Override
+    public AIGunController createAIController(
+            LivingEntity user,
+            Supplier<ItemStack> stackSupplier,
+            Supplier<Optional<Inventory>> inventorySupplier) {
+        return new SAAAIGunController(user, this, stackSupplier, inventorySupplier);
     }
 
     public SAAGunData getGunData() {
